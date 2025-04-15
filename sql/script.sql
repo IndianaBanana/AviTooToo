@@ -24,24 +24,36 @@ create table if not exists "user" (
     role varchar(255) not null
 );
 
---8) Система рейтингов продавцов, влияющая на положение объявлений продавца в поисковой выдаче.
---   Чем ниже рейтинг, тем ниже объявление в выдаче.
-create table if not exists user_rating (
-    user_id uuid primary key,
-    average_rating numeric not null check (average_rating >= 1 and average_rating <= 5),
-    rating_count integer not null,
-    foreign key (user_id) references "user"(user_id) on delete cascade
-);
-
 create table if not exists rating (
     user_id uuid,
     rater_id uuid,
-    rating smallint not null check (rating >= 1 and rating <= 5),
+    rating_value smallint not null check (rating_value >= 1 and rating_value <= 5),
     check (user_id != rater_id),
     foreign key (user_id) references "user"(user_id) on delete cascade,
     foreign key (rater_id) references "user"(user_id) on delete cascade,
     primary key (user_id, rater_id)
 );
+
+--8) Система рейтингов продавцов, влияющая на положение объявлений продавца в поисковой выдаче.
+-- будем обновлять данные о рейтинге ВСЕХ продавцов периодически (например, раз в 15 минут или реже)
+-- пользователю поставившему оценку надо обязательно вернуть в ответ что его оценка учтена
+-- и рейтинг будет пересчитан в течении какого-то времени.
+create materialized view if not exists user_rating as
+    select
+        user_id,
+        AVG(rating_value) AS average_rating,
+        COUNT(*) AS rating_count
+    from rating
+    group by user_id
+with data;
+create unique index if not exists index_user_rating_user_id -- заместо первичного ключа
+on user_rating(user_id);
+--для точности понимания на диаграммах
+comment on materialized view user_rating is 'materialized view';
+comment on column user_rating.user_id is 'grouped by. has index';
+comment on column user_rating.average_rating is 'avg(rating.rating_value)';
+comment on column user_rating.rating_count is 'count(rating.*)';
+--refresh materialized view user_rating; -- для обновления view
 
 --3) Просмотр списка объявлений. Поиск и фильтрация.
 --4) Возможность добавления / редактирования / удаления объявлений.
