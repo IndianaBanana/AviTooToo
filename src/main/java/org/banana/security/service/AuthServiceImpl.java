@@ -2,7 +2,7 @@
 //
 //import jakarta.transaction.Transactional;
 //import lombok.extern.slf4j.Slf4j;
-//import org.banana.dto.UserDto;
+//import org.banana.dto.user.UserResponseDto;
 //import org.banana.entity.User;
 //import org.banana.exception.InvalidUserAddingEmailException;
 //import org.banana.exception.InvalidUserAddingPhoneException;
@@ -37,7 +37,7 @@
 //
 //    @Override
 //    @Transactional
-//    public UserDto register(UserDto userDto) {
+//    public UserResponseDto register(UserResponseDto userDto) {
 //        log.debug("entering register method in {}", this.getClass().getSimpleName());
 //        if (userRepository.existsByUsername(userDto.getUsername())) {
 //            throw new InvalidUserAddingEmailException(userDto.getUsername());
@@ -63,7 +63,7 @@
 //    }
 //
 //    @Override
-//    public String verify(UserDto userDto) {
+//    public String verify(UserResponseDto userDto) {
 //        Authentication authentication = authManager
 //                .authenticate(new UsernamePasswordAuthenticationToken(userDto.getUsername(), userDto.getPassword()));
 //        if (authentication != null && authentication.isAuthenticated()) {

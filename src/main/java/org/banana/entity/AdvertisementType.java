@@ -1,13 +1,9 @@
 package org.banana.entity;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +12,6 @@ import lombok.ToString;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,39 +21,15 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "message")
-public class Message {
+@Table(name = "advertisement_type")
+public class AdvertisementType {
 
     @Id
     @UuidGenerator
-    private UUID messageId;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "advertisement_id")
-    @ToString.Exclude
-    private Advertisement advertisement;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sender_id")
-    @ToString.Exclude
-    private User sender;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "recipient_id")
-    @ToString.Exclude
-    private User recipient; // fixme а не нарушает ли это 3нф?
+    private UUID advertisementTypeId;
 
     @NotBlank
-    private String messageText;
-
-    @NotNull
-    private LocalDateTime messageDate;
-
-    @NotNull
-    private Boolean isRead;
+    private String name;
 
     @Override
     public final boolean equals(Object o) {
@@ -67,8 +38,8 @@ public class Message {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Message message = (Message) o;
-        return getMessageId() != null && Objects.equals(getMessageId(), message.getMessageId());
+        AdvertisementType that = (AdvertisementType) o;
+        return getAdvertisementTypeId() != null && Objects.equals(getAdvertisementTypeId(), that.getAdvertisementTypeId());
     }
 
     @Override

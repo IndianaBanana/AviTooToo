@@ -11,11 +11,12 @@
 --   Чем ниже рейтинг, тем ниже объявление в выдаче.
 --9) История продаж пользователя.
 
+create extension if not exists pgcrypto;
 
 --1) Регистрация пользователя в системе (пользователя и администратора).
 --2) Редактирование профиля.
 create table if not exists "user" (
-    user_id uuid primary key,
+    user_id uuid primary key default gen_random_uuid(),
     first_name varchar(255) not null,
     last_name varchar(255) not null,
     phone varchar(255) not null unique,
@@ -41,8 +42,8 @@ create table if not exists rating (
 create materialized view if not exists user_rating as
     select
         user_id,
-        AVG(rating_value) AS average_rating,
-        COUNT(*) AS rating_count
+        avg(rating_value) as average_rating,
+        count(*) as rating_count
     from rating
     group by user_id
 with data;
@@ -55,28 +56,42 @@ comment on column user_rating.average_rating is 'avg(rating.rating_value)';
 comment on column user_rating.rating_count is 'count(rating.*)';
 --refresh materialized view user_rating; -- для обновления view
 
+create table if not exists city (
+    city_id uuid primary key default gen_random_uuid(),
+    name varchar(255) unique not null
+);
+
+create table if not exists advertisement_type (
+    advertisement_type_id uuid primary key default gen_random_uuid(),
+    name varchar(255) unique not null
+);
+
 --3) Просмотр списка объявлений. Поиск и фильтрация.
 --4) Возможность добавления / редактирования / удаления объявлений.
 --7) Возможность проплатить отображение объявления в топе выдачи.
 create table if not exists advertisement (
-    advertisement_id uuid primary key,
+    advertisement_id uuid primary key default gen_random_uuid(),
     user_id uuid not null, -- the user who created the advertisement
+    city_id uuid not null,
+    advertisement_type_id uuid not null,
     title varchar(255) not null,
     description text not null,
     price numeric not null,
-    quantity smallint not null,
-    is_paid boolean default false, -- if the advertisement is paid or not. for showing it in top
-    create_date timestamp default now(),
+    quantity integer not null,
+    is_paid boolean not null default false, -- if the advertisement is paid or not. for showing it in top
+    create_date timestamp not null default now(),
     close_date timestamp,
-    foreign key (user_id) references "user"(user_id) on delete cascade
+    foreign key (user_id) references "user"(user_id) on delete cascade,
+    foreign key (city_id) references city(city_id) on delete cascade,
+    foreign key (advertisement_type_id) references advertisement_type(advertisement_type_id) on delete cascade
 );
 
 --9) История продаж пользователя.
 create table if not exists sale_history (
-    sale_history_id uuid primary key,
+    sale_history_id uuid primary key default gen_random_uuid(),
     advertisement_id uuid not null,
     buyer_id uuid,
-    sale_date timestamp default now(),
+    sale_date timestamp not null default now(),
     quantity smallint not null,
     foreign key (buyer_id) references "user"(user_id) on delete set null,
     foreign key (advertisement_id) references advertisement(advertisement_id) on delete cascade
@@ -84,13 +99,13 @@ create table if not exists sale_history (
 
 --5) Возможность оставлять комментарии под объявлениями.
 create table if not exists comment (
-    comment_id uuid primary key,
+    comment_id uuid primary key default gen_random_uuid(),
     advertisement_id uuid not null, -- the advertisement to which the comment is attached
     commenter_id uuid not null, -- the user who wrote the comment
     root_comment_id uuid, -- useful for selecting nested comments (less selections)
     parent_comment_id uuid, -- the comment to which the comment is attached
     comment_text text not null,
-    comment_date timestamp default now(),
+    comment_date timestamp not null default now(),
     check (comment_id != parent_comment_id and comment_id != root_comment_id),
     foreign key (commenter_id) references "user"(user_id) on delete set null,
     foreign key (advertisement_id) references advertisement(advertisement_id) on delete cascade,
@@ -100,13 +115,13 @@ create table if not exists comment (
 
 --6) Организация личной переписки покупателя и продавца.
 create table if not exists message (
-    message_id uuid primary key,
+    message_id uuid primary key default gen_random_uuid(),
     advertisement_id uuid not null,
     sender_id uuid not null,
     recipient_id uuid not null,
     message_text text not null,
-    message_date timestamp default now(),
-    is_read boolean default false,
+    message_date timestamp not null default now(),
+    is_read boolean not null default false,
     foreign key (sender_id) references "user"(user_id) on delete set null,
     foreign key (recipient_id) references "user"(user_id) on delete set null,
     foreign key (advertisement_id) references advertisement(advertisement_id) on delete cascade,
@@ -114,6 +129,24 @@ create table if not exists message (
 );
 
 
+-- inserts
+insert into city (name)
+values
+    ('Орел'),
+    ('Мценск'),
+    ('Кромы'),
+    ('Дмитровск'),
+    ('Ливны'),
+    ('Новосиль');
 
-
-
+insert into advertisement_type (name)
+values
+    ('Личные вещи'),
+    ('Транспорт'),
+    ('Недвижимость'),
+    ('Работа'),
+    ('Для дома и дачи'),
+    ('Бытовая электроника'),
+    ('Хобби и отдых'),
+    ('Животные'),
+    ('Для бизнеса');

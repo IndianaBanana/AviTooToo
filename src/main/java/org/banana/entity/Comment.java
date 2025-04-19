@@ -26,12 +26,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "message")
-public class Message {
+@Table(name = "comment")
+public class Comment {
 
     @Id
     @UuidGenerator
-    private UUID messageId;
+    private UUID commentId;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -41,24 +41,25 @@ public class Message {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sender_id")
+    @JoinColumn(name = "commenter_id")
     @ToString.Exclude
-    private User sender;
+    private User commenter;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "recipient_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "root_comment_id")
     @ToString.Exclude
-    private User recipient; // fixme а не нарушает ли это 3нф?
+    private UUID rootComment; // todo: либо UUID либо сделать тут Comment
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_comment_id")
+    @ToString.Exclude
+    private Comment parentComment;
 
     @NotBlank
-    private String messageText;
+    private String commentText;
 
     @NotNull
-    private LocalDateTime messageDate;
-
-    @NotNull
-    private Boolean isRead;
+    private LocalDateTime commentDate;
 
     @Override
     public final boolean equals(Object o) {
@@ -67,8 +68,8 @@ public class Message {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Message message = (Message) o;
-        return getMessageId() != null && Objects.equals(getMessageId(), message.getMessageId());
+        Comment comment = (Comment) o;
+        return getCommentId() != null && Objects.equals(getCommentId(), comment.getCommentId());
     }
 
     @Override
