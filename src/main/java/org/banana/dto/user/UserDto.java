@@ -2,16 +2,20 @@ package org.banana.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.banana.security.UserRole;
 
 import java.util.UUID;
 
 @Data
-public class UserResponseDto {
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDto {
 
-    @NotNull
+//    @NotNull
     private UUID userId;
     @NotBlank
     private String firstName;

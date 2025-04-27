@@ -1,7 +1,7 @@
 package org.banana.repository;
 
-import org.banana.entity.Rating;
-import org.banana.entity.RatingId;
+import org.banana.entity.rating.Rating;
+import org.banana.entity.rating.RatingId;
 import org.banana.repository.crud.AbstractCrudRepositoryImpl;
 import org.springframework.stereotype.Repository;
 

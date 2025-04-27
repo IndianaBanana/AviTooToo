@@ -1,12 +1,12 @@
 package org.banana.repository.crud;
 
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceContext;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Session;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -17,10 +17,11 @@ import java.util.Optional;
 @Slf4j
 public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> implements CrudRepository<T, ID> {
 
+    public static final String EXISTS_BY_ID = "SELECT 1 FROM %s e WHERE e.%s = :id";
     private final Class<T> entityClass;
     @Getter(AccessLevel.PROTECTED)
     @PersistenceContext
-    private EntityManager entityManager;
+    private Session session;
     private String idAttributeName;
 
     protected AbstractCrudRepositoryImpl(Class<T> entityClass) {
@@ -32,7 +33,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     @Override
     public <S extends T> S save(S entity) {
         log.debug("save() in {}: {}", getClass().getSimpleName(), entity);
-        return getEntityManager().merge(entity);
+        return getSession().merge(entity);
     }
 
     @Override
@@ -47,25 +48,25 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     @Override
     public Optional<T> findById(ID id) {
         log.debug("findById({}) in {}", id, getClass().getSimpleName());
-        return Optional.ofNullable(getEntityManager().find(entityClass, id));
+        return Optional.ofNullable(getSession().find(entityClass, id));
     }
 
     @Override
     public boolean existsById(ID id) {
-        String jpql = String.format(
-                "SELECT 1 FROM %s e WHERE e.%s = :id",
+        String query = String.format(
+                EXISTS_BY_ID,
                 entityClass.getSimpleName(), idAttributeName
         );
-        Short result = entityManager.createQuery(jpql, Short.class)
+        Integer result = session.createQuery(query, Integer.class)
                 .setParameter("id", id)
-                .getSingleResult();
+                .getSingleResultOrNull();
         return result != null && result == 1;
     }
 
     @Override
     public Iterable<T> findAll() {
         log.debug("findAll() in {}", getClass().getSimpleName());
-        return getEntityManager()
+        return getSession()
                 .createQuery("FROM " + entityClass.getSimpleName(), entityClass)
                 .getResultList();
     }
@@ -83,7 +84,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     @Override
     public long count() {
         log.debug("count() in {}", getClass().getSimpleName());
-        return getEntityManager()
+        return getSession()
                 .createQuery("SELECT COUNT(e) FROM " + entityClass.getSimpleName() + " e", Long.class)
                 .getSingleResult();
     }
@@ -91,13 +92,13 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     @Override
     public void deleteById(ID id) {
         log.debug("deleteById({}) in {}", id, getClass().getSimpleName());
-        findById(id).ifPresent(getEntityManager()::remove);
+        findById(id).ifPresent(getSession()::remove);
     }
 
     @Override
     public void delete(T entity) {
         log.debug("delete({}) in {}", entity, getClass().getSimpleName());
-        getEntityManager().remove(entity);
+        getSession().remove(entity);
     }
 
     @Override
@@ -119,8 +120,8 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     @Override
     public void deleteAll() {
         log.debug("deleteAll() in {}", getClass().getSimpleName());
-        getEntityManager()
-                .createQuery("DELETE FROM " + entityClass.getSimpleName())
+        getSession()
+                .createMutationQuery("DELETE FROM " + entityClass.getSimpleName())
                 .executeUpdate();
     }
 

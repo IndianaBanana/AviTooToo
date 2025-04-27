@@ -1,5 +1,6 @@
 package org.banana.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -45,14 +46,18 @@ public class Comment {
     @ToString.Exclude
     private User commenter;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "root_comment_id")
-    @ToString.Exclude
-    private UUID rootComment; // todo: либо UUID либо сделать тут Comment
+    @Column(name = "root_comment_id")
+//    @ToString.Exclude
+    private UUID rootCommentId; // todo: либо UUID либо сделать тут Comment
+//
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "root_comment_id")
+//    @ToString.Exclude
+//    private Comment rootComment;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment_id")
-    @ToString.Exclude
+//    @ToString.Exclude
     private Comment parentComment;
 
     @NotBlank

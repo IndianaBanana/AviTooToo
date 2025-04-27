@@ -14,7 +14,9 @@ public class CommentRequestDto {
     @NotNull
     private UUID commenterId;
     @NotNull
-    private UUID parentComment;
+    private UUID parentCommentId;
+//    @NotNull
+//    private UUID rootCommentId;
     @NotBlank
     private String commentText;
 }

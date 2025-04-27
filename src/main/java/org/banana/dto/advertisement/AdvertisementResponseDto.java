@@ -1,7 +1,7 @@
 package org.banana.dto.advertisement;
 
 import lombok.Data;
-import org.banana.dto.user.UserResponseDto;
+import org.banana.dto.user.UserDto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,7 +11,7 @@ import java.util.UUID;
 public class AdvertisementResponseDto {
 
     private UUID advertisementId;
-    private UserResponseDto userResponseDto;
+    private UserDto userDto;
     private String cityName;
     private String advertisementType;
     private String title;

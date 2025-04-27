@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.banana.security.UserRole;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -26,7 +27,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "\"user\"")
+//@Table(name = "user")
+@Table(name = "user")
 public class User {
 
     @Id

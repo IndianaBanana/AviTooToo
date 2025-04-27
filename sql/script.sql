@@ -85,6 +85,9 @@ create table if not exists advertisement (
     foreign key (city_id) references city(city_id) on delete cascade,
     foreign key (advertisement_type_id) references advertisement_type(advertisement_type_id) on delete cascade
 );
+create index if not exists index_advertisement_user_id on advertisement(user_id);
+create index if not exists index_advertisement_city_id on advertisement(city_id);
+create index if not exists index_advertisement_advertisement_type_id on advertisement(advertisement_type_id);
 
 --9) История продаж пользователя.
 create table if not exists sale_history (
@@ -112,11 +115,12 @@ create table if not exists comment (
     foreign key (root_comment_id) references comment(comment_id) on delete restrict,
     foreign key (parent_comment_id) references comment(comment_id) on delete restrict
 );
+create index if not exists index_comment_advertisement_id on comment(advertisement_id);
 
 --6) Организация личной переписки покупателя и продавца.
 create table if not exists message (
     message_id uuid primary key default gen_random_uuid(),
-    advertisement_id uuid not null,
+    advertisement_id uuid,
     sender_id uuid not null,
     recipient_id uuid not null,
     message_text text not null,
@@ -150,3 +154,38 @@ values
     ('Хобби и отдых'),
     ('Животные'),
     ('Для бизнеса');
+
+-- Первый базовый комментарий (root)
+insert into comment (comment_id, advertisement_id, commenter_id, comment_text)
+values
+('11111111-1111-1111-1111-111111111111', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Первый комментарий к объявлению');
+
+-- Ответ на первый комментарий (1 уровень вложенности)
+insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
+values
+('22222222-2222-2222-2222-222222222222', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на первый комментарий', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111');
+
+-- Ответ на ответ (2 уровень вложенности)
+insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
+values
+('33333333-3333-3333-3333-333333333333', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на ответ', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222');
+
+-- Второй базовый комментарий (новая ветка)
+insert into comment (comment_id, advertisement_id, commenter_id, comment_text)
+values
+('44444444-4444-4444-4444-444444444444', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Второй корневой комментарий');
+
+-- Ответ к новому корневому комментарию
+insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
+values
+('55555555-5555-5555-5555-555555555555', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на второй корневой комментарий', '44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444');
+
+-- Еще один ответ на корневой комментарий
+insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
+values
+('66666666-6666-6666-6666-666666666666', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Еще один ответ на второй корневой комментарий', '44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444');
+
+-- Ответ на ответ
+insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
+values
+('77777777-7777-7777-7777-777777777777', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на ответ к второму комментарию', '44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555');

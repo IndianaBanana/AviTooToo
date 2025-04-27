@@ -13,10 +13,7 @@
         <property name="hibernate.show_sql">true</property>
         <property name="hibernate.format_sql">true</property>
 
-        <!--        <mapping class="org.banana.entity.Product"/>-->
-        <!--        <mapping class="org.banana.entity.Book"/>-->
-        <!--        <mapping class="org.banana.entity.User"/>-->
-        <!--        <mapping class="org.banana.entity.Order"/>-->
-        <!--        <mapping class="org.banana.entity.Stock"/>-->
+        <mapping package="org.banana.entity"/>
+
     </session-factory>
 </hibernate-configuration>
