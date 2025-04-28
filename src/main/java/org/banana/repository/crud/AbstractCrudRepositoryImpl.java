@@ -19,6 +19,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     public static final String EXISTS_BY_ID = "SELECT 1 FROM %s e WHERE e.%s = :id";
     private final Class<T> entityClass;
+
     @Getter(AccessLevel.PROTECTED)
     @PersistenceContext
     private Session session;

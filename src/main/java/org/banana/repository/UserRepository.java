@@ -1,6 +1,7 @@
 package org.banana.repository;
 
 import org.banana.dto.user.UserResponseDto;
+import org.banana.dto.user.UserUpdateRequestDto;
 import org.banana.entity.User;
 import org.banana.repository.crud.CrudRepository;
 
@@ -17,6 +18,5 @@ public interface UserRepository extends CrudRepository<User, UUID> {
 
     boolean existsByPhone(String phone);
 
-    UserResponseDto updateUser(UserResponseDto userResponseDto);
-
+    UserResponseDto updateUser(UserUpdateRequestDto userRequest);
 }

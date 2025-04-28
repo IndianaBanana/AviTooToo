@@ -19,5 +19,4 @@ public class AdvertisementService {
     public AdvertisementService(AdvertisementRepository advertisementRepository) {
         this.advertisementRepository = advertisementRepository;
     }
-
 }

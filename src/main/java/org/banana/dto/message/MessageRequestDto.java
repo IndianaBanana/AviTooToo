@@ -11,10 +11,13 @@ public class MessageRequestDto {
 
     @NotNull
     private UUID advertisementId;
+
     @NotNull
     private UUID senderId;
+
     @NotNull
     private UUID recipientId;
+
     @NotBlank
     private String messageText;
 }

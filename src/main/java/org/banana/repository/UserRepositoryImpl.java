@@ -2,6 +2,7 @@ package org.banana.repository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.banana.dto.user.UserResponseDto;
+import org.banana.dto.user.UserUpdateRequestDto;
 import org.banana.entity.User;
 import org.banana.repository.crud.AbstractCrudRepositoryImpl;
 import org.springframework.stereotype.Repository;
@@ -62,7 +63,7 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
     }
 
     @Override
-    public UserResponseDto updateUser(UserResponseDto userResponseDto) {
+    public UserResponseDto updateUser(UserUpdateRequestDto userRequest) {
         return null;
     }
 }

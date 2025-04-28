@@ -16,6 +16,7 @@ import java.util.List;
 @Service
 @Slf4j
 public class CommentServiceImpl implements CommentService {
+
     private final CommentRepository commentRepository;
 
     @Autowired

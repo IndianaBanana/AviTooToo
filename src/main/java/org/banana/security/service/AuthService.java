@@ -1,7 +1,7 @@
 package org.banana.security.service;
 
-import org.banana.dto.user.UserLoginRequestDto;
-import org.banana.dto.user.UserRegisterRequestDto;
+import org.banana.security.dto.UserLoginRequestDto;
+import org.banana.security.dto.UserRegisterRequestDto;
 
 public interface AuthService {
 

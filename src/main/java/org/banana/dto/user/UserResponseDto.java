@@ -17,14 +17,19 @@ public class UserResponseDto {
 
     @NotNull
     private UUID userId;
+
     @NotBlank
     private String firstName;
+
     @NotBlank
     private String lastName;
+
     @NotBlank
     private String phone;
+
     @NotBlank
     private String username;
+
     @ToString.Exclude
     @NotNull
     private String password;

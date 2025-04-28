@@ -1,6 +1,5 @@
 package org.banana.entity.rating;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;

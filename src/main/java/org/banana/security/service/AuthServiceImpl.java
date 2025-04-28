@@ -1,24 +1,21 @@
 package org.banana.security.service;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.banana.dto.user.UserLoginRequestDto;
-import org.banana.dto.user.UserRegisterRequestDto;
-import org.banana.dto.user.UserResponseDto;
 import org.banana.dto.user.UserMapper;
 import org.banana.entity.User;
 import org.banana.exception.UserAddingEmailException;
 import org.banana.exception.UserAddingPhoneException;
 import org.banana.repository.UserRepository;
 import org.banana.security.UserRole;
+import org.banana.security.dto.UserLoginRequestDto;
+import org.banana.security.dto.UserRegisterRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 @Slf4j
 @Service

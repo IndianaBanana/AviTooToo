@@ -13,16 +13,22 @@ public class AdvertisementRequestDto {
 
     @NotNull
     private UUID userId;
+
     @NotNull
     private UUID cityId;
+
     @NotNull
     private UUID advertisementTypeId;
+
     @NotBlank
     private String title;
+
     @NotBlank
     private String description;
+
     @Min(0)
     private BigDecimal price;
+
     @Min(0)
     private int quantity;
 }

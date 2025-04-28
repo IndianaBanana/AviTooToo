@@ -1,12 +1,10 @@
 package org.banana.entity;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -44,7 +42,7 @@ public class Comment {
     @ToString.Exclude
     private User commenter;
 
-//    @Column(name = "root_comment_id")
+    //    @Column(name = "root_comment_id")
 //    @ToString.Exclude
     private UUID rootCommentId; // todo: либо UUID либо сделать тут Comment
 //
@@ -53,7 +51,7 @@ public class Comment {
 //    @ToString.Exclude
 //    private Comment rootComment;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
+    //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "parent_comment_id")
 //    @ToString.Exclude
     private UUID parentCommentId;

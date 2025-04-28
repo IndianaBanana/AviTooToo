@@ -1,4 +1,4 @@
-package org.banana.dto.user;
+package org.banana.security.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -13,6 +13,7 @@ public class UserLoginRequestDto {
 
     @NotBlank
     private String username;
+
     @NotBlank
     private String password;
 }

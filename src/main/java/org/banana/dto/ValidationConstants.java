@@ -3,7 +3,8 @@ package org.banana.dto;
 /**
  * Created by Banana on 27.04.2025
  */
-public  class ValidationConstants {
+public class ValidationConstants {
+
     public static final int PASSWORD_REGISTRATION_MIN_LENGTH = 4;
     /**
      * OWASP Email Validation Regular Expression

@@ -1,10 +1,5 @@
 package org.banana;
 
-import org.banana.dto.user.UserLoginRequestDto;
-import org.banana.dto.user.UserRegisterRequestDto;
-import org.banana.security.service.AuthService;
-import org.banana.service.CommentService;
-import org.banana.service.CommentServiceImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -28,5 +23,4 @@ public class Application {
 //                "user3"
 //        )));
     }
-
 }

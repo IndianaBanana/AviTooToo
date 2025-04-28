@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class RatingService {
+
     private final RatingRepository ratingRepository;
 
     @Autowired

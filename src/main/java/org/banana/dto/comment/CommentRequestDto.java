@@ -11,11 +11,13 @@ public class CommentRequestDto {
 
     @NotNull
     private UUID advertisementId;
+
     @NotNull
     private UUID commenterId;
+
     @NotNull
     private UUID parentCommentId;
-//    @NotNull
+    //    @NotNull
 //    private UUID rootCommentId;
     @NotBlank
     private String commentText;
