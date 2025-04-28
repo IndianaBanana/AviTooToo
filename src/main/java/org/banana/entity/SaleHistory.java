@@ -26,7 +26,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "sale_history")
+//@Table(name = "sale_history")
 public class SaleHistory {
 
     @Id

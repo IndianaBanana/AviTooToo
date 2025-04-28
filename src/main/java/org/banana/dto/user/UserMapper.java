@@ -14,7 +14,9 @@ public interface UserMapper {
 
     UserMapper INSTANCE = getMapper(UserMapper.class);
 
-    UserDto userToUserDto(User user);
+    UserResponseDto userToUserDto(User user);
     @Mapping(target = "userId", ignore = true)
-    User userDtoToUser(UserDto userDto);
+    User userDtoToUser(UserResponseDto userResponseDto);
+
+    User userRegisterRequestDtoToUser(UserRegisterRequestDto userRegisterRequestDto);
 }

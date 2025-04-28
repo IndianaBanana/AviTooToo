@@ -1,11 +1,12 @@
 package org.banana.security.service;
 
-import org.banana.dto.user.UserDto;
+import org.banana.dto.user.UserLoginRequestDto;
+import org.banana.dto.user.UserRegisterRequestDto;
 
 public interface AuthService {
 
-    UserDto register(UserDto userDto);
+    String register(UserRegisterRequestDto requestDto);
 
 
-    String verify(UserDto user);
+    String verify(UserLoginRequestDto requestDto);
 }

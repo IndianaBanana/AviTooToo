@@ -1,5 +1,6 @@
 package org.banana.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,10 +14,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.banana.dto.ValidationConstants;
 import org.banana.security.UserRole;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -28,30 +31,26 @@ import java.util.UUID;
 @ToString
 @Entity
 //@Table(name = "user")
-@Table(name = "user")
+//@Table(name = "user")
 public class User {
 
     @Id
     @UuidGenerator
     private UUID userId;
-
     @NotBlank
     private String firstName;
-
     @NotBlank
     private String lastName;
-
     @NotBlank
+    @Column(unique = true)
     private String phone;
-
     @NotBlank
-    @Email
+    @Email(regexp = ValidationConstants.EMAIL_REGEX)
+    @Column(unique = true)
     private String username;
-
     @NotBlank
     @ToString.Exclude
     private String password;
-
     @NotNull
     @Enumerated(value = EnumType.STRING)
     private UserRole role;

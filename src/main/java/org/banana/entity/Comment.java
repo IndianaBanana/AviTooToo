@@ -27,7 +27,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "comment")
+//@Table(name = "comment")
 public class Comment {
 
     @Id
@@ -35,10 +35,8 @@ public class Comment {
     private UUID commentId;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "advertisement_id")
     @ToString.Exclude
-    private Advertisement advertisement;
+    private UUID advertisementId;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -46,7 +44,7 @@ public class Comment {
     @ToString.Exclude
     private User commenter;
 
-    @Column(name = "root_comment_id")
+//    @Column(name = "root_comment_id")
 //    @ToString.Exclude
     private UUID rootCommentId; // todo: либо UUID либо сделать тут Comment
 //
@@ -55,10 +53,10 @@ public class Comment {
 //    @ToString.Exclude
 //    private Comment rootComment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_comment_id")
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "parent_comment_id")
 //    @ToString.Exclude
-    private Comment parentComment;
+    private UUID parentCommentId;
 
     @NotBlank
     private String commentText;

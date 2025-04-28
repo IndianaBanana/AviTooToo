@@ -1,8 +1,11 @@
 package org.banana.security.service;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.banana.dto.user.UserDto;
+import org.banana.dto.user.UserLoginRequestDto;
+import org.banana.dto.user.UserRegisterRequestDto;
+import org.banana.dto.user.UserResponseDto;
 import org.banana.dto.user.UserMapper;
 import org.banana.entity.User;
 import org.banana.exception.UserAddingEmailException;
@@ -15,8 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
+import org.springframework.validation.annotation.Validated;
 
 @Slf4j
 @Service
@@ -37,30 +39,29 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
-    public UserDto register(UserDto userDto) {
+    @Transactional // todo поменять чтобы возвращал токен (возможно надо как то доработать JwtService)
+    public String register(UserRegisterRequestDto requestDto) {
         log.debug("entering register method in {}", this.getClass().getSimpleName());
-        if (userRepository.existsByUsername(userDto.getUsername())) {
-            throw new UserAddingEmailException(userDto.getUsername());
+        if (userRepository.existsByUsername(requestDto.getUsername())) {
+            throw new UserAddingEmailException(requestDto.getUsername());
         }
-        if (userRepository.existsByPhone(userDto.getPhone())) {
-            throw new UserAddingPhoneException(userDto.getPhone());
+        if (userRepository.existsByPhone(requestDto.getPhone())) {
+            throw new UserAddingPhoneException(requestDto.getPhone());
         }
-        String password = passwordEncoder.encode(userDto.getPassword());
-        userDto.setRole(UserRole.ROLE_USER);
-        User user = UserMapper.INSTANCE.userDtoToUser(userDto);
+        String password = passwordEncoder.encode(requestDto.getPassword());
+        User user = UserMapper.INSTANCE.userRegisterRequestDtoToUser(requestDto);
         user.setPassword(password);
-        userDto.setUserId(userRepository.save(user).getUserId());
-        userDto.setPassword(null);
-        return userDto;
+        user.setRole(UserRole.ROLE_USER);
+        userRepository.save(user);
+        return jwtService.generateToken(requestDto.getUsername());
     }
 
     @Override
-    public String verify(UserDto userDto) {
+    public String verify(UserLoginRequestDto requestDto) {
         Authentication authentication = authManager
-                .authenticate(new UsernamePasswordAuthenticationToken(userDto.getUsername(), userDto.getPassword()));
+                .authenticate(new UsernamePasswordAuthenticationToken(requestDto.getUsername(), requestDto.getPassword()));
         if (authentication != null && authentication.isAuthenticated()) {
-            return jwtService.generateToken(userDto.getUsername());
+            return jwtService.generateToken(requestDto.getUsername());
         } else {
             return "failed to verify user";
         }

@@ -1,7 +1,7 @@
 package org.banana.dto.comment;
 
 import lombok.Data;
-import org.banana.dto.user.UserDto;
+import org.banana.dto.user.UserResponseDto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,7 +11,7 @@ public class CommentResponseDto {
 
     private UUID commentId;
     private UUID advertisementId;
-    private UserDto commenter;
+    private UserResponseDto commenter;
     private UUID rootCommentId;
     private CommentResponseDto childComment;
     private String commentText;

@@ -1,9 +1,9 @@
 package org.banana.repository;
 
 import lombok.extern.slf4j.Slf4j;
+import org.banana.dto.user.UserResponseDto;
 import org.banana.entity.User;
 import org.banana.repository.crud.AbstractCrudRepositoryImpl;
-import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -59,5 +59,10 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
                 .setParameter("phone", phone)
                 .getSingleResultOrNull();
         return result != null && result == 1;
+    }
+
+    @Override
+    public UserResponseDto updateUser(UserResponseDto userResponseDto) {
+        return null;
     }
 }

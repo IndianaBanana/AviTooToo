@@ -29,7 +29,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "advertisement")
+//@Table(name = "advertisement")
 public class Advertisement {
 
     @Id

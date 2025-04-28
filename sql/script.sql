@@ -104,7 +104,7 @@ create table if not exists sale_history (
 create table if not exists comment (
     comment_id uuid primary key default gen_random_uuid(),
     advertisement_id uuid not null, -- the advertisement to which the comment is attached
-    commenter_id uuid not null, -- the user who wrote the comment
+    commenter_id uuid, -- the user who wrote the comment
     root_comment_id uuid, -- useful for selecting nested comments (less selections)
     parent_comment_id uuid, -- the comment to which the comment is attached
     comment_text text not null,
@@ -189,3 +189,4 @@ values
 insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
 values
 ('77777777-7777-7777-7777-777777777777', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на ответ к второму комментарию', '44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555');
+

@@ -17,12 +17,11 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
+    public static final long VALID_PERIOD = 86_400_000; // 1 day
+    private final String secretkey;
 
-    public static final long VALID_PERIOD = 1000 * 60 * 60 * 30;
-    @Value("${jwt.secret}")
-    private String secretkey;
-
-    public JwtService() {
+    public JwtService(@Value("${jwt.secret}") String secretkey) {
+        this.secretkey = secretkey;
     }
 
     public String generateToken(String username) {

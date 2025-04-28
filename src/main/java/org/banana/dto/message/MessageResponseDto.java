@@ -1,7 +1,7 @@
 package org.banana.dto.message;
 
 import lombok.Data;
-import org.banana.dto.user.UserDto;
+import org.banana.dto.user.UserResponseDto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,8 +11,8 @@ public class MessageResponseDto {
 
     private UUID messageId;
     private UUID advertisementId;
-    private UserDto senderId;
-    private UserDto recipientId;
+    private UserResponseDto senderId;
+    private UserResponseDto recipientId;
     private String messageText;
     private LocalDateTime messageDate;
     private boolean isRead;
