@@ -33,7 +33,7 @@ public class Message {
     private UUID messageId;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "advertisement_id")
     @ToString.Exclude
     private Advertisement advertisement;
@@ -48,7 +48,7 @@ public class Message {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "recipient_id")
     @ToString.Exclude
-    private User recipient; // fixme а не нарушает ли это 3нф?
+    private User recipient;
 
     @NotBlank
     private String messageText;

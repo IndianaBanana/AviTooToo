@@ -61,9 +61,4 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
                 .getSingleResultOrNull();
         return result != null && result == 1;
     }
-
-    @Override
-    public UserResponseDto updateUser(UserUpdateRequestDto userRequest) {
-        return null;
-    }
 }

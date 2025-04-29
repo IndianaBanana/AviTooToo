@@ -10,8 +10,16 @@ import java.util.UUID;
 @Repository
 public class CommentRepositoryImpl extends AbstractCrudRepositoryImpl<Comment, UUID> implements CommentRepository {
 
-    private static final String FIND_BY_ROOT_COMMENT_ID_IS_NULL = "select c from Comment c where c.rootCommentId is null";
-    private static final String FIND_ALL_COMMENTS_IN_ROOT_IDS = "select c from Comment c where c.rootCommentId in :rootCommentIds";
+    private static final String FIND_BY_ROOT_COMMENT_ID_IS_NULL = """
+            select c
+            from Comment c
+            join fetch c.commenter
+            where c.rootCommentId is null""";
+    private static final String FIND_ALL_COMMENTS_IN_ROOT_IDS = """
+            select c
+            from Comment c
+            join fetch c.commenter
+            where c.rootCommentId in :rootCommentIds""";
 
 
     public CommentRepositoryImpl() {

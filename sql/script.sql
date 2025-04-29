@@ -155,6 +155,19 @@ values
     ('Животные'),
     ('Для бизнеса');
 
+insert into "user" values (
+    '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb',
+    'user',
+    'user',
+    'user',
+    'user@user.user',
+    '$2a$16$Lwlwmx99XjWJ6on3Iqz8GuM2EDsl3SqTsBJ18ky/6vHMpYKPZnNiO',
+    'ROLE_USER'
+);
+
+insert into advertisement
+values
+    ('218c00e2-01d3-40b6-99d2-1e54986e26e3','4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', (select city_id from city where name = 'Орел'), (select advertisement_type_id from advertisement_type where name = 'Личные вещи'), 'title', 'description', 1000, '1');
 -- Первый базовый комментарий (root)
 insert into comment (comment_id, advertisement_id, commenter_id, comment_text)
 values

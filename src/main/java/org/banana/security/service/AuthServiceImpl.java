@@ -7,6 +7,7 @@ import org.banana.entity.User;
 import org.banana.exception.UserAddingEmailException;
 import org.banana.exception.UserAddingPhoneException;
 import org.banana.repository.UserRepository;
+import org.banana.security.UserPrincipal;
 import org.banana.security.UserRole;
 import org.banana.security.dto.UserLoginRequestDto;
 import org.banana.security.dto.UserRegisterRequestDto;
@@ -50,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(password);
         user.setRole(UserRole.ROLE_USER);
         userRepository.save(user);
-        return jwtService.generateToken(requestDto.getUsername());
+        return jwtService.generateToken(user);
     }
 
     @Override
@@ -58,7 +59,8 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = authManager
                 .authenticate(new UsernamePasswordAuthenticationToken(requestDto.getUsername(), requestDto.getPassword()));
         if (authentication != null && authentication.isAuthenticated()) {
-            return jwtService.generateToken(requestDto.getUsername());
+            UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+            return jwtService.generateToken(principal.getUser());
         } else {
             return "failed to verify user";
         }

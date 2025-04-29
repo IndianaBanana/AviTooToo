@@ -17,6 +17,4 @@ public interface UserRepository extends CrudRepository<User, UUID> {
     boolean existsByUsername(String username);
 
     boolean existsByPhone(String phone);
-
-    UserResponseDto updateUser(UserUpdateRequestDto userRequest);
 }

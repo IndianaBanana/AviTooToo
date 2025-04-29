@@ -1,26 +1,32 @@
 package org.banana;
 
+import org.banana.security.dto.UserLoginRequestDto;
+import org.banana.security.dto.UserRegisterRequestDto;
+import org.banana.security.service.AuthService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class Application {
 
     public static void main(String[] args) {
         ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
-//        AuthService bean = run.getBean(AuthService.class);
+        AuthService bean = run.getBean(AuthService.class);
 //        bean.register(new UserRegisterRequestDto(
-//                "user4",
-//                "user4",
-//                "user4",
-//                "user4@user4.user",
-//                "user4",
-//                "user4"
+//                "user",
+//                "user",
+//                "user",
+//                "user@user.user",
+//                "user",
+//                "user"
 //        ));
-//        System.out.println(bean.verify(new UserLoginRequestDto(
-//                "user3@user3.user",
-//                "user3"
-//        )));
+//        PasswordEncoder bean1 = run.getBean(PasswordEncoder.class);
+//        System.out.println(bean1.encode("user"));
+        System.out.println(bean.verify(new UserLoginRequestDto(
+                "user@user.user",
+                "user"
+        )));
     }
 }
