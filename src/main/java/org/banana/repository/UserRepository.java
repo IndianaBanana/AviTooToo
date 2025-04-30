@@ -1,7 +1,5 @@
 package org.banana.repository;
 
-import org.banana.dto.user.UserResponseDto;
-import org.banana.dto.user.UserUpdateRequestDto;
 import org.banana.entity.User;
 import org.banana.repository.crud.CrudRepository;
 

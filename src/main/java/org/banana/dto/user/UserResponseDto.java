@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.banana.security.UserRole;
 
 import java.util.UUID;
 
@@ -30,8 +28,8 @@ public class UserResponseDto {
     @NotBlank
     private String username;
 
-    @ToString.Exclude
-    @NotNull
-    private String password;
-    private UserRole role;
+//    @ToString.Exclude
+//    @NotNull
+//    private String password;
+//    private UserRole role;
 }

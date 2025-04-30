@@ -1,5 +1,6 @@
 package org.banana.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.banana.repository.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,12 +11,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class MessageService {
 
     private final MessageRepository messageRepository;
 
-    @Autowired
-    public MessageService(MessageRepository messageRepository) {
-        this.messageRepository = messageRepository;
-    }
 }

@@ -2,15 +2,18 @@ package org.banana.security.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.banana.security.dto.validation.PasswordOnRegisterMatches;
+import org.banana.security.dto.validation.PasswordOnRegisterValidation;
 
 import static org.banana.dto.ValidationConstants.EMAIL_REGEX;
-import static org.banana.dto.ValidationConstants.PASSWORD_REGISTRATION_MIN_LENGTH;
+import static org.banana.dto.ValidationConstants.PASSWORD_MIN_LENGTH;
+import static org.banana.dto.ValidationConstants.PHONE_ERROR_MESSAGE;
+import static org.banana.dto.ValidationConstants.PHONE_REGEX;
 
 /**
  * Created by Banana on 27.04.2025
@@ -18,7 +21,7 @@ import static org.banana.dto.ValidationConstants.PASSWORD_REGISTRATION_MIN_LENGT
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@PasswordOnRegisterMatches(message = "Passwords do not match")
+@PasswordOnRegisterValidation
 public class UserRegisterRequestDto {
 
     @NotBlank
@@ -28,6 +31,7 @@ public class UserRegisterRequestDto {
     private String lastName;
 
     @NotBlank
+    @Pattern(regexp = PHONE_REGEX, message = PHONE_ERROR_MESSAGE)
     private String phone;
 
     @NotBlank
@@ -35,12 +39,12 @@ public class UserRegisterRequestDto {
     private String username;
 
     @NotBlank
-    @Size(min = PASSWORD_REGISTRATION_MIN_LENGTH)
+    @Size(min = PASSWORD_MIN_LENGTH)
     @ToString.Exclude
     private String password;
 
     @NotBlank
-    @Size(min = PASSWORD_REGISTRATION_MIN_LENGTH)
+    @Size(min = PASSWORD_MIN_LENGTH)
     @ToString.Exclude
     private String matchingPassword;
 }

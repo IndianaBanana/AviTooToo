@@ -13,9 +13,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({TYPE, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@Constraint(validatedBy = PasswordOnRegisterMatchesValidator.class)
+@Constraint(validatedBy = PasswordChangeValidator.class)
 @Documented
-public @interface PasswordOnRegisterMatches {
+public @interface PasswordChangeValidation {
 
     String message() default "";
 

@@ -1,5 +1,6 @@
 package org.banana.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.banana.entity.Comment;
 import org.banana.repository.CommentRepository;
@@ -15,14 +16,10 @@ import java.util.List;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-
-    @Autowired
-    public CommentServiceImpl(CommentRepository commentRepository) {
-        this.commentRepository = commentRepository;
-    }
 
     @Transactional
     @Override

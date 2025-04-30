@@ -1,19 +1,17 @@
 package org.banana;
 
 import org.banana.security.dto.UserLoginRequestDto;
-import org.banana.security.dto.UserRegisterRequestDto;
-import org.banana.security.service.AuthService;
+import org.banana.security.service.UserService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class Application {
 
     public static void main(String[] args) {
         ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
-        AuthService bean = run.getBean(AuthService.class);
+        UserService bean = run.getBean(UserService.class);
 //        bean.register(new UserRegisterRequestDto(
 //                "user",
 //                "user",

@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.banana.security.dto.UserRegisterRequestDto;
 
 
-public class PasswordOnRegisterMatchesValidator implements ConstraintValidator<PasswordOnRegisterMatches, UserRegisterRequestDto> {
+public class PasswordOnRegisterValidator implements ConstraintValidator<PasswordOnRegisterValidation, UserRegisterRequestDto> {
 
     @Override
     public boolean isValid(final UserRegisterRequestDto user, final ConstraintValidatorContext context) {

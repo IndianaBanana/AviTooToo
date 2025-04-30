@@ -1,5 +1,6 @@
 package org.banana.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.banana.repository.SaleHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,12 +11,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class SaleHistoryService {
 
     private final SaleHistoryRepository saleHistoryRepository;
 
-    @Autowired
-    public SaleHistoryService(SaleHistoryRepository saleHistoryRepository) {
-        this.saleHistoryRepository = saleHistoryRepository;
-    }
 }

@@ -3,7 +3,6 @@ package org.banana.dto.user;
 import org.banana.entity.User;
 import org.banana.security.dto.UserRegisterRequestDto;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 import static org.mapstruct.factory.Mappers.getMapper;
 
@@ -17,8 +16,9 @@ public interface UserMapper {
 
     UserResponseDto userToUserDto(User user);
 
-    @Mapping(target = "userId", ignore = true)
-    User userDtoToUser(UserResponseDto userResponseDto);
+    User userResponseDtoToUser(UserResponseDto userResponseDto);
+
+    UserResponseDto userToUserResponseDto(User user);
 
     User userRegisterRequestDtoToUser(UserRegisterRequestDto userRegisterRequestDto);
 }

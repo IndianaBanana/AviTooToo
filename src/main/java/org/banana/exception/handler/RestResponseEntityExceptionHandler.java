@@ -1,8 +1,8 @@
 package org.banana.exception.handler;
 
-import org.banana.exception.UserAddingEmailException;
-import org.banana.exception.UserAddingPhoneException;
 import org.banana.exception.UserNotFoundException;
+import org.banana.security.exception.UserPhoneAlreadyExistsException;
+import org.banana.security.exception.UserUsernameAlreadyExistsException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return buildErrorResponse(ex, request, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({UserAddingEmailException.class, UserAddingPhoneException.class})
+    @ExceptionHandler({UserUsernameAlreadyExistsException.class, UserPhoneAlreadyExistsException.class})
     protected ResponseEntity<Object> handleConflictDataException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.CONFLICT);
     }

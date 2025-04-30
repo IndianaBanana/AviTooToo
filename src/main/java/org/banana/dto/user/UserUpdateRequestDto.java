@@ -1,9 +1,7 @@
 package org.banana.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.ToString;
 
 /**
  * Created by Banana on 27.04.2025

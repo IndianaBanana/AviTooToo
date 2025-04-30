@@ -1,5 +1,6 @@
 package org.banana.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.banana.repository.AdvertisementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +12,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AdvertisementService {
 
     private final AdvertisementRepository advertisementRepository;
 
-    @Autowired
-    public AdvertisementService(AdvertisementRepository advertisementRepository) {
-        this.advertisementRepository = advertisementRepository;
-    }
 }

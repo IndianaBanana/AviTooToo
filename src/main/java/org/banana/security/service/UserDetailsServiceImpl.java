@@ -1,5 +1,6 @@
 package org.banana.security.service;
 
+import lombok.RequiredArgsConstructor;
 import org.banana.entity.User;
 import org.banana.repository.UserRepository;
 import org.banana.security.UserPrincipal;
@@ -10,15 +11,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
-
-    @Autowired
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

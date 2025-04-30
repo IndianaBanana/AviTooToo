@@ -1,8 +1,6 @@
 package org.banana.repository;
 
 import lombok.extern.slf4j.Slf4j;
-import org.banana.dto.user.UserResponseDto;
-import org.banana.dto.user.UserUpdateRequestDto;
 import org.banana.entity.User;
 import org.banana.repository.crud.AbstractCrudRepositoryImpl;
 import org.springframework.stereotype.Repository;
