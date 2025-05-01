@@ -2,6 +2,7 @@ package org.banana.controller;
 
 import org.banana.dto.user.UserResponseDto;
 import org.banana.dto.user.UserUpdateRequestDto;
+import org.banana.security.dto.UserLoginRequestDto;
 import org.banana.security.dto.UserPasswordUpdateRequestDto;
 import org.banana.security.dto.UserPhoneUpdateRequestDto;
 import org.banana.security.dto.UserUsernameUpdateRequestDto;
@@ -21,4 +22,5 @@ public interface UserController {
 
     String updateUsername(UserUsernameUpdateRequestDto requestDto);
 
+    void deleteUser(UserLoginRequestDto requestDto);
 }

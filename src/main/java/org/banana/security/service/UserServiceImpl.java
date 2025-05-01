@@ -18,7 +18,6 @@ import org.banana.security.dto.UserUsernameUpdateRequestDto;
 import org.banana.security.exception.UserPhoneAlreadyExistsException;
 import org.banana.security.exception.UserUpdateOldEqualsNewDataException;
 import org.banana.security.exception.UserUsernameAlreadyExistsException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -73,6 +72,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponseDto getCurrentUser() {
+        return UserMapper.INSTANCE.userToUserResponseDto(getUserPrincipal().getUser());
+    }
+
+    @Override
     @Transactional
     public UserResponseDto updateUser(UserUpdateRequestDto userUpdateRequestDto) {
         UserPrincipal principal = getUserPrincipal();
@@ -82,7 +86,7 @@ public class UserServiceImpl implements UserService {
             throw new UserUpdateOldEqualsNewDataException(SAME_FIRST_NAME_AND_LAST_NAME);
         user.setFirstName(userUpdateRequestDto.getFirstName());
         user.setLastName(userUpdateRequestDto.getLastName());
-        userRepository.save(user);
+        user = userRepository.save(user);
         return UserMapper.INSTANCE.userToUserResponseDto(user);
     }
 
@@ -92,7 +96,7 @@ public class UserServiceImpl implements UserService {
         User user = getUserPrincipal().getUser();
         verify(new UserLoginRequestDto(user.getUsername(), requestDto.getOldPassword()));
         user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
-        userRepository.save(user);
+        user = userRepository.save(user);
         return jwtService.generateToken(user);
     }
 
@@ -100,16 +104,16 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String updateUsername(UserUsernameUpdateRequestDto requestDto) {
         User user = getUserPrincipal().getUser();
-        verify(new UserLoginRequestDto(user.getUsername(), requestDto.getPassword()));
-
         if (user.getUsername().equals(requestDto.getNewUsername()))
             throw new UserUpdateOldEqualsNewDataException(SAME_USERNAME);
+
+        verify(new UserLoginRequestDto(user.getUsername(), requestDto.getPassword()));
 
         if (userRepository.existsByUsername(requestDto.getNewUsername()))
             throw new UserUsernameAlreadyExistsException(requestDto.getNewUsername());
 
         user.setUsername(requestDto.getNewUsername());
-        userRepository.save(user);
+        user = userRepository.save(user);
         return jwtService.generateToken(user);
     }
 
@@ -117,23 +121,28 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String updatePhone(UserPhoneUpdateRequestDto requestDto) {
         User user = getUserPrincipal().getUser();
-        verify(new UserLoginRequestDto(user.getUsername(), requestDto.getPassword()));
         if (user.getPhone().equals(requestDto.getNewPhone()))
             throw new UserUpdateOldEqualsNewDataException(SAME_PHONE);
+
+        verify(new UserLoginRequestDto(user.getUsername(), requestDto.getPassword()));
 
         if (userRepository.existsByPhone(requestDto.getNewPhone())) {
             throw new UserPhoneAlreadyExistsException(requestDto.getNewPhone());
         }
         user.setPhone(requestDto.getNewPhone());
-        userRepository.save(user);
+        user = userRepository.save(user);
         return jwtService.generateToken(user);
     }
 
     @Override
     public void deleteUser(UserLoginRequestDto requestDto) {
-        User user = getUserPrincipal().getUser();
+        User currentUser = getUserPrincipal().getUser();
+
+        if (!currentUser.getUsername().equals(requestDto.getUsername()))
+            throw new BadCredentialsException("Bad credentials");
+
         verify(requestDto);
-        userRepository.delete(user);
+        userRepository.delete(currentUser);
     }
 
     private UserPrincipal getUserPrincipal() {

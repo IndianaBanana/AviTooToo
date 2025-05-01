@@ -10,7 +10,7 @@ public class UserUpdateOldEqualsNewDataException extends RuntimeException {
     private static final String MESSAGE = "New %s should be different from the old %s";
 
     public UserUpdateOldEqualsNewDataException(UserUpdateExceptionMessage type) {
-        super(MESSAGE.formatted(type.getName(), type.getName()));
+        super(MESSAGE.formatted(type.getDescription(), type.getDescription()));
     }
 
     public enum UserUpdateExceptionMessage {
@@ -19,10 +19,10 @@ public class UserUpdateOldEqualsNewDataException extends RuntimeException {
         SAME_FIRST_NAME_AND_LAST_NAME("first name and last name");
 
         @Getter
-        private final String name;
+        private final String description;
 
-        UserUpdateExceptionMessage(String name) {
-            this.name = name;
+        UserUpdateExceptionMessage(String description) {
+            this.description = description;
         }
     }
 }

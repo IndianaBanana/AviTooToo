@@ -1,5 +1,6 @@
 package org.banana.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.banana.security.dto.UserLoginRequestDto;
 import org.banana.security.dto.UserRegisterRequestDto;
@@ -21,13 +22,13 @@ public class AuthControllerImpl implements AuthController {
 
     @Override
     @PostMapping("/login")
-    public String login(@RequestBody UserLoginRequestDto requestDto) {
+    public String login(@RequestBody @Valid UserLoginRequestDto requestDto) {
         return userService.verify(requestDto);
     }
 
     @Override
     @PostMapping("/register")
-    public String register(UserRegisterRequestDto requestDto) {
+    public String register(@RequestBody @Valid UserRegisterRequestDto requestDto) {
         return userService.register(requestDto);
     }
 }

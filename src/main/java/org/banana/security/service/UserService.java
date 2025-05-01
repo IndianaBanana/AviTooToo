@@ -14,6 +14,8 @@ public interface UserService {
 
     String verify(UserLoginRequestDto requestDto);
 
+    UserResponseDto getCurrentUser();
+
     UserResponseDto updateUser(UserUpdateRequestDto userUpdateRequestDto);
 
     String updatePassword(UserPasswordUpdateRequestDto requestDto);

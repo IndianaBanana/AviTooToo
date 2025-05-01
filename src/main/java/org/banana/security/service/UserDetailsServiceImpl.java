@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.banana.entity.User;
 import org.banana.repository.UserRepository;
 import org.banana.security.UserPrincipal;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
