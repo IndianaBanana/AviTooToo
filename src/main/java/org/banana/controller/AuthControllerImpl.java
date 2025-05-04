@@ -5,16 +5,19 @@ import lombok.RequiredArgsConstructor;
 import org.banana.security.dto.UserLoginRequestDto;
 import org.banana.security.dto.UserRegisterRequestDto;
 import org.banana.security.service.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
+
 /**
  * Created by Banana on 30.04.2025
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthControllerImpl implements AuthController {
 
@@ -22,13 +25,18 @@ public class AuthControllerImpl implements AuthController {
 
     @Override
     @PostMapping("/login")
-    public String login(@RequestBody @Valid UserLoginRequestDto requestDto) {
-        return userService.verify(requestDto);
+    public ResponseEntity<String> login(@RequestBody @Valid UserLoginRequestDto requestDto) {
+        String jwt = userService.verify(requestDto);
+        return ResponseEntity.ok(jwt);
     }
 
     @Override
     @PostMapping("/register")
-    public String register(@RequestBody @Valid UserRegisterRequestDto requestDto) {
-        return userService.register(requestDto);
+    public ResponseEntity<String> register(@RequestBody @Valid UserRegisterRequestDto requestDto) {
+        String jwt = userService.register(requestDto);
+        return ResponseEntity
+                .created(URI.create("/api/v1/user"))
+                .body(jwt);
     }
 }
+

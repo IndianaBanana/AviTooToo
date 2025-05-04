@@ -39,7 +39,7 @@ create table if not exists rating (
 -- будем обновлять данные о рейтинге ВСЕХ продавцов периодически (например, раз в 15 минут или реже)
 -- пользователю поставившему оценку надо обязательно вернуть в ответ что его оценка учтена
 -- и рейтинг будет пересчитан в течении какого-то времени.
-create materialized view if not exists user_rating as
+create materialized view if not exists user_rating_view as
     select
         user_id,
         avg(rating_value) as average_rating,
@@ -48,13 +48,13 @@ create materialized view if not exists user_rating as
     group by user_id
 with data;
 create unique index if not exists index_user_rating_user_id -- заместо первичного ключа
-on user_rating(user_id);
+on user_rating_view(user_id);
 --для точности понимания на диаграммах
-comment on materialized view user_rating is 'materialized view';
-comment on column user_rating.user_id is 'grouped by. has index';
-comment on column user_rating.average_rating is 'avg(rating.rating_value)';
-comment on column user_rating.rating_count is 'count(rating.*)';
---refresh materialized view user_rating; -- для обновления view
+comment on materialized view user_rating_view is 'materialized view';
+comment on column user_rating_view.user_id is 'grouped by. has index';
+comment on column user_rating_view.average_rating is 'avg(rating.rating_value)';
+comment on column user_rating_view.rating_count is 'count(rating.*)';
+--refresh materialized view concurrently user_rating_view; -- для обновления view
 
 create table if not exists city (
     city_id uuid primary key default gen_random_uuid(),
@@ -154,52 +154,4 @@ values
     ('Хобби и отдых'),
     ('Животные'),
     ('Для бизнеса');
-
-insert into "user" values (
-    '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb',
-    'user',
-    'user',
-    'user',
-    'user@user.user',
-    '$2a$16$Lwlwmx99XjWJ6on3Iqz8GuM2EDsl3SqTsBJ18ky/6vHMpYKPZnNiO',
-    'ROLE_USER'
-);
-
-insert into advertisement
-values
-    ('218c00e2-01d3-40b6-99d2-1e54986e26e3','4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', (select city_id from city where name = 'Орел'), (select advertisement_type_id from advertisement_type where name = 'Личные вещи'), 'title', 'description', 1000, '1');
--- Первый базовый комментарий (root)
-insert into comment (comment_id, advertisement_id, commenter_id, comment_text)
-values
-('11111111-1111-1111-1111-111111111111', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Первый комментарий к объявлению');
-
--- Ответ на первый комментарий (1 уровень вложенности)
-insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
-values
-('22222222-2222-2222-2222-222222222222', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на первый комментарий', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111');
-
--- Ответ на ответ (2 уровень вложенности)
-insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
-values
-('33333333-3333-3333-3333-333333333333', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на ответ', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222');
-
--- Второй базовый комментарий (новая ветка)
-insert into comment (comment_id, advertisement_id, commenter_id, comment_text)
-values
-('44444444-4444-4444-4444-444444444444', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Второй корневой комментарий');
-
--- Ответ к новому корневому комментарию
-insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
-values
-('55555555-5555-5555-5555-555555555555', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на второй корневой комментарий', '44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444');
-
--- Еще один ответ на корневой комментарий
-insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
-values
-('66666666-6666-6666-6666-666666666666', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Еще один ответ на второй корневой комментарий', '44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444');
-
--- Ответ на ответ
-insert into comment (comment_id, advertisement_id, commenter_id, comment_text, root_comment_id, parent_comment_id)
-values
-('77777777-7777-7777-7777-777777777777', '218c00e2-01d3-40b6-99d2-1e54986e26e3', '4807b4ba-fd3c-4e48-b3b6-70a5905b37eb', 'Ответ на ответ к второму комментарию', '44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555');
 

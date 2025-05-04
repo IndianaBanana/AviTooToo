@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.banana.security.dto.validation.PasswordChangeValidation;
 
+import static org.banana.dto.ValidationConstants.PASSWORD_MAX_LENGTH;
 import static org.banana.dto.ValidationConstants.PASSWORD_MIN_LENGTH;
 
 /**
@@ -20,10 +21,10 @@ public class UserPasswordUpdateRequestDto {
     private String oldPassword;
 
     @NotBlank
-    @Size(min = PASSWORD_MIN_LENGTH)
+    @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     private String newPassword;
 
     @NotBlank
-    @Size(min = PASSWORD_MIN_LENGTH)
+    @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     private String matchingNewPassword;
 }

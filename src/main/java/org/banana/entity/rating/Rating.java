@@ -13,6 +13,7 @@ import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -40,6 +41,11 @@ public class Rating {
 //    @JoinColumn(name = "rater_id", insertable = false, updatable = false)
 //    @ToString.Exclude
 //    private User rater;
+
+    public Rating(UUID userId, UUID raterId, short ratingValue) {
+        this.id = new RatingId(userId, raterId);
+        this.ratingValue = ratingValue;
+    }
 
     @Override
     public final boolean equals(Object o) {

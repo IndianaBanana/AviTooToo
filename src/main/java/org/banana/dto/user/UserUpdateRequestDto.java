@@ -16,10 +16,4 @@ public class UserUpdateRequestDto {
 
     @NotBlank
     private String lastName;
-
-//    @NotBlank
-//    private String phone;
-//
-//    @NotBlank
-//    private String username;
 }

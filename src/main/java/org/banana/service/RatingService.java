@@ -1,17 +1,19 @@
 package org.banana.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.banana.repository.RatingRepository;
-import org.springframework.stereotype.Service;
+import org.banana.dto.rating.RatingDto;
+
+import java.util.UUID;
 
 /**
- * Created by Banana on 25.04.2025
+ * Created by Banana on 04.05.2025
  */
-@Service
-@Slf4j
-@RequiredArgsConstructor
-public class RatingService {
+public interface RatingService {
 
-    private final RatingRepository ratingRepository;
+    String rateUser(RatingDto dto);
+
+    String removeRating(UUID userId);
+
+    void updateAgregatedDataAboutUserRatings();
+
+//    void updateRating(UUID userId, short ratingValue);
 }

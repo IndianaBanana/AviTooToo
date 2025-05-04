@@ -93,6 +93,7 @@ class UserServiceImplTest {
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.existsByPhone(anyString())).thenReturn(false);
         when(jwtService.generateToken(any(User.class))).thenReturn("token");
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
         String token = userService.register(requestDto);
         assertThat(token).isNotBlank().isEqualTo("token");

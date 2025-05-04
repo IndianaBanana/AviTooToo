@@ -1,5 +1,6 @@
 package org.banana.dto.advertisement;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.banana.dto.user.UserResponseDto;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
+@AllArgsConstructor
 public class AdvertisementResponseDto {
 
     private UUID advertisementId;

@@ -8,6 +8,8 @@ import org.banana.security.dto.UserPhoneUpdateRequestDto;
 import org.banana.security.dto.UserRegisterRequestDto;
 import org.banana.security.dto.UserUsernameUpdateRequestDto;
 
+import java.util.UUID;
+
 public interface UserService {
 
     String register(UserRegisterRequestDto requestDto);
@@ -15,6 +17,8 @@ public interface UserService {
     String verify(UserLoginRequestDto requestDto);
 
     UserResponseDto getCurrentUser();
+
+    UserResponseDto findById(UUID id);
 
     UserResponseDto updateUser(UserUpdateRequestDto userUpdateRequestDto);
 

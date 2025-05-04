@@ -12,9 +12,6 @@ import java.util.UUID;
 public class AdvertisementRequestDto {
 
     @NotNull
-    private UUID userId;
-
-    @NotNull
     private UUID cityId;
 
     @NotNull

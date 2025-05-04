@@ -11,6 +11,7 @@ import lombok.ToString;
 import org.banana.security.dto.validation.PasswordOnRegisterValidation;
 
 import static org.banana.dto.ValidationConstants.EMAIL_REGEX;
+import static org.banana.dto.ValidationConstants.PASSWORD_MAX_LENGTH;
 import static org.banana.dto.ValidationConstants.PASSWORD_MIN_LENGTH;
 import static org.banana.dto.ValidationConstants.PHONE_ERROR_MESSAGE;
 import static org.banana.dto.ValidationConstants.PHONE_REGEX;
@@ -21,7 +22,7 @@ import static org.banana.dto.ValidationConstants.PHONE_REGEX;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@PasswordOnRegisterValidation
+@PasswordOnRegisterValidation()
 public class UserRegisterRequestDto {
 
     @NotBlank
@@ -39,12 +40,12 @@ public class UserRegisterRequestDto {
     private String username;
 
     @NotBlank
-    @Size(min = PASSWORD_MIN_LENGTH)
+    @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     @ToString.Exclude
     private String password;
 
     @NotBlank
-    @Size(min = PASSWORD_MIN_LENGTH)
+    @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     @ToString.Exclude
     private String matchingPassword;
 }

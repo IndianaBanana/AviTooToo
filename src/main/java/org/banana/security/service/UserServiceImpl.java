@@ -7,6 +7,7 @@ import org.banana.dto.user.UserMapper;
 import org.banana.dto.user.UserResponseDto;
 import org.banana.dto.user.UserUpdateRequestDto;
 import org.banana.entity.User;
+import org.banana.exception.UserNotFoundException;
 import org.banana.repository.UserRepository;
 import org.banana.security.UserPrincipal;
 import org.banana.security.UserRole;
@@ -26,6 +27,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 import static org.banana.security.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_FIRST_NAME_AND_LAST_NAME;
 import static org.banana.security.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_PHONE;
 import static org.banana.security.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_USERNAME;
@@ -39,7 +42,7 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authManager;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final UserMapper userMapper;
 
     @Override
     @Transactional
@@ -52,10 +55,10 @@ public class UserServiceImpl implements UserService {
             throw new UserPhoneAlreadyExistsException(requestDto.getPhone());
         }
         String password = passwordEncoder.encode(requestDto.getPassword());
-        User user = UserMapper.INSTANCE.userRegisterRequestDtoToUser(requestDto);
+        User user = userMapper.userRegisterRequestDtoToUser(requestDto);
         user.setPassword(password);
         user.setRole(UserRole.ROLE_USER);
-        userRepository.save(user);
+        user = userRepository.save(user);
         return jwtService.generateToken(user);
     }
 
@@ -73,7 +76,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto getCurrentUser() {
-        return UserMapper.INSTANCE.userToUserResponseDto(getUserPrincipal().getUser());
+        return userMapper.userToUserResponseDto(getUserPrincipal().getUser());
+    }
+    @Override //todo убрать sout
+    public UserResponseDto findById(UUID id){
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+//        System.out.println(user);
+        return userMapper.userToUserResponseDto(user);
     }
 
     @Override
@@ -87,7 +96,7 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(userUpdateRequestDto.getFirstName());
         user.setLastName(userUpdateRequestDto.getLastName());
         user = userRepository.save(user);
-        return UserMapper.INSTANCE.userToUserResponseDto(user);
+        return userMapper.userToUserResponseDto(user);
     }
 
     @Override

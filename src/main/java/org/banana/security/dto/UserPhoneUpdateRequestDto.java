@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 
 import static org.banana.dto.ValidationConstants.PHONE_ERROR_MESSAGE;
 import static org.banana.dto.ValidationConstants.PHONE_REGEX;
@@ -20,5 +21,6 @@ public class UserPhoneUpdateRequestDto {
     private String newPhone;
 
     @NotBlank
+    @ToString.Exclude
     private String password;
 }
