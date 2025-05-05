@@ -57,7 +57,7 @@ public class Message {
     private LocalDateTime messageDate;
 
     @NotNull
-    private Boolean isRead;
+    private Boolean isRead = false;
 
     @Override
     public final boolean equals(Object o) {

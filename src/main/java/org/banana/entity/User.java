@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
@@ -19,10 +20,12 @@ import lombok.Setter;
 import lombok.ToString;
 import org.banana.dto.ValidationConstants;
 import org.banana.security.UserRole;
+import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -63,9 +66,14 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
 
-//    @OneToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
-//    private UserRatingView userRatingView;
+    // fixme n+1 problem возможно надо переделать все запросы так чтобы зависимость была у UserRatingView а не User и как то выбирать из него. или как то еще сделать.
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
+    private UserRatingView userRatingView;
+
+//    @OneToMany
+//    @JoinColumn(referencedColumnName = "commenter_id", insertable = false, updatable = false)
+//    private List<Comment> comments;
 
 
     @Override

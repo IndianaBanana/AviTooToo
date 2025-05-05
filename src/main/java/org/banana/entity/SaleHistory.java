@@ -48,7 +48,7 @@ public class SaleHistory {
 
     @NotNull
     @Min(1)
-    private Short quantity;
+    private Integer quantity;
 
     @Override
     public final boolean equals(Object o) {

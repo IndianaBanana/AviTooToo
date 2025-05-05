@@ -28,12 +28,12 @@ import java.util.UUID;
 public class UserRatingView {
 
 //    @Id
-//    private UUID userId;
-        @Id
-    @MapsId
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+//    @MapsId
+//    @OneToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "user_id")
+//    private User user;
+    @Id
+    private UUID userId;
     private BigDecimal averageRating;
     private int ratingCount;
 }

@@ -1,0 +1,76 @@
+package org.banana.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.banana.dto.advertisement.AdvertisementFilterDto;
+import org.banana.dto.advertisement.AdvertisementRequestDto;
+import org.banana.dto.advertisement.AdvertisementResponseDto;
+import org.banana.dto.advertisement.AdvertisementUpdateRequestDto;
+import org.banana.service.AdvertisementService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URI;
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/advertisement")
+@RequiredArgsConstructor
+public class AdvertisementController {
+
+    private final AdvertisementService advertisementService;
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AdvertisementResponseDto> getAdvertisementById(@PathVariable UUID id) {
+        return ResponseEntity.ok(advertisementService.findById(id));
+    }
+
+    @PostMapping("/filter")
+    public ResponseEntity<List<AdvertisementResponseDto>> getFilteredAdvertisements(
+            @Valid @RequestBody AdvertisementFilterDto filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(advertisementService.findAllFiltered(filter, page, size));
+    }
+
+    @PostMapping
+    public ResponseEntity<AdvertisementResponseDto> createAdvertisement(@RequestBody @Valid AdvertisementRequestDto requestDto) {
+        AdvertisementResponseDto created = advertisementService.createAdvertisement(requestDto);
+        URI uri = URI.create(String.format("/api/v1/advertisement/%s", created.getAdvertisementId()));
+        return ResponseEntity.created(uri).body(created);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<AdvertisementResponseDto> updateAdvertisement(
+            @PathVariable UUID id,
+            @RequestBody @Valid AdvertisementUpdateRequestDto requestDto) {
+        return ResponseEntity.ok(advertisementService.updateAdvertisement(id, requestDto));
+    }
+
+    @PatchMapping("/{id}/close")
+    public ResponseEntity<AdvertisementResponseDto> closeAdvertisement(@PathVariable UUID id) {
+        return ResponseEntity.ok(advertisementService.closeAdvertisement(id));
+    }
+
+    @PatchMapping("/{id}/promote")
+    public ResponseEntity<AdvertisementResponseDto> promoteAdvertisement(@PathVariable UUID id) {
+        advertisementService.promoteAdvertisement(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAdvertisement(@PathVariable UUID id) {
+        advertisementService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+}

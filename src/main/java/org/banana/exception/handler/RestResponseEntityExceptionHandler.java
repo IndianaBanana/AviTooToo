@@ -1,6 +1,10 @@
 package org.banana.exception.handler;
 
 import org.banana.exception.AdvertisementNotFoundException;
+import org.banana.exception.AdvertisementTypeNotFoundException;
+import org.banana.exception.AdvertisementUpdateException;
+import org.banana.exception.CityNotFoundException;
+import org.banana.exception.CommentNotFoundException;
 import org.banana.exception.UserNotFoundException;
 import org.banana.exception.UserRatesTheSameUserException;
 import org.banana.security.exception.UserPhoneAlreadyExistsException;
@@ -29,7 +33,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler({UserNotFoundException.class, UsernameNotFoundException.class, AdvertisementNotFoundException.class})
+    @ExceptionHandler({UserNotFoundException.class, UsernameNotFoundException.class, AdvertisementNotFoundException.class,
+            CommentNotFoundException.class, CityNotFoundException.class, AdvertisementTypeNotFoundException.class})
     protected ResponseEntity<Object> handleNotFoundException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.NOT_FOUND);
     }
@@ -39,6 +44,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             UserPhoneAlreadyExistsException.class,
             UserUpdateOldEqualsNewDataException.class,
             UserRatesTheSameUserException.class,
+            AdvertisementUpdateException.class,
     })
     protected ResponseEntity<Object> handleConflictDataException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.CONFLICT);

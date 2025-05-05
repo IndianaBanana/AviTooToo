@@ -1,5 +1,6 @@
 package org.banana.dto.advertisement;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 
@@ -13,8 +14,8 @@ public class AdvertisementFilterDto {
     private List<UUID> cityIds;
     private List<UUID> advertisementTypeIds;
     private String searchParam;
-    @Min(0)
+    @DecimalMin("0.00")
     private BigDecimal minPrice;
-    @Min(0)
+    @DecimalMin("0.00")
     private BigDecimal maxPrice;
 }

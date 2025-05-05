@@ -37,23 +37,13 @@ public class Comment {
     private UUID advertisementId;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commenter_id")
     @ToString.Exclude
     private User commenter;
 
-    //    @Column(name = "root_comment_id")
-//    @ToString.Exclude
-    private UUID rootCommentId; // todo: либо UUID либо сделать тут Comment
-//
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "root_comment_id")
-//    @ToString.Exclude
-//    private Comment rootComment;
+    private UUID rootCommentId;
 
-    //    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "parent_comment_id")
-//    @ToString.Exclude
     private UUID parentCommentId;
 
     @NotBlank
@@ -61,6 +51,14 @@ public class Comment {
 
     @NotNull
     private LocalDateTime commentDate;
+
+    public Comment(UUID advertisementId, UUID rootCommentId, UUID parentCommentId, String commentText, User commenter) {
+        this.advertisementId = advertisementId;
+        this.rootCommentId = rootCommentId;
+        this.parentCommentId = parentCommentId;
+        this.commentText = commentText;
+        this.commenter = commenter;
+    }
 
     @Override
     public final boolean equals(Object o) {

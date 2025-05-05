@@ -61,17 +61,15 @@ public class Advertisement {
     private String description;
 
     @NotNull
-    @DecimalMin("0.0")
+    @DecimalMin("0.00")
     private BigDecimal price;
 
     @NotNull
-    @Min(0)
+    @Min(1)
     private Integer quantity;
 
-    @NotNull
-    private Boolean isPaid;
+    private Boolean isPaid = false;
 
-    @NotNull
     private LocalDateTime createDate;
 
     private LocalDateTime closeDate;

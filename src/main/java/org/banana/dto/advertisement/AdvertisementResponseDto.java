@@ -2,6 +2,7 @@ package org.banana.dto.advertisement;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.banana.dto.user.UserResponseDto;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class AdvertisementResponseDto {
 
     private UUID advertisementId;
@@ -19,8 +21,8 @@ public class AdvertisementResponseDto {
     private String title;
     private String description;
     private BigDecimal price;
-    private int quantity;
-    private boolean isPaid;
+    private Integer quantity;
+    private Boolean isPaid;
     private LocalDateTime createDate;
     private LocalDateTime closeDate;
 }

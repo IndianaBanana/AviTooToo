@@ -11,6 +11,7 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class UserResponseDto {
 
     private UUID userId;
@@ -25,5 +26,5 @@ public class UserResponseDto {
 
     private BigDecimal averageRating;
 
-    private int ratingCount;
+    private Integer ratingCount;
 }

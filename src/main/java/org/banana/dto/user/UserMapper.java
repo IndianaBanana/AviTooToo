@@ -11,11 +11,17 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @Mapping(target = "userRatingView", ignore = true)
+    @Mapping(target = "role", ignore = true)
+    @Mapping(target = "password", ignore = true)
     User userResponseDtoToUser(UserResponseDto userResponseDto);
 
-//    @Mapping(target = "averageRating", source = "userRatingView.averageRating")
-//    @Mapping(target = "ratingCount", source = "userRatingView.ratingCount")
+    @Mapping(target = "averageRating", source = "userRatingView.averageRating")
+    @Mapping(target = "ratingCount", source = "userRatingView.ratingCount")
     UserResponseDto userToUserResponseDto(User user);
 
+    @Mapping(target = "userRatingView", ignore = true)
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "role", ignore = true)
     User userRegisterRequestDtoToUser(UserRegisterRequestDto userRegisterRequestDto);
 }

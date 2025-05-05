@@ -12,5 +12,5 @@ public class SaleHistoryDto {
     private UUID advertisementId;
     private UUID buyerId;
     private LocalDateTime saleDate;
-    private short quantity;
+    private Integer quantity;
 }
