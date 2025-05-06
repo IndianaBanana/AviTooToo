@@ -9,13 +9,12 @@ import java.util.UUID;
 @Data
 public class CommentRequestDto {
 
-//    @NotNull
-//    private UUID advertisementId;
+    @NotNull
+    private UUID advertisementId;
 
 //    @NotNull
 //    private UUID commenterId;
 
-    @NotNull
     private UUID parentCommentId;
     //    @NotNull
 //    private UUID rootCommentId;

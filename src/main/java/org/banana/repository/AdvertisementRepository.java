@@ -6,11 +6,13 @@ import org.banana.entity.Advertisement;
 import org.banana.repository.crud.CrudRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface AdvertisementRepository extends CrudRepository<Advertisement, UUID> {
 
 
-    List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size);
+    Optional<AdvertisementResponseDto> findDtoById(UUID id);
 
+    List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size);
 }

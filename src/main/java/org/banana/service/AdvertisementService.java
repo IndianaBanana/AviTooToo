@@ -18,9 +18,9 @@ public interface AdvertisementService {
 
     AdvertisementResponseDto createAdvertisement(AdvertisementRequestDto requestDto);
 
-    AdvertisementResponseDto updateAdvertisement(UUID advertisementId, AdvertisementUpdateRequestDto requestDto);
+    AdvertisementResponseDto updateAdvertisement(AdvertisementUpdateRequestDto requestDto);
 
     AdvertisementResponseDto closeAdvertisement(UUID advertisementId);
 
-    void promoteAdvertisement(UUID advertisementId);
+    AdvertisementResponseDto promoteAdvertisement(UUID advertisementId);
 }

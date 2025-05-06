@@ -1,5 +1,7 @@
 package org.banana.security;
 
+import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -14,13 +16,11 @@ import java.util.Collections;
 @Getter
 @ToString
 @EqualsAndHashCode
+@AllArgsConstructor
 public class UserPrincipal implements UserDetails {
 
     private final User user;
 
-    public UserPrincipal(User user) {
-        this.user = user;
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

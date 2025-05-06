@@ -65,7 +65,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     }
 
     @Override
-    public Iterable<T> findAll() {
+    public List<T> findAll() {
         log.debug("findAll() in {}", getClass().getSimpleName());
         return getSession()
                 .createQuery("FROM " + entityClass.getSimpleName(), entityClass)
@@ -73,7 +73,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     }
 
     @Override
-    public Iterable<T> findAllById(Iterable<ID> ids) {
+    public List<T> findAllById(Iterable<ID> ids) {
         log.debug("findAllById() in {}", getClass().getSimpleName());
         List<T> list = new ArrayList<>();
         for (ID id : ids) {

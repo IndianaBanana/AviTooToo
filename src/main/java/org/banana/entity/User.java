@@ -7,9 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,12 +18,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.banana.dto.ValidationConstants;
 import org.banana.security.UserRole;
-import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.math.BigDecimal;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -41,7 +36,8 @@ public class User {
 
     @Id
     @UuidGenerator
-    private UUID userId;
+    @Column(name = "user_id", updatable = false, nullable = false)
+    private UUID id;
 
     @NotBlank
     private String firstName;
@@ -69,12 +65,18 @@ public class User {
     // fixme n+1 problem возможно надо переделать все запросы так чтобы зависимость была у UserRatingView а не User и как то выбирать из него. или как то еще сделать.
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
+    @ToString.Exclude
     private UserRatingView userRatingView;
 
-//    @OneToMany
-//    @JoinColumn(referencedColumnName = "commenter_id", insertable = false, updatable = false)
-//    private List<Comment> comments;
-
+    public User(UUID id, String firstName, String lastName, String phone, String username, String password, UserRole role) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+    }
 
     @Override
     public final boolean equals(Object o) {
@@ -84,7 +86,7 @@ public class User {
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
         User user = (User) o;
-        return getUserId() != null && Objects.equals(getUserId(), user.getUserId());
+        return getId() != null && Objects.equals(getId(), user.getId());
     }
 
     @Override

@@ -14,7 +14,7 @@ public class CommentRepositoryImpl extends AbstractCrudRepositoryImpl<Comment, U
             select c
             from Comment c
             join fetch c.commenter
-            where c.rootCommentId is null""";
+            where c.rootCommentId is null and c.advertisementId = :advertisementId""";
     private static final String FIND_ALL_COMMENTS_IN_ROOT_IDS = """
             select c
             from Comment c
@@ -27,8 +27,11 @@ public class CommentRepositoryImpl extends AbstractCrudRepositoryImpl<Comment, U
     }
 
     @Override
-    public List<Comment> findAllRootComments() {
+    public List<Comment> findAllRootCommentsByAdvertisementId(UUID advertisementId, int offset, int limit) {
         return getSession().createQuery(FIND_BY_ROOT_COMMENT_ID_IS_NULL, Comment.class)
+                .setParameter("advertisementId", advertisementId)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
                 .getResultList();
     }
 

@@ -12,15 +12,25 @@ import java.util.UUID;
 @Slf4j
 public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> implements UserRepository {
 
-    public static final String EXISTS_BY_USERNAME = "SELECT 1 FROM User c WHERE c.username = :username";
-    public static final String EXISTS_BY_PHONE = "SELECT 1 FROM User c WHERE c.phone = :phone";
-    public static final String FIND_BY_USERNAME = "SELECT c FROM User c WHERE c.username = :username";
-    public static final String FIND_BY_PHONE = "SELECT c FROM User c WHERE c.phone = :phone";
+    private static final String EXISTS_BY_USERNAME = "SELECT 1 FROM User u WHERE u.username = :username";
+    private static final String EXISTS_BY_PHONE = "SELECT 1 FROM User u WHERE u.phone = :phone";
+    private static final String FIND_BY_USERNAME = "SELECT u.id, u.firstName, u.lastName,u.phone,u.username, u.password,u.role FROM User u WHERE u.username = :username";
+    //        private static final String FIND_BY_USERNAME = "SELECT u FROM User u LEFT JOIN FETCH u.userRatingView WHERE u.username = :username";
+//    private static final String FIND_BY_ID = "SELECT u FROM User u WHERE u.id = :id";
+    private static final String FIND_BY_ID = "SELECT u FROM User u LEFT JOIN FETCH u.userRatingView WHERE u.id = :id";
+    //    private static final String FIND_BY_PHONE = "SELECT u FROM User u WHERE u.phone = :phone";
 
     public UserRepositoryImpl() {
         super(User.class);
     }
 
+    @Override
+    public Optional<User> findById(UUID uuid) {
+        log.debug("entering `findById` method in {}", this.getClass().getSimpleName());
+        return Optional.ofNullable(getSession().createQuery(FIND_BY_ID, User.class)
+                .setParameter("id", uuid)
+                .getSingleResultOrNull());
+    }
 
     @Override
     public Optional<User> findByUsername(String username) {
@@ -28,16 +38,6 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
         return Optional.ofNullable(
                 getSession().createQuery(FIND_BY_USERNAME, User.class)
                         .setParameter("username", username)
-                        .getSingleResultOrNull()
-        );
-    }
-
-    @Override
-    public Optional<User> findByPhone(String phone) {
-        log.debug("entering `findByPhone` method in {}", this.getClass().getSimpleName());
-        return Optional.ofNullable(
-                getSession().createQuery(FIND_BY_PHONE, User.class)
-                        .setParameter("phone", phone)
                         .getSingleResultOrNull()
         );
     }

@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class AdvertisementResponseDto {
 
-    private UUID advertisementId;
+    private UUID id;
     private UserResponseDto userResponseDto;
     private String cityName;
     private String advertisementType;

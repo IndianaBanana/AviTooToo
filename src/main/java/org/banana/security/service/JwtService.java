@@ -34,7 +34,7 @@ public class JwtService {
         return Jwts.builder()
                 .claims()
                 .add(claims)
-                .subject(user.getUserId().toString())
+                .subject(user.getId().toString())
                 .id(UUID.randomUUID().toString())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + VALID_PERIOD))

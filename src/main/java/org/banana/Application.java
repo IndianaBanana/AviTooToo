@@ -1,8 +1,6 @@
 package org.banana;
 
 import org.banana.repository.AdvertisementRepository;
-import org.banana.repository.UserRatingViewRepository;
-import org.banana.repository.UserRatingViewRepositoryImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;

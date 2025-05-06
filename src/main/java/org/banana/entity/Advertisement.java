@@ -1,5 +1,6 @@
 package org.banana.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -33,7 +34,8 @@ public class Advertisement {
 
     @Id
     @UuidGenerator
-    private UUID advertisementId;
+    @Column(name = "advertisement_id", updatable = false, nullable = false)
+    private UUID id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -82,7 +84,7 @@ public class Advertisement {
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
         Advertisement that = (Advertisement) o;
-        return getAdvertisementId() != null && Objects.equals(getAdvertisementId(), that.getAdvertisementId());
+        return getId() != null && Objects.equals(getId(), that.getId());
     }
 
     @Override

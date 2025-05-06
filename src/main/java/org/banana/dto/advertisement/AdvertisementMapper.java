@@ -4,7 +4,6 @@ import org.banana.dto.user.UserMapper;
 import org.banana.entity.Advertisement;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.List;
 
@@ -15,6 +14,8 @@ import java.util.List;
 public interface AdvertisementMapper {
 
     @Mapping(source = "user", target = "userResponseDto")
+//    @Mapping(target = "userResponseDto.averageRating", ignore = true)
+//    @Mapping(target = "userResponseDto.ratingCount", ignore = true)
     @Mapping(source = "city.name", target = "cityName")
     @Mapping(source = "advertisementType.name", target = "advertisementType")
     AdvertisementResponseDto advertisementToAdvertisementResponseDto(Advertisement advertisement);

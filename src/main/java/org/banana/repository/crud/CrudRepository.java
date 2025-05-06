@@ -1,5 +1,6 @@
 package org.banana.repository.crud;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CrudRepository<T, ID> {
@@ -12,9 +13,9 @@ public interface CrudRepository<T, ID> {
 
     boolean existsById(ID id);
 
-    Iterable<T> findAll();
+    List<T> findAll();
 
-    Iterable<T> findAllById(Iterable<ID> ids);
+    List<T> findAllById(Iterable<ID> ids);
 
     long count();
 

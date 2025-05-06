@@ -5,6 +5,7 @@ import org.banana.exception.AdvertisementTypeNotFoundException;
 import org.banana.exception.AdvertisementUpdateException;
 import org.banana.exception.CityNotFoundException;
 import org.banana.exception.CommentNotFoundException;
+import org.banana.exception.UserDeleteCommentException;
 import org.banana.exception.UserNotFoundException;
 import org.banana.exception.UserRatesTheSameUserException;
 import org.banana.security.exception.UserPhoneAlreadyExistsException;
@@ -45,6 +46,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             UserUpdateOldEqualsNewDataException.class,
             UserRatesTheSameUserException.class,
             AdvertisementUpdateException.class,
+            UserDeleteCommentException.class,
     })
     protected ResponseEntity<Object> handleConflictDataException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.CONFLICT);
@@ -76,12 +78,17 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
                         (existing, replacement) -> existing
                 ));
 
+        ex.getBindingResult().getGlobalErrors().forEach(error -> {
+            fieldErrors.put("global", Optional.ofNullable(error.getDefaultMessage()).orElse("Invalid"));
+        });
+
         problemDetail.setProperty("errors", fieldErrors);
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("path", ((ServletWebRequest) request).getRequest().getRequestURI());
 
         return handleExceptionInternal(ex, problemDetail, headers, HttpStatus.BAD_REQUEST, request);
     }
+
 
     private ResponseEntity<Object> buildErrorResponse(RuntimeException ex, WebRequest request, HttpStatus status) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, ex.getMessage());

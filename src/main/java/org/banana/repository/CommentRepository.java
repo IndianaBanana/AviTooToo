@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface CommentRepository extends CrudRepository<Comment, UUID> {
 
-    List<Comment> findAllRootComments();
+    List<Comment> findAllRootCommentsByAdvertisementId(UUID advertisementId, int offset, int limit);
 
     List<Comment> findAllCommentsInRootIds(List<UUID> rootCommentIds);
 }

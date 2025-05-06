@@ -18,6 +18,7 @@ import org.banana.security.exception.UserUsernameAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -46,7 +47,7 @@ import static org.mockito.Mockito.when;
 class UserServiceImplTest {
 
     private static final UUID USER_ID = UUID.randomUUID();
-    UserResponseDto userResponseDto;
+    private UserResponseDto userResponseDto;
     @Mock
     private JwtService jwtService;
     @Mock
@@ -55,6 +56,8 @@ class UserServiceImplTest {
     private UserRepository userRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private UserMapper userMapper;
     @InjectMocks
     private UserServiceImpl userService;
     private User user;
@@ -62,7 +65,9 @@ class UserServiceImplTest {
     @BeforeEach
     void setup() {
         user = new User(USER_ID, "John", "Doe", "123", "com@com.com", "password", UserRole.ROLE_USER);
-        userResponseDto = UserMapper.INSTANCE.userToUserDto(user);
+        userResponseDto = new UserResponseDto(USER_ID, "John", "Doe", "123", "com@com.com", null, null);
+//        when(userMapper.userToUserResponseDto(any(User.class))).thenReturn(userResponseDto);
+//        when(userMapper.userRegisterRequestDtoToUser(any(UserRegisterRequestDto.class))).thenReturn(user);
     }
 
     @Test
@@ -87,16 +92,33 @@ class UserServiceImplTest {
 
     @Test
     void register_whenPhoneAndUsernameDoNotExist_thenReturnToken() {
-        UserRegisterRequestDto requestDto = new UserRegisterRequestDto();
-        requestDto.setUsername("john");
-        requestDto.setPhone("123");
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.existsByPhone(anyString())).thenReturn(false);
-        when(jwtService.generateToken(any(User.class))).thenReturn("token");
-        when(userRepository.save(any(User.class))).thenReturn(user);
 
-        String token = userService.register(requestDto);
-        assertThat(token).isNotBlank().isEqualTo("token");
+        UserRegisterRequestDto requestDto = new UserRegisterRequestDto(
+                user.getFirstName(),
+                user.getLastName(),
+                user.getPhone(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getPassword()
+        );
+        user.setRole(null);
+        user.setId(null);
+
+        when(userMapper.userRegisterRequestDtoToUser(any())).thenReturn(user);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPass");
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.save(userCaptor.capture())).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
+        when(jwtService.generateToken(any(User.class))).thenReturn("token");
+
+        String result = userService.register(requestDto);
+
+        assertThat(result).isEqualTo("token");
+        assertThat(userCaptor.getValue().getPassword()).isEqualTo("encodedPass");
+        assertThat(userCaptor.getValue().getRole()).isNotNull().isEqualTo(UserRole.ROLE_USER);
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
@@ -133,6 +155,7 @@ class UserServiceImplTest {
     @Test
     void getCurrentUser_shouldReturnCurrentUser() {
         setupSecurityContext();
+        when(userMapper.userToUserResponseDto(any(User.class))).thenReturn(userResponseDto);
         assertThat(userService.getCurrentUser()).isEqualTo(userResponseDto);
     }
 
@@ -149,14 +172,18 @@ class UserServiceImplTest {
     @Test
     void updateUser_whenLastNameAndFirstNameAreNotEqualToOldValuesSimultaneously_thenUpdateUser() {
         setupSecurityContext();
-        when(userRepository.save(any(User.class))).thenReturn(user);
-        UserUpdateRequestDto requestDto = new UserUpdateRequestDto(user.getFirstName() + "string", user.getLastName());
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        UserUpdateRequestDto requestDto = new UserUpdateRequestDto("newFN", "newLN");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserResponseDto userResponseDto = userService.updateUser(requestDto);
+        userService.updateUser(requestDto);
 
-        assertThat(userResponseDto.getFirstName()).isEqualTo(requestDto.getFirstName());
-        assertThat(userResponseDto.getLastName()).isEqualTo(requestDto.getLastName());
+        verify(userRepository).save(captor.capture());
+        verify(userMapper).userToUserResponseDto(captor.getValue());
+        assertThat(captor.getValue().getFirstName()).isEqualTo(requestDto.getFirstName());
+        assertThat(captor.getValue().getLastName()).isEqualTo(requestDto.getLastName());
     }
+
 
     @Test
     void updatePassword_whenBadCredentials_thenThrowBadCredentialsException() {
@@ -170,10 +197,15 @@ class UserServiceImplTest {
     @Test
     void updatePassword_whenGoodCredentials_thenSaveUserReturnToken() {
         whenGoodCredentialsGiven();
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         UserPasswordUpdateRequestDto dto = new UserPasswordUpdateRequestDto("old-pass", "new-pass", "new-pass");
+        when(jwtService.generateToken(any(User.class))).thenReturn("token");
 
         assertThat(userService.updatePassword(dto)).isEqualTo("token");
+        verify(userRepository).save(captor.capture());
+        verify(passwordEncoder).encode(dto.getNewPassword());
+        verify(jwtService).generateToken(captor.getValue());
         verify(userRepository).save(any(User.class));
     }
 
@@ -207,13 +239,20 @@ class UserServiceImplTest {
     @Test
     void updateUsername_whenGoodCredentialsAndUsernameDoesNotExistAndNewUsernameNotEqualsOldUsername_thenSaveUserReturnToken() {
         whenGoodCredentialsGiven();
-        when(userRepository.save(any(User.class))).thenReturn(user);
-        UserUsernameUpdateRequestDto dto = new UserUsernameUpdateRequestDto(user.getUsername() + "new-username", "pass");
+        UserUsernameUpdateRequestDto dto = new UserUsernameUpdateRequestDto("new-username", "pass");
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtService.generateToken(any(User.class))).thenReturn("token");
 
-        assertThat(userService.updateUsername(dto)).isEqualTo("token");
-        verify(userRepository).save(any(User.class));
+        String token = userService.updateUsername(dto);
+
+        assertThat(token).isEqualTo("token");
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getUsername()).isEqualTo("new-username");
     }
+
 
     @Test
     void updatePhone_whenBadCredentials_thenThrowBadCredentialsException() {
@@ -244,12 +283,16 @@ class UserServiceImplTest {
     @Test
     void updatePhone_whenGoodCredentialsAndPhoneDoesNotExistAndNewPhoneNotEqualsOldPhone_thenSaveUserReturnToken() {
         whenGoodCredentialsGiven();
-        when(userRepository.save(any(User.class))).thenReturn(user);
-        UserPhoneUpdateRequestDto dto = new UserPhoneUpdateRequestDto(user.getPhone() + "new-phone", "pass");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+//        when(userRepository.save(any(User.class))).thenReturn(user);
+        UserPhoneUpdateRequestDto dto = new UserPhoneUpdateRequestDto("new-phone", "pass");
         when(userRepository.existsByPhone(anyString())).thenReturn(false);
+        when(jwtService.generateToken(any(User.class))).thenReturn("token");
 
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         assertThat(userService.updatePhone(dto)).isEqualTo("token");
-        verify(userRepository).save(any(User.class));
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getPhone()).isEqualTo("new-phone");
     }
 
 
@@ -299,7 +342,7 @@ class UserServiceImplTest {
         when(context.getAuthentication()).thenReturn(auth);
         when(auth.isAuthenticated()).thenReturn(true);
         when(authManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
-        when(jwtService.generateToken(any(User.class))).thenReturn("token");
+//        when(jwtService.generateToken(any(User.class))).thenReturn("token");
     }
 
     private void setupSecurityContext() {

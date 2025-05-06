@@ -1,5 +1,6 @@
 package org.banana.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -30,13 +31,13 @@ public class Comment {
 
     @Id
     @UuidGenerator
-    private UUID commentId;
+    @Column(name = "comment_id", updatable = false, nullable = false)
+    private UUID id;
 
     @NotNull
     @ToString.Exclude
     private UUID advertisementId;
 
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commenter_id")
     @ToString.Exclude
@@ -52,12 +53,13 @@ public class Comment {
     @NotNull
     private LocalDateTime commentDate;
 
-    public Comment(UUID advertisementId, UUID rootCommentId, UUID parentCommentId, String commentText, User commenter) {
+    public Comment(UUID advertisementId, UUID rootCommentId, UUID parentCommentId, String commentText, User commenter, LocalDateTime commentDate) {
         this.advertisementId = advertisementId;
         this.rootCommentId = rootCommentId;
         this.parentCommentId = parentCommentId;
         this.commentText = commentText;
         this.commenter = commenter;
+        this.commentDate = commentDate;
     }
 
     @Override
@@ -68,7 +70,7 @@ public class Comment {
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
         Comment comment = (Comment) o;
-        return getCommentId() != null && Objects.equals(getCommentId(), comment.getCommentId());
+        return getId() != null && Objects.equals(getId(), comment.getId());
     }
 
     @Override

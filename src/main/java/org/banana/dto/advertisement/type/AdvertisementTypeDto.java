@@ -7,6 +7,6 @@ import java.util.UUID;
 @Data
 public class AdvertisementTypeDto {
 
-    private UUID advertisementTypeId;
+    private UUID id;
     private String name;
 }

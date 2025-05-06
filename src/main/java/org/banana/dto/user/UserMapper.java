@@ -21,7 +21,7 @@ public interface UserMapper {
     UserResponseDto userToUserResponseDto(User user);
 
     @Mapping(target = "userRatingView", ignore = true)
-    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "role", ignore = true)
     User userRegisterRequestDtoToUser(UserRegisterRequestDto userRegisterRequestDto);
 }

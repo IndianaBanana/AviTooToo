@@ -1,6 +1,5 @@
 package org.banana.repository;
 
-import jakarta.persistence.TypedQuery;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.banana.dto.advertisement.AdvertisementFilterDto;
@@ -11,19 +10,58 @@ import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Advertisement, UUID> implements AdvertisementRepository {
+
+    private static final String FIND_FULL_ENTITY = """
+                SELECT new org.banana.dto.advertisement.AdvertisementResponseDto(
+                a.id,
+                new org.banana.dto.user.UserResponseDto(
+                    u.id,
+                    u.firstName,
+                    u.lastName,
+                    u.phone,
+                    u.username,
+                    ur.averageRating,
+                    ur.ratingCount
+                ),
+                c.name,
+                at.name,
+                a.title,
+                a.description,
+                a.price,
+                a.quantity,
+                a.isPaid,
+                a.createDate,
+                a.closeDate
+            )
+            FROM Advertisement a
+            JOIN a.city c
+            JOIN a.advertisementType at
+            JOIN a.user u
+            LEFT JOIN UserRatingView ur ON ur.id = u.id
+            """;
 
     public AdvertisementRepositoryImpl() {
         super(Advertisement.class);
     }
 
     @Override
+    public Optional<AdvertisementResponseDto> findDtoById(UUID id) {
+        return getSession()
+                .createQuery(FIND_FULL_ENTITY + " WHERE a.id = :id", AdvertisementResponseDto.class)
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst();
+    }
+
+    @Override
     public List<AdvertisementResponseDto> findAllFiltered(@NotNull AdvertisementFilterDto filter,
-                                                          @Min(1) int page,
-                                                          @Min(20) int size) {
+                                                          int page,
+                                                          int size) {
         Query<AdvertisementResponseDto> query = getAdvertisementResponseDtoTypedQuery(filter);
 
         if (filter.getCityIds() != null && !filter.getCityIds().isEmpty()) {
@@ -49,36 +87,9 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     }
 
     private Query<AdvertisementResponseDto> getAdvertisementResponseDtoTypedQuery(AdvertisementFilterDto filter) {
-        System.out.println(findAll());
-        StringBuilder jpql = new StringBuilder("""
-        SELECT new org.banana.dto.advertisement.AdvertisementResponseDto(
-            a.advertisementId,
-            new org.banana.dto.user.UserResponseDto(
-                u.userId,
-                u.firstName,
-                u.lastName,
-                u.phone,
-                u.username,
-                ur.averageRating,
-                ur.ratingCount
-            ),
-            c.name,
-            at.name,
-            a.title,
-            a.description,
-            a.price,
-            a.quantity,
-            a.isPaid,
-            a.createDate,
-            a.closeDate
-        )
-        FROM Advertisement a
-        JOIN a.city c
-        JOIN a.advertisementType at
-        JOIN a.user u
-        LEFT JOIN UserRatingView ur ON ur.userId = u.userId
-        WHERE 1=1
-        """);
+        StringBuilder jpql = new StringBuilder();
+        jpql.append(FIND_FULL_ENTITY);
+        jpql.append(" WHERE a.closeDate IS NULL");
 
         if (filter.getCityIds() != null && !filter.getCityIds().isEmpty()) {
             jpql.append(" AND a.city.cityId IN :cityIds");
@@ -99,8 +110,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
 
         jpql.append(" ORDER BY a.isPaid DESC, ur.averageRating DESC, ur.ratingCount DESC, a.createDate ASC");
 
-        Query<AdvertisementResponseDto> query = getSession()
+        return getSession()
                 .createQuery(jpql.toString(), AdvertisementResponseDto.class);
-        return query;
     }
 }

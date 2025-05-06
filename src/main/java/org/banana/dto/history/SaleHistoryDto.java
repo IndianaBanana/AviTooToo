@@ -8,7 +8,7 @@ import java.util.UUID;
 @Data
 public class SaleHistoryDto {
 
-    private UUID saleHistoryId;
+    private UUID id;
     private UUID advertisementId;
     private UUID buyerId;
     private LocalDateTime saleDate;

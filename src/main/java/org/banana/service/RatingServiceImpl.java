@@ -35,9 +35,9 @@ public class RatingServiceImpl implements RatingService {
     @Transactional
     public String rateUser(RatingDto dto) {
         User currentUser = getCurrentUser();
-        if (currentUser.getUserId().equals(dto.getUserId())) throw new UserRatesTheSameUserException();
+        if (currentUser.getId().equals(dto.getUserId())) throw new UserRatesTheSameUserException();
         if (!userRepository.existsById(dto.getUserId())) throw new UserNotFoundException(dto.getUserId());
-        ratingRepository.save(new Rating(dto.getUserId(), currentUser.getUserId(), dto.getRatingValue()));
+        ratingRepository.save(new Rating(dto.getUserId(), currentUser.getId(), dto.getRatingValue()));
         return RATE_MESSAGE;
     }
 
@@ -45,9 +45,9 @@ public class RatingServiceImpl implements RatingService {
     @Transactional
     public String removeRating(UUID userId) {
         User currentUser = getCurrentUser();
-        if (currentUser.getUserId().equals(userId)) throw new UserRatesTheSameUserException();
+        if (currentUser.getId().equals(userId)) throw new UserRatesTheSameUserException();
         if (!userRepository.existsById(userId)) throw new UserNotFoundException(userId);
-        ratingRepository.deleteById(new RatingId(userId, currentUser.getUserId()));
+        ratingRepository.deleteById(new RatingId(userId, currentUser.getId()));
         return RATE_MESSAGE;
     }
 

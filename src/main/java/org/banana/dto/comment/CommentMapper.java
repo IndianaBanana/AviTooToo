@@ -1,10 +1,10 @@
 package org.banana.dto.comment;
 
-import org.banana.dto.user.UserResponseDto;
 import org.banana.entity.Comment;
-import org.banana.entity.User;
-import org.banana.security.dto.UserRegisterRequestDto;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.util.List;
 
 /**
  * Created by Banana on 25.04.2025
@@ -12,5 +12,13 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
 
+    @Mapping(target = "commenter.id", source = "commenter.id")
+    @Mapping(target = "commenter.firstName", source = "commenter.firstName")
+    @Mapping(target = "commenter.lastName", source = "commenter.lastName")
     CommentResponseDto fromCommentToCommentResponseDto(Comment comment);
+
+    @Mapping(target = "commenter.id", source = "commenter.id")
+    @Mapping(target = "commenter.firstName", source = "commenter.firstName")
+    @Mapping(target = "commenter.lastName", source = "commenter.lastName")
+    List<CommentResponseDto> fromCommentListToCommentResponseDtoList(List<Comment> comments);
 }

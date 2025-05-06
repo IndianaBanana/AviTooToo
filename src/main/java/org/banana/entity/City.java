@@ -1,5 +1,6 @@
 package org.banana.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
@@ -25,10 +26,15 @@ public class City {
 
     @Id
     @UuidGenerator
-    private UUID cityId;
+    @Column(name = "city_id", updatable = false, nullable = false)
+    private UUID id;
 
     @NotBlank
     private String name;
+
+    public City(String name) {
+        this.name = name;
+    }
 
     @Override
     public final boolean equals(Object o) {
@@ -38,8 +44,9 @@ public class City {
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
         City city = (City) o;
-        return getCityId() != null && Objects.equals(getCityId(), city.getCityId());
+        return getId() != null && Objects.equals(getId(), city.getId());
     }
+
 
     @Override
     public final int hashCode() {

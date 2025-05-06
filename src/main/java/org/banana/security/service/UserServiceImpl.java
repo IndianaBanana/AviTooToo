@@ -58,30 +58,39 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.userRegisterRequestDtoToUser(requestDto);
         user.setPassword(password);
         user.setRole(UserRole.ROLE_USER);
+//        user.setUserId(UUID.randomUUID());
         user = userRepository.save(user);
         return jwtService.generateToken(user);
     }
 
     @Override
     public String verify(UserLoginRequestDto requestDto) {
+        UserPrincipal principal = (UserPrincipal) checkUserCredentialsAndReturnAuthentication(requestDto).getPrincipal();
+        return jwtService.generateToken(principal.getUser());
+    }
+
+    private Authentication checkUserCredentialsAndReturnAuthentication(UserLoginRequestDto requestDto) {
         Authentication authentication = authManager
                 .authenticate(new UsernamePasswordAuthenticationToken(requestDto.getUsername(), requestDto.getPassword()));
-        if (authentication != null && authentication.isAuthenticated()) {
-            UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-            return jwtService.generateToken(principal.getUser());
-        } else {
+        if (authentication == null || !authentication.isAuthenticated()) {
             throw new BadCredentialsException("Bad credentials");
         }
+        return authentication;
     }
 
     @Override
     public UserResponseDto getCurrentUser() {
-        return userMapper.userToUserResponseDto(getUserPrincipal().getUser());
+//        userRepository.findByUsername("banana@banana.com");
+//        userRepository.findById(UUID.fromString("f11bf8e8-22e1-4021-9d78-947aae9786ff"));
+//        return null;
+        return userMapper.userToUserResponseDto(userRepository.findById(getUserPrincipal().getUser().getId())
+                .orElseThrow(() -> new UserNotFoundException(getUserPrincipal().getUser().getId())));
+//        return userMapper.userToUserResponseDto(getUserPrincipal().getUser());
     }
-    @Override //todo убрать sout
-    public UserResponseDto findById(UUID id){
+
+    @Override
+    public UserResponseDto findById(UUID id) {
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-//        System.out.println(user);
         return userMapper.userToUserResponseDto(user);
     }
 
@@ -103,7 +112,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String updatePassword(UserPasswordUpdateRequestDto requestDto) {
         User user = getUserPrincipal().getUser();
-        verify(new UserLoginRequestDto(user.getUsername(), requestDto.getOldPassword()));
+        checkUserCredentialsAndReturnAuthentication(new UserLoginRequestDto(user.getUsername(), requestDto.getOldPassword()));
         user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
         user = userRepository.save(user);
         return jwtService.generateToken(user);
@@ -116,7 +125,7 @@ public class UserServiceImpl implements UserService {
         if (user.getUsername().equals(requestDto.getNewUsername()))
             throw new UserUpdateOldEqualsNewDataException(SAME_USERNAME);
 
-        verify(new UserLoginRequestDto(user.getUsername(), requestDto.getPassword()));
+        checkUserCredentialsAndReturnAuthentication(new UserLoginRequestDto(user.getUsername(), requestDto.getPassword()));
 
         if (userRepository.existsByUsername(requestDto.getNewUsername()))
             throw new UserUsernameAlreadyExistsException(requestDto.getNewUsername());
@@ -133,7 +142,7 @@ public class UserServiceImpl implements UserService {
         if (user.getPhone().equals(requestDto.getNewPhone()))
             throw new UserUpdateOldEqualsNewDataException(SAME_PHONE);
 
-        verify(new UserLoginRequestDto(user.getUsername(), requestDto.getPassword()));
+        checkUserCredentialsAndReturnAuthentication(new UserLoginRequestDto(user.getUsername(), requestDto.getPassword()));
 
         if (userRepository.existsByPhone(requestDto.getNewPhone())) {
             throw new UserPhoneAlreadyExistsException(requestDto.getNewPhone());
@@ -150,7 +159,7 @@ public class UserServiceImpl implements UserService {
         if (!currentUser.getUsername().equals(requestDto.getUsername()))
             throw new BadCredentialsException("Bad credentials");
 
-        verify(requestDto);
+        checkUserCredentialsAndReturnAuthentication(requestDto);
         userRepository.delete(currentUser);
     }
 

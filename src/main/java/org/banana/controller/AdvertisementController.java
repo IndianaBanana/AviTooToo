@@ -1,13 +1,13 @@
 package org.banana.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.banana.dto.advertisement.AdvertisementFilterDto;
 import org.banana.dto.advertisement.AdvertisementRequestDto;
 import org.banana.dto.advertisement.AdvertisementResponseDto;
 import org.banana.dto.advertisement.AdvertisementUpdateRequestDto;
 import org.banana.service.AdvertisementService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,23 +38,22 @@ public class AdvertisementController {
     @PostMapping("/filter")
     public ResponseEntity<List<AdvertisementResponseDto>> getFilteredAdvertisements(
             @Valid @RequestBody AdvertisementFilterDto filter,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) int size) {
         return ResponseEntity.ok(advertisementService.findAllFiltered(filter, page, size));
     }
 
     @PostMapping
     public ResponseEntity<AdvertisementResponseDto> createAdvertisement(@RequestBody @Valid AdvertisementRequestDto requestDto) {
         AdvertisementResponseDto created = advertisementService.createAdvertisement(requestDto);
-        URI uri = URI.create(String.format("/api/v1/advertisement/%s", created.getAdvertisementId()));
+        URI uri = URI.create(String.format("/api/v1/advertisement/%s", created.getId()));
         return ResponseEntity.created(uri).body(created);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping
     public ResponseEntity<AdvertisementResponseDto> updateAdvertisement(
-            @PathVariable UUID id,
             @RequestBody @Valid AdvertisementUpdateRequestDto requestDto) {
-        return ResponseEntity.ok(advertisementService.updateAdvertisement(id, requestDto));
+        return ResponseEntity.ok(advertisementService.updateAdvertisement(requestDto));
     }
 
     @PatchMapping("/{id}/close")
@@ -64,8 +63,7 @@ public class AdvertisementController {
 
     @PatchMapping("/{id}/promote")
     public ResponseEntity<AdvertisementResponseDto> promoteAdvertisement(@PathVariable UUID id) {
-        advertisementService.promoteAdvertisement(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(advertisementService.promoteAdvertisement(id));
     }
 
     @DeleteMapping("/{id}")
