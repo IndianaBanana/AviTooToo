@@ -2,10 +2,7 @@ package org.banana.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -34,23 +31,30 @@ public class Message {
     @Column(name = "message_id", updatable = false, nullable = false)
     private UUID id;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "advertisement_id")
-    @ToString.Exclude
-    private Advertisement advertisement;
+    //    @NotNull
+    private UUID advertisementId;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sender_id")
-    @ToString.Exclude
-    private User sender;
+    private UUID senderId;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "recipient_id")
-    @ToString.Exclude
-    private User recipient;
+    private UUID recipientId;
+//  @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "advertisement_id")
+//    @ToString.Exclude
+//    private Advertisement advertisement;
+//
+//    @NotNull
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "sender_id")
+//    @ToString.Exclude
+//    private User sender;
+//
+//    @NotNull
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "recipient_id")
+//    @ToString.Exclude
+//    private User recipient;
 
     @NotBlank
     private String messageText;
@@ -60,6 +64,14 @@ public class Message {
 
     @NotNull
     private Boolean isRead = false;
+
+    public Message(UUID advertisementId, UUID senderId, UUID recipientId, String messageText, LocalDateTime messageDate) {
+        this.advertisementId = advertisementId;
+        this.senderId = senderId;
+        this.recipientId = recipientId;
+        this.messageText = messageText;
+        this.messageDate = messageDate;
+    }
 
     @Override
     public final boolean equals(Object o) {

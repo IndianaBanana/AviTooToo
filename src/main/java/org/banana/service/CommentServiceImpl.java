@@ -45,7 +45,7 @@ public class CommentServiceImpl implements CommentService {
             Comment parent = commentRepository.findById(requestDto.getParentCommentId())
                     .orElseThrow(() -> new CommentNotFoundException(requestDto.getParentCommentId()));
             if (!parent.getAdvertisementId().equals(requestDto.getAdvertisementId()))
-                throw new CommentInAdvertisementNotFoundException(requestDto.getParentCommentId(),requestDto.getAdvertisementId());
+                throw new CommentInAdvertisementNotFoundException(requestDto.getParentCommentId(), requestDto.getAdvertisementId());
 
             rootCommentId = parent.getRootCommentId();
             if (rootCommentId == null) {
@@ -89,7 +89,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponseDto> findAllByAdvertisementId(UUID advertisementId, int page, int size) {
-        List<Comment> allRootComments = commentRepository.findAllRootCommentsByAdvertisementId(advertisementId, page*size, size);
+        List<Comment> allRootComments = commentRepository.findAllRootCommentsByAdvertisementId(advertisementId, page * size, size);
         List<Comment> allCommentsInRootIds = commentRepository.findAllCommentsInRootIds(allRootComments.stream().map(Comment::getId).toList());
         List<Comment> allComments = new ArrayList<>();
         allComments.addAll(allRootComments);

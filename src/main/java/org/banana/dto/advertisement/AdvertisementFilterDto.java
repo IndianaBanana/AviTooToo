@@ -17,4 +17,8 @@ public class AdvertisementFilterDto {
     private BigDecimal minPrice;
     @DecimalMin("0.00")
     private BigDecimal maxPrice;
+
+//    private LocalDateTime cursorDate;
+//    @Min(1)
+//    private int limit;
 }

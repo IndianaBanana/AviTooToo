@@ -1,6 +1,5 @@
 package org.banana.security;
 
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

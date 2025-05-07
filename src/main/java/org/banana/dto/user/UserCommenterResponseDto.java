@@ -19,5 +19,4 @@ public class UserCommenterResponseDto {
     private String firstName;
 
     private String lastName;
-
 }

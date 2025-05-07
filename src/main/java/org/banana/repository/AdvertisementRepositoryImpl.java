@@ -1,6 +1,5 @@
 package org.banana.repository;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.banana.dto.advertisement.AdvertisementFilterDto;
 import org.banana.dto.advertisement.AdvertisementResponseDto;

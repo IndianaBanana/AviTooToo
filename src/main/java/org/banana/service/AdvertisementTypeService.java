@@ -5,7 +5,6 @@ import org.banana.dto.advertisement.type.AdvertisementTypeDto;
 import org.banana.dto.advertisement.type.AdvertisementTypeMapper;
 import org.banana.entity.AdvertisementType;
 import org.banana.repository.AdvertisementTypeRepository;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

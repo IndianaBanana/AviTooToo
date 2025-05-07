@@ -2,7 +2,6 @@ package org.banana.dto.comment;
 
 import lombok.Data;
 import org.banana.dto.user.UserCommenterResponseDto;
-import org.banana.dto.user.UserResponseDto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

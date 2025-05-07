@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.banana.dto.comment.CommentRequestDto;
 import org.banana.dto.comment.CommentResponseDto;
 import org.banana.service.CommentService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +30,7 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<CommentResponseDto> addComment(@Valid @RequestBody CommentRequestDto requestDto) {
         CommentResponseDto createdComment = commentService.addComment(requestDto);
-        return ResponseEntity.created(URI.create("api/v1/comment/"+createdComment.getId())).body(createdComment);
+        return ResponseEntity.created(URI.create("api/v1/comment/" + createdComment.getId())).body(createdComment);
     }
 
     @DeleteMapping("/{commentId}")
