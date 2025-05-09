@@ -1,6 +1,7 @@
 package org.banana.repository;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.banana.dto.advertisement.AdvertisementFilterDto;
 import org.banana.dto.advertisement.AdvertisementResponseDto;
 import org.banana.entity.Advertisement;
@@ -8,11 +9,13 @@ import org.banana.repository.crud.AbstractCrudRepositoryImpl;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
+@Slf4j
 public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Advertisement, UUID> implements AdvertisementRepository {
 
     private static final String FIND_FULL_ENTITY = """
@@ -33,7 +36,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
                 a.description,
                 a.price,
                 a.quantity,
-                a.isPaid,
+                a.isPromoted,
                 a.createDate,
                 a.closeDate
             )
@@ -43,6 +46,8 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
             JOIN a.user u
             LEFT JOIN UserRatingView ur ON ur.id = u.id
             """;
+    private static final String PROMOTE_ADVERTISEMENT = "UPDATE Advertisement a SET a.isPromoted = true WHERE a.id = :id";
+    private static final String CLOSE_ADVERTISEMENT = "UPDATE Advertisement a SET a.closeDate = :closeDate WHERE a.id = :id";
 
     public AdvertisementRepositoryImpl() {
         super(Advertisement.class);
@@ -50,6 +55,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
 
     @Override
     public Optional<AdvertisementResponseDto> findDtoById(UUID id) {
+        log.debug("findDtoById({}) in {}", id, getClass().getSimpleName());
         return getSession()
                 .createQuery(FIND_FULL_ENTITY + " WHERE a.id = :id", AdvertisementResponseDto.class)
                 .setParameter("id", id)
@@ -58,9 +64,29 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     }
 
     @Override
+    public void promoteAdvertisement(UUID id) {
+        log.debug("promoteAdvertisement({}) in {}", id, getClass().getSimpleName());
+        getSession()
+                .createMutationQuery(PROMOTE_ADVERTISEMENT)
+                .setParameter("id", id)
+                .executeUpdate();
+    }
+
+    @Override
+    public void closeAdvertisement(UUID id, LocalDateTime closeDate) {
+        log.debug("closeAdvertisement({}) in {}", id, getClass().getSimpleName());
+        getSession()
+                .createMutationQuery(CLOSE_ADVERTISEMENT)
+                .setParameter("id", id)
+                .setParameter("closeDate", closeDate)
+                .executeUpdate();
+    }
+
+    @Override
     public List<AdvertisementResponseDto> findAllFiltered(@NotNull AdvertisementFilterDto filter,
                                                           int page,
                                                           int size) {
+        log.debug("findAllFiltered() in {}", getClass().getSimpleName());
         Query<AdvertisementResponseDto> query = getAdvertisementResponseDtoTypedQuery(filter);
 
         if (filter.getCityIds() != null && !filter.getCityIds().isEmpty()) {
@@ -98,7 +124,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
         }
         if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank()) {
             System.out.println("Search param: " + filter.getSearchParam());
-            jpql.append(" AND (LOWER(a.title) LIKE :search OR LOWER(a.description) LIKE :search)");
+            jpql.append(" AND (LOWER(a.title) LIKE :search ESCAPE '\\' OR LOWER(a.description) LIKE :search ESCAPE '\\')");
         }
         if (filter.getMinPrice() != null) {
             jpql.append(" AND a.price >= :minPrice");
@@ -107,7 +133,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
             jpql.append(" AND a.price <= :maxPrice");
         }
 
-        jpql.append(" ORDER BY a.isPaid DESC, ur.averageRating DESC, ur.ratingCount DESC, a.createDate ASC");
+        jpql.append(" ORDER BY a.isPromoted DESC, ur.averageRating DESC, ur.ratingCount DESC, a.createDate DESC");
 
         return getSession()
                 .createQuery(jpql.toString(), AdvertisementResponseDto.class);

@@ -30,17 +30,6 @@ public class Rating {
     @Min(1)
     @Max(5)
     private Short ratingValue;
-//    // todo посмотреть надо ли нам оставлять эти объекты.
-//    @Transient
-//    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-//    @ToString.Exclude
-//    private User user;
-//    @Transient
-//    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-//    @JoinColumn(name = "rater_id", insertable = false, updatable = false)
-//    @ToString.Exclude
-//    private User rater;
 
     public Rating(UUID userId, UUID raterId, short ratingValue) {
         this.id = new RatingId(userId, raterId);

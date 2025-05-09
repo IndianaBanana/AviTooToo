@@ -9,21 +9,22 @@ import org.banana.dto.user.UserUpdateRequestDto;
 import org.banana.entity.User;
 import org.banana.exception.UserNotFoundException;
 import org.banana.repository.UserRepository;
-import org.banana.security.UserPrincipal;
 import org.banana.security.UserRole;
 import org.banana.security.dto.UserLoginRequestDto;
 import org.banana.security.dto.UserPasswordUpdateRequestDto;
 import org.banana.security.dto.UserPhoneUpdateRequestDto;
+import org.banana.security.dto.UserPrincipal;
 import org.banana.security.dto.UserRegisterRequestDto;
 import org.banana.security.dto.UserUsernameUpdateRequestDto;
 import org.banana.security.exception.UserPhoneAlreadyExistsException;
 import org.banana.security.exception.UserUpdateOldEqualsNewDataException;
 import org.banana.security.exception.UserUsernameAlreadyExistsException;
+import org.banana.util.SecurityUtils;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -58,34 +59,22 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.userRegisterRequestDtoToUser(requestDto);
         user.setPassword(password);
         user.setRole(UserRole.ROLE_USER);
-//        user.setUserId(UUID.randomUUID());
         user = userRepository.save(user);
-        return jwtService.generateToken(user);
+        return jwtService.generateToken(user.getId(), user.getUsername(), user.getRole(), user.getPhone());
     }
 
     @Override
     public String verify(UserLoginRequestDto requestDto) {
         UserPrincipal principal = (UserPrincipal) checkUserCredentialsAndReturnAuthentication(requestDto).getPrincipal();
-        return jwtService.generateToken(principal.getUser());
+        return jwtService.generateToken(principal.getId(), principal.getUsername(), principal.getRole(), principal.getPhone());
     }
 
-    private Authentication checkUserCredentialsAndReturnAuthentication(UserLoginRequestDto requestDto) {
-        Authentication authentication = authManager
-                .authenticate(new UsernamePasswordAuthenticationToken(requestDto.getUsername(), requestDto.getPassword()));
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new BadCredentialsException("Bad credentials");
-        }
-        return authentication;
-    }
 
     @Override
     public UserResponseDto getCurrentUser() {
-//        userRepository.findByUsername("banana@banana.com");
-//        userRepository.findById(UUID.fromString("f11bf8e8-22e1-4021-9d78-947aae9786ff"));
-//        return null;
-        return userMapper.userToUserResponseDto(userRepository.findById(getUserPrincipal().getUser().getId())
-                .orElseThrow(() -> new UserNotFoundException(getUserPrincipal().getUser().getId())));
-//        return userMapper.userToUserResponseDto(getUserPrincipal().getUser());
+        UUID id = SecurityUtils.getCurrentUserPrincipal().getId();
+        return userMapper.userToUserResponseDto(userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id)));
     }
 
     @Override
@@ -97,31 +86,33 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto updateUser(UserUpdateRequestDto userUpdateRequestDto) {
-        UserPrincipal principal = getUserPrincipal();
-        User user = principal.getUser();
-        if (user.getFirstName().equals(userUpdateRequestDto.getFirstName())
-            && user.getLastName().equals(userUpdateRequestDto.getLastName()))
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUserPrincipal();
+
+        if (userPrincipal.getFirstName().equals(userUpdateRequestDto.getFirstName()) && userPrincipal.getLastName().equals(userUpdateRequestDto.getLastName()))
             throw new UserUpdateOldEqualsNewDataException(SAME_FIRST_NAME_AND_LAST_NAME);
+
+        User user = userRepository.findById(userPrincipal.getId()).orElseThrow(() -> new UserNotFoundException(userPrincipal.getId()));
         user.setFirstName(userUpdateRequestDto.getFirstName());
         user.setLastName(userUpdateRequestDto.getLastName());
         user = userRepository.save(user);
         return userMapper.userToUserResponseDto(user);
     }
 
+    // todo здесь не нужен токен. может стоит заморочиться и написать инвалидацию токенов в бд
     @Override
     @Transactional
     public String updatePassword(UserPasswordUpdateRequestDto requestDto) {
-        User user = getUserPrincipal().getUser();
+        UserPrincipal user = SecurityUtils.getCurrentUserPrincipal();
         checkUserCredentialsAndReturnAuthentication(new UserLoginRequestDto(user.getUsername(), requestDto.getOldPassword()));
-        user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
-        user = userRepository.save(user);
-        return jwtService.generateToken(user);
+        String encodedPass = passwordEncoder.encode(requestDto.getNewPassword());
+        userRepository.updatePassword(user.getId(), encodedPass);
+        return jwtService.generateToken(user.getId(), user.getUsername(), user.getRole(), user.getPhone());
     }
 
     @Override
     @Transactional
     public String updateUsername(UserUsernameUpdateRequestDto requestDto) {
-        User user = getUserPrincipal().getUser();
+        UserPrincipal user = SecurityUtils.getCurrentUserPrincipal();
         if (user.getUsername().equals(requestDto.getNewUsername()))
             throw new UserUpdateOldEqualsNewDataException(SAME_USERNAME);
 
@@ -130,15 +121,15 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByUsername(requestDto.getNewUsername()))
             throw new UserUsernameAlreadyExistsException(requestDto.getNewUsername());
 
-        user.setUsername(requestDto.getNewUsername());
-        user = userRepository.save(user);
-        return jwtService.generateToken(user);
+        userRepository.updateUsername(user.getId(), requestDto.getNewUsername());
+
+        return jwtService.generateToken(user.getId(), requestDto.getNewUsername(), user.getRole(), user.getPhone());
     }
 
     @Override
     @Transactional
     public String updatePhone(UserPhoneUpdateRequestDto requestDto) {
-        User user = getUserPrincipal().getUser();
+        UserPrincipal user = SecurityUtils.getCurrentUserPrincipal();
         if (user.getPhone().equals(requestDto.getNewPhone()))
             throw new UserUpdateOldEqualsNewDataException(SAME_PHONE);
 
@@ -147,23 +138,28 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByPhone(requestDto.getNewPhone())) {
             throw new UserPhoneAlreadyExistsException(requestDto.getNewPhone());
         }
-        user.setPhone(requestDto.getNewPhone());
-        user = userRepository.save(user);
-        return jwtService.generateToken(user);
+        userRepository.updatePhone(user.getId(), requestDto.getNewPhone());
+
+        return jwtService.generateToken(user.getId(), user.getUsername(), user.getRole(), requestDto.getNewPhone());
     }
 
     @Override
     public void deleteUser(UserLoginRequestDto requestDto) {
-        User currentUser = getUserPrincipal().getUser();
+        UserPrincipal currentUser = SecurityUtils.getCurrentUserPrincipal();
 
         if (!currentUser.getUsername().equals(requestDto.getUsername()))
-            throw new BadCredentialsException("Bad credentials");
+            throw new AccessDeniedException("Only owner can delete account");
 
         checkUserCredentialsAndReturnAuthentication(requestDto);
-        userRepository.delete(currentUser);
+        userRepository.deleteById(currentUser.getId());
     }
 
-    private UserPrincipal getUserPrincipal() {
-        return (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    private Authentication checkUserCredentialsAndReturnAuthentication(UserLoginRequestDto requestDto) {
+        Authentication authentication = authManager
+                .authenticate(new UsernamePasswordAuthenticationToken(requestDto.getUsername(), requestDto.getPassword()));
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BadCredentialsException("Bad credentials");
+        }
+        return authentication;
     }
 }

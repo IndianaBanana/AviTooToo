@@ -14,11 +14,14 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
 
     private static final String EXISTS_BY_USERNAME = "SELECT 1 FROM User u WHERE u.username = :username";
     private static final String EXISTS_BY_PHONE = "SELECT 1 FROM User u WHERE u.phone = :phone";
-    private static final String FIND_BY_USERNAME = "SELECT u.id, u.firstName, u.lastName,u.phone,u.username, u.password,u.role FROM User u WHERE u.username = :username";
-    //        private static final String FIND_BY_USERNAME = "SELECT u FROM User u LEFT JOIN FETCH u.userRatingView WHERE u.username = :username";
-//    private static final String FIND_BY_ID = "SELECT u FROM User u WHERE u.id = :id";
+    //    private static final String FIND_BY_USERNAME = "SELECT u.id, u.firstName, u.lastName,u.phone,u.username, u.password,u.role FROM User u WHERE u.username = :username";
+    private static final String FIND_BY_USERNAME = "SELECT u FROM User u WHERE u.username = :username";
+    //    private static final String FIND_BY_ID = "SELECT u FROM User u WHERE u.id = :id";
     private static final String FIND_BY_ID = "SELECT u FROM User u LEFT JOIN FETCH u.userRatingView WHERE u.id = :id";
     //    private static final String FIND_BY_PHONE = "SELECT u FROM User u WHERE u.phone = :phone";
+    private static final String UPDATE_PASSWORD = "UPDATE User u SET u.password = :password WHERE u.id = :id";
+    private static final String UPDATE_USERNAME = "UPDATE User u SET u.username = :username WHERE u.id = :id";
+    private static final String UPDATE_PHONE = "UPDATE User u SET u.phone = :phone WHERE u.id = :id";
 
     public UserRepositoryImpl() {
         super(User.class);
@@ -30,6 +33,33 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
         return Optional.ofNullable(getSession().createQuery(FIND_BY_ID, User.class)
                 .setParameter("id", uuid)
                 .getSingleResultOrNull());
+    }
+
+    @Override
+    public void updatePassword(UUID id, String password) {
+        log.debug("entering `updatePassword` method in {}", this.getClass().getSimpleName());
+        getSession().createMutationQuery(UPDATE_PASSWORD)
+                .setParameter("password", password)
+                .setParameter("id", id)
+                .executeUpdate();
+    }
+
+    @Override
+    public void updateUsername(UUID id, String username) {
+        log.debug("entering `updateUsername` method in {}", this.getClass().getSimpleName());
+        getSession().createMutationQuery(UPDATE_USERNAME)
+                .setParameter("username", username)
+                .setParameter("id", id)
+                .executeUpdate();
+    }
+
+    @Override
+    public void updatePhone(UUID id, String phone) {
+        log.debug("entering `updatePhone` method in {}", this.getClass().getSimpleName());
+        getSession().createMutationQuery(UPDATE_PHONE)
+                .setParameter("phone", phone)
+                .setParameter("id", id)
+                .executeUpdate();
     }
 
     @Override

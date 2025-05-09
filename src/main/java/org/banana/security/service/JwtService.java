@@ -4,7 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.banana.entity.User;
+import org.banana.security.UserRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -26,15 +26,15 @@ public class JwtService {
         this.secretkey = secretkey;
     }
 
-    public String generateToken(User user) {
+    public String generateToken(UUID userId, String username, UserRole role, String phone) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("username", user.getUsername());
-        claims.put("role", user.getRole());
-        claims.put("phone", user.getPhone());
+        claims.put("username", username);
+        claims.put("role", role);
+        claims.put("phone", phone);
         return Jwts.builder()
                 .claims()
                 .add(claims)
-                .subject(user.getId().toString())
+                .subject(userId.toString())
                 .id(UUID.randomUUID().toString())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + VALID_PERIOD))

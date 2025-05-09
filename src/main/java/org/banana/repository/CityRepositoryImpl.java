@@ -16,7 +16,7 @@ public class CityRepositoryImpl extends AbstractCrudRepositoryImpl<City, UUID> i
 
     @Override
     public List<City> findByNameLike(String pattern) {
-        return getSession().createQuery("SELECT c FROM City c WHERE LOWER(c.name) LIKE LOWER(:pattern)", City.class)
+        return getSession().createQuery("SELECT c FROM City c WHERE LOWER(c.name) LIKE LOWER(:pattern) ESCAPE '\\'", City.class)
                 .setParameter("pattern", pattern + "%")
                 .getResultList();
     }

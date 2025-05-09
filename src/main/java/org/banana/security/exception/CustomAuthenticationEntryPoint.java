@@ -18,7 +18,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType("application/json");
 
         PrintWriter writer = response.getWriter();
-        writer.write("{\"error\": \"Error authenticating. Invalid credentials\"}");
+        writer.write("{\"error\": \"Error authenticating. %s\"}".formatted(authException.getMessage()));
         writer.flush();
     }
 }

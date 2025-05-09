@@ -22,7 +22,7 @@ public class AdvertisementResponseDto {
     private String description;
     private BigDecimal price;
     private Integer quantity;
-    private Boolean isPaid;
+    private Boolean isPromoted;
     private LocalDateTime createDate;
     private LocalDateTime closeDate;
 }

@@ -7,14 +7,16 @@ import org.banana.dto.comment.CommentRequestDto;
 import org.banana.dto.comment.CommentResponseDto;
 import org.banana.entity.Comment;
 import org.banana.entity.User;
+import org.banana.exception.AddingCommentWhenParentCommenterIsNullException;
 import org.banana.exception.CommentInAdvertisementNotFoundException;
 import org.banana.exception.CommentNotFoundException;
 import org.banana.exception.UserDeleteCommentException;
+import org.banana.exception.UserNotFoundException;
 import org.banana.repository.CommentRepository;
 import org.banana.repository.UserRepository;
-import org.banana.security.UserPrincipal;
 import org.banana.security.UserRole;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.banana.security.dto.UserPrincipal;
+import org.banana.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,11 +41,12 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentResponseDto addComment(CommentRequestDto requestDto) {
-        User currentUser = getCurrentUser();
+        UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
         UUID rootCommentId = null;
         if (requestDto.getParentCommentId() != null) {
             Comment parent = commentRepository.findById(requestDto.getParentCommentId())
                     .orElseThrow(() -> new CommentNotFoundException(requestDto.getParentCommentId()));
+            if (parent.getCommenter() == null) throw new AddingCommentWhenParentCommenterIsNullException();
             if (!parent.getAdvertisementId().equals(requestDto.getAdvertisementId()))
                 throw new CommentInAdvertisementNotFoundException(requestDto.getParentCommentId(), requestDto.getAdvertisementId());
 
@@ -52,6 +55,9 @@ public class CommentServiceImpl implements CommentService {
                 rootCommentId = requestDto.getParentCommentId();
             }
         }
+        // fixme тут не нужен fetch
+        User currentUser = userRepository.findById(currentUserPrincipal.getId())
+                .orElseThrow(() -> new UserNotFoundException(currentUserPrincipal.getId()));
         Comment comment = new Comment(
                 requestDto.getAdvertisementId(),
                 rootCommentId,
@@ -62,15 +68,18 @@ public class CommentServiceImpl implements CommentService {
         );
         comment = commentRepository.save(comment);
         return commentMapper.fromCommentToCommentResponseDto(comment);
+//        return null;
     }
 
     @Override
     @Transactional
     public void deleteComment(UUID commentId) {
-        User currentUser = getCurrentUser();
+        UserPrincipal currentUser = SecurityUtils.getCurrentUserPrincipal();
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
-        if (!comment.getCommenter().getId().equals(currentUser.getId()) && !currentUser.getRole().equals(UserRole.ROLE_ADMIN)) {
+        boolean isOwner = comment.getCommenter().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getRole().equals(UserRole.ROLE_ADMIN);
+        if (!isOwner && !isAdmin) {
             throw new UserDeleteCommentException();
         }
         comment.setCommenter(null);
@@ -78,6 +87,7 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.save(comment);
     }
 
+    // fixme два запроса вместо одного
     @Override
     @Transactional(readOnly = true)
     public CommentResponseDto findCommentById(UUID commentId) {
@@ -90,16 +100,12 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponseDto> findAllByAdvertisementId(UUID advertisementId, int page, int size) {
         List<Comment> allRootComments = commentRepository.findAllRootCommentsByAdvertisementId(advertisementId, page * size, size);
-        List<Comment> allCommentsInRootIds = commentRepository.findAllCommentsInRootIds(allRootComments.stream().map(Comment::getId).toList());
+        List<Comment> allCommentsInRootIds = commentRepository.findAllCommentsInRootIds(
+                allRootComments.stream().map(Comment::getId).toList());
         List<Comment> allComments = new ArrayList<>();
         allComments.addAll(allRootComments);
         allComments.addAll(allCommentsInRootIds);
         return commentMapper.fromCommentListToCommentResponseDtoList(allComments);
-    }
-
-
-    private User getCurrentUser() {
-        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return principal.getUser();
+//        return null;
     }
 }

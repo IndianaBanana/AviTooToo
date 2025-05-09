@@ -10,16 +10,19 @@ import java.util.UUID;
 @Repository
 public class CommentRepositoryImpl extends AbstractCrudRepositoryImpl<Comment, UUID> implements CommentRepository {
 
+    // todo переделать запрос для пагинации на нормальный
     private static final String FIND_BY_ROOT_COMMENT_ID_IS_NULL = """
             select c
             from Comment c
-            join fetch c.commenter
-            where c.rootCommentId is null and c.advertisementId = :advertisementId""";
+            left join fetch c.commenter cc
+            where c.rootCommentId is null and c.advertisementId = :advertisementId
+            order by c.commentDate desc, c.id desc""";
     private static final String FIND_ALL_COMMENTS_IN_ROOT_IDS = """
             select c
             from Comment c
-            join fetch c.commenter
-            where c.rootCommentId in :rootCommentIds""";
+            left join c.commenter
+            where c.rootCommentId in :rootCommentIds
+            order by c.rootCommentId DESC, c.parentCommentId DESC, c.commentDate DESC""";
 
 
     public CommentRepositoryImpl() {

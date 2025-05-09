@@ -8,12 +8,8 @@ import java.util.UUID;
 
 @Data
 public class MessageSendRequestDto {
-    // todo: может написать свою валидацию и проверять чтобы хотя бы одно поле было не Null
 
     private UUID advertisementId;
-
-//    @NotNull
-//    private UUID senderId;
 
     @NotNull
     private UUID recipientId;

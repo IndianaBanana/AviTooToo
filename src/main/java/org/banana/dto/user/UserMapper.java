@@ -1,6 +1,7 @@
 package org.banana.dto.user;
 
 import org.banana.entity.User;
+import org.banana.security.dto.UserPrincipal;
 import org.banana.security.dto.UserRegisterRequestDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,4 +25,8 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "role", ignore = true)
     User userRegisterRequestDtoToUser(UserRegisterRequestDto userRegisterRequestDto);
+
+    @Mapping(target = "ratingCount", ignore = true)
+    @Mapping(target = "averageRating", ignore = true)
+    UserResponseDto userPrincipalToUserResponseDto(UserPrincipal userPrincipal);
 }

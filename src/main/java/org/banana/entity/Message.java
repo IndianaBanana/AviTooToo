@@ -60,17 +60,17 @@ public class Message {
     private String messageText;
 
     @NotNull
-    private LocalDateTime messageDate;
+    private LocalDateTime messageDateTime;
 
     @NotNull
     private Boolean isRead = false;
 
-    public Message(UUID advertisementId, UUID senderId, UUID recipientId, String messageText, LocalDateTime messageDate) {
+    public Message(UUID advertisementId, UUID senderId, UUID recipientId, String messageText, LocalDateTime messageDateTime) {
         this.advertisementId = advertisementId;
         this.senderId = senderId;
         this.recipientId = recipientId;
         this.messageText = messageText;
-        this.messageDate = messageDate;
+        this.messageDateTime = messageDateTime;
     }
 
     @Override

@@ -23,6 +23,6 @@ public class UserRatingViewRepositoryImpl implements UserRatingViewRepository {
 
     @Override
     public void updateView() {
-        session.createNativeQuery("REFRESH MATERIALIZED VIEW CONCURRENTLY user_rating_view").executeUpdate();
+        session.createNativeMutationQuery("REFRESH MATERIALIZED VIEW CONCURRENTLY user_rating_view").executeUpdate();
     }
 }

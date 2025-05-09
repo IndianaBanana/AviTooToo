@@ -25,4 +25,12 @@ public class UserResponseDto {
     private BigDecimal averageRating;
 
     private Integer ratingCount;
+
+    public UserResponseDto(UUID id, String firstName, String lastName, String phone, String username) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.username = username;
+    }
 }

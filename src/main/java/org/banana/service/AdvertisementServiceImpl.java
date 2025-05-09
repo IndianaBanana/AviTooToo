@@ -15,12 +15,14 @@ import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.AdvertisementTypeNotFoundException;
 import org.banana.exception.AdvertisementUpdateException;
 import org.banana.exception.CityNotFoundException;
+import org.banana.exception.UserNotFoundException;
 import org.banana.repository.AdvertisementRepository;
 import org.banana.repository.AdvertisementTypeRepository;
 import org.banana.repository.CityRepository;
-import org.banana.security.UserPrincipal;
+import org.banana.repository.UserRepository;
 import org.banana.security.UserRole;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.banana.security.dto.UserPrincipal;
+import org.banana.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +45,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     private final AdvertisementRepository advertisementRepository;
     private final CityRepository cityRepository;
     private final AdvertisementTypeRepository advertisementTypeRepository;
+    private final UserRepository userRepository;
     private final AdvertisementMapper advertisementMapper;
 
     @Override
@@ -54,6 +57,12 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
     @Override
     public List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size) {
+        if (filter.getSearchParam() != null) {
+            filter.setSearchParam(filter.getSearchParam()
+                    .replace("\\", "\\\\")
+                    .replace("_", "\\_")
+                    .replace("%", "\\%"));
+        }
         return advertisementRepository.findAllFiltered(filter, page, size);
     }
 
@@ -62,14 +71,13 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     @Transactional
     public void deleteById(UUID advertisementId) {
         Advertisement advertisement = findAdvertisementByIdOrThrow(advertisementId);
-        User currentUser = getCurrentUser();
-        if (!advertisement.getUser().getId().equals(currentUser.getId()) && !currentUser.getRole().equals(UserRole.ROLE_ADMIN)) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUserPrincipal();
+        if (!advertisement.getUser().getId().equals(userPrincipal.getId()) && !userPrincipal.getRole().equals(UserRole.ROLE_ADMIN)) {
             throw new AdvertisementUpdateException(NOT_OWNER);
         }
         advertisementRepository.delete(advertisement);
     }
 
-    // fixme переписать запрос чтобы не было миллиона запросов в БД
     @Override
     @Transactional
     public AdvertisementResponseDto createAdvertisement(AdvertisementRequestDto requestDto) {
@@ -77,25 +85,26 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                 .orElseThrow(() -> new AdvertisementTypeNotFoundException(requestDto.getAdvertisementTypeId()));
         City city = cityRepository.findById(requestDto.getCityId())
                 .orElseThrow(() -> new CityNotFoundException(requestDto.getCityId()));
+        UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new UserNotFoundException(currentUserId));
         Advertisement advertisement = advertisementMapper.advertisementRequestDtoToAdvertisement(requestDto);
         advertisement.setAdvertisementType(advertisementType);
-        advertisement.setUser(getCurrentUser());
+        advertisement.setUser(currentUser);
         advertisement.setCity(city);
         advertisement.setCreateDate(LocalDateTime.now());
         Advertisement save = advertisementRepository.save(advertisement);
-//        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         return advertisementMapper.advertisementToAdvertisementResponseDto(save);
     }
 
 
-    // fixme переписать запрос чтобы не было миллиона запросов в БД
+    // !!! fixme переписать запрос чтобы не было миллиона запросов в БД
     @Override
     @Transactional
     public AdvertisementResponseDto updateAdvertisement(AdvertisementUpdateRequestDto requestDto) {
         Advertisement advertisement = findAdvertisementByIdOrThrow(requestDto.getAdvertisementId());
         if (advertisement.getCloseDate() != null) throw new AdvertisementUpdateException(ALREADY_CLOSED);
 
-        if (!advertisement.getUser().getId().equals(getCurrentUser().getId()))
+        if (!advertisement.getUser().getId().equals(SecurityUtils.getCurrentUserPrincipal().getId()))
             throw new AdvertisementUpdateException(NOT_OWNER);
 
         if (requestDto.getTitle() != null && !requestDto.getTitle().isBlank())
@@ -121,46 +130,48 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             advertisement.setQuantity(requestDto.getQuantity());
         }
 
+        advertisement = advertisementRepository.save(advertisement);
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
-    // fixme переписать запрос чтобы не было миллиона запросов в БД
     @Override
     @Transactional
     public AdvertisementResponseDto closeAdvertisement(UUID advertisementId) {
-        Advertisement advertisement = findAdvertisementByIdOrThrow(advertisementId);
+//        Advertisement advertisement = findAdvertisementByIdOrThrow(advertisementId);
+        AdvertisementResponseDto advertisement = advertisementRepository.findDtoById(advertisementId)
+                .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
         if (advertisement.getCloseDate() != null) {
             throw new AdvertisementUpdateException(ALREADY_CLOSED);
         }
-        if (!advertisement.getUser().getId().equals(getCurrentUser().getId())) {
+        UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
+        boolean isOwner = advertisement.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
+        boolean isAdmin = currentUserPrincipal.getRole().equals(UserRole.ROLE_ADMIN);
+        if (!isOwner && !isAdmin) {
             throw new AdvertisementUpdateException(NOT_OWNER);
         }
-        advertisement.setCloseDate(LocalDateTime.now());
-        return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
+        LocalDateTime closeDate = LocalDateTime.now();
+        advertisement.setCloseDate(closeDate);
+        advertisementRepository.closeAdvertisement(advertisementId, closeDate);
+        return advertisement;
     }
 
-    // fixme переписать запрос чтобы не было миллиона запросов в БД
     @Override
     @Transactional
     public AdvertisementResponseDto promoteAdvertisement(UUID advertisementId) {
-        Advertisement advertisement = findAdvertisementByIdOrThrow(advertisementId);
-        if (advertisement.getIsPaid()) {
+        AdvertisementResponseDto advertisement = advertisementRepository.findDtoById(advertisementId)
+                .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
+        if (advertisement.getIsPromoted()) {
             throw new AdvertisementUpdateException(ALREADY_PROMOTED);
         }
         if (advertisement.getCloseDate() != null) {
             throw new AdvertisementUpdateException(ALREADY_CLOSED);
         }
-        if (!advertisement.getUser().getId().equals(getCurrentUser().getId())) {
+        if (!advertisement.getUserResponseDto().getId().equals(SecurityUtils.getCurrentUserPrincipal().getId())) {
             throw new AdvertisementUpdateException(NOT_OWNER);
         }
-        advertisement.setIsPaid(true);
-
-        return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
-    }
-
-    private User getCurrentUser() {
-        UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return principal.getUser();
+        advertisement.setIsPromoted(true);
+        advertisementRepository.promoteAdvertisement(advertisementId);
+        return advertisement;
     }
 
     private Advertisement findAdvertisementByIdOrThrow(UUID advertisementId) {

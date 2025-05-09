@@ -10,6 +10,7 @@ import java.util.UUID;
 @Data
 public class AdvertisementFilterDto {
 
+    boolean onlyOpened = true;
     private List<UUID> cityIds;
     private List<UUID> advertisementTypeIds;
     private String searchParam;
@@ -17,7 +18,6 @@ public class AdvertisementFilterDto {
     private BigDecimal minPrice;
     @DecimalMin("0.00")
     private BigDecimal maxPrice;
-
 //    private LocalDateTime cursorDate;
 //    @Min(1)
 //    private int limit;

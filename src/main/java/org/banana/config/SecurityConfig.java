@@ -2,6 +2,8 @@ package org.banana.config;
 
 
 import lombok.RequiredArgsConstructor;
+import org.banana.security.exception.CustomAccessDeniedHandler;
+import org.banana.security.exception.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,6 +38,9 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
                                 .anyRequest().authenticated()
 //                        .anyRequest().permitAll()
+                ).exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+                        .accessDeniedHandler(new CustomAccessDeniedHandler())
                 )
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

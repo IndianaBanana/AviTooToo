@@ -3,7 +3,7 @@ package org.banana.security.service;
 import lombok.RequiredArgsConstructor;
 import org.banana.entity.User;
 import org.banana.repository.UserRepository;
-import org.banana.security.UserPrincipal;
+import org.banana.security.dto.UserPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,6 +19,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username).orElseThrow(() ->
                 new UsernameNotFoundException("Invalid password or login"));
-        return new UserPrincipal(user);
+        return new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getPhone(), user.getUsername(), user.getPassword(), user.getRole());
     }
 }

@@ -1,16 +1,16 @@
-package org.banana.security;
+package org.banana.security.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import org.banana.entity.User;
+import org.banana.security.UserRole;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 @Getter
 @ToString
@@ -18,23 +18,30 @@ import java.util.Collections;
 @AllArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-    private final User user;
+    //    private final User user;
+    private final UUID id;
+    private String firstName;
+    private String lastName;
+    private String phone;
+    private String username;
+    private String password;
+    private UserRole role;
 
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        GrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().name());
-        return Collections.singleton(authority);
+//        GrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().name());
+        return Collections.singleton(role);
     }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return username;
     }
 
     @Override

@@ -16,7 +16,7 @@ public class AdvertisementTypeRepositoryImpl extends AbstractCrudRepositoryImpl<
 
     @Override
     public List<AdvertisementType> findByNameLike(String pattern) {
-        return getSession().createQuery("SELECT a FROM AdvertisementType a WHERE LOWER(a.name) LIKE LOWER(:pattern)", AdvertisementType.class)
+        return getSession().createQuery("SELECT a FROM AdvertisementType a WHERE LOWER(a.name) LIKE LOWER(:pattern) ESCAPE '\\'", AdvertisementType.class)
                 .setParameter("pattern", "%" + pattern + "%")
                 .getResultList();
     }

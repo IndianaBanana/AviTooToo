@@ -1,10 +1,15 @@
 package org.banana.exception.handler;
 
+import org.banana.exception.AddingCommentWhenParentCommenterIsNullException;
 import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.AdvertisementTypeNotFoundException;
 import org.banana.exception.AdvertisementUpdateException;
 import org.banana.exception.CityNotFoundException;
 import org.banana.exception.CommentNotFoundException;
+import org.banana.exception.MessageSendException;
+import org.banana.exception.SaleHistoryAccessDeniedException;
+import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedException;
+import org.banana.exception.SaleHistoryNotFoundException;
 import org.banana.exception.UserDeleteCommentException;
 import org.banana.exception.UserNotFoundException;
 import org.banana.exception.UserRatesTheSameUserException;
@@ -16,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
@@ -35,7 +41,8 @@ import java.util.stream.Collectors;
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({UserNotFoundException.class, UsernameNotFoundException.class, AdvertisementNotFoundException.class,
-            CommentNotFoundException.class, CityNotFoundException.class, AdvertisementTypeNotFoundException.class})
+            CommentNotFoundException.class, CityNotFoundException.class, AdvertisementTypeNotFoundException.class,
+            SaleHistoryNotFoundException.class})
     protected ResponseEntity<Object> handleNotFoundException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.NOT_FOUND);
     }
@@ -46,16 +53,21 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             UserUpdateOldEqualsNewDataException.class,
             UserRatesTheSameUserException.class,
             AdvertisementUpdateException.class,
-            UserDeleteCommentException.class,
+            MessageSendException.class,
+            AddingCommentWhenParentCommenterIsNullException.class,
+            SaleHistoryAdvertisementQuantityIsLowerThanExpectedException.class
     })
     protected ResponseEntity<Object> handleConflictDataException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler({
-            BadCredentialsException.class
+            BadCredentialsException.class,
+            AccessDeniedException.class,
+            SaleHistoryAccessDeniedException.class,
+            UserDeleteCommentException.class,
     })
-    protected ResponseEntity<Object> handleBadCredentialsException(RuntimeException ex, WebRequest request) {
+    protected ResponseEntity<Object> handleAccessException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.UNAUTHORIZED);
     }
 

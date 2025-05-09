@@ -26,7 +26,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-//@Table(name = "sale_history")
 public class SaleHistory {
 
     @Id
@@ -40,17 +39,21 @@ public class SaleHistory {
     @ToString.Exclude
     private Advertisement advertisement;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "buyer_id")
-    @ToString.Exclude
-    private User buyer;
+    private UUID buyerId;
 
     @NotNull
-    private LocalDateTime saleDate;
+    private LocalDateTime saleDateTime;
 
     @NotNull
     @Min(1)
     private Integer quantity;
+
+    public SaleHistory(Advertisement advertisement, UUID buyerId, Integer quantity, LocalDateTime saleDateTime) {
+        this.advertisement = advertisement;
+        this.buyerId = buyerId;
+        this.quantity = quantity;
+        this.saleDateTime = saleDateTime;
+    }
 
     @Override
     public final boolean equals(Object o) {

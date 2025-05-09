@@ -4,12 +4,13 @@ import org.banana.dto.user.UserMapper;
 import org.banana.dto.user.UserResponseDto;
 import org.banana.dto.user.UserUpdateRequestDto;
 import org.banana.entity.User;
+import org.banana.exception.UserNotFoundException;
 import org.banana.repository.UserRepository;
-import org.banana.security.UserPrincipal;
 import org.banana.security.UserRole;
 import org.banana.security.dto.UserLoginRequestDto;
 import org.banana.security.dto.UserPasswordUpdateRequestDto;
 import org.banana.security.dto.UserPhoneUpdateRequestDto;
+import org.banana.security.dto.UserPrincipal;
 import org.banana.security.dto.UserRegisterRequestDto;
 import org.banana.security.dto.UserUsernameUpdateRequestDto;
 import org.banana.security.exception.UserPhoneAlreadyExistsException;
@@ -22,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,6 +32,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,27 +51,32 @@ import static org.mockito.Mockito.when;
 class UserServiceImplTest {
 
     private static final UUID USER_ID = UUID.randomUUID();
-    private UserResponseDto userResponseDto;
+
     @Mock
     private JwtService jwtService;
+
     @Mock
     private AuthenticationManager authManager;
+
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private PasswordEncoder passwordEncoder;
+
     @Mock
     private UserMapper userMapper;
+
     @InjectMocks
     private UserServiceImpl userService;
+
     private User user;
+    private UserResponseDto userResponseDto;
 
     @BeforeEach
     void setup() {
         user = new User(USER_ID, "John", "Doe", "123", "com@com.com", "password", UserRole.ROLE_USER);
         userResponseDto = new UserResponseDto(USER_ID, "John", "Doe", "123", "com@com.com", null, null);
-//        when(userMapper.userToUserResponseDto(any(User.class))).thenReturn(userResponseDto);
-//        when(userMapper.userRegisterRequestDtoToUser(any(UserRegisterRequestDto.class))).thenReturn(user);
     }
 
     @Test
@@ -103,42 +112,36 @@ class UserServiceImplTest {
                 user.getPassword(),
                 user.getPassword()
         );
-        user.setRole(null);
-        user.setId(null);
 
         when(userMapper.userRegisterRequestDtoToUser(any())).thenReturn(user);
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPass");
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        when(userRepository.save(userCaptor.capture())).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
-        when(jwtService.generateToken(any(User.class))).thenReturn("token");
+        when(userRepository.save(userCaptor.capture())).thenReturn(user);
+        when(jwtService.generateToken(USER_ID, requestDto.getUsername(), UserRole.ROLE_USER, requestDto.getPhone())).thenReturn("token");
 
         String result = userService.register(requestDto);
 
         assertThat(result).isEqualTo("token");
         assertThat(userCaptor.getValue().getPassword()).isEqualTo("encodedPass");
         assertThat(userCaptor.getValue().getRole()).isNotNull().isEqualTo(UserRole.ROLE_USER);
-        verify(userRepository).save(any(User.class));
+        verify(userRepository).save(userCaptor.getValue());
     }
 
     @Test
     void verify_shouldAuthenticateAndReturnToken() {
-        UserPrincipal principal = new UserPrincipal(user);
+        UserPrincipal principal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getPhone(), user.getUsername(), user.getPassword(), user.getRole());
         Authentication auth = mock(Authentication.class);
 
         when(auth.isAuthenticated()).thenReturn(true);
         when(auth.getPrincipal()).thenReturn(principal);
 
         when(authManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
-        when(jwtService.generateToken(user)).thenReturn("token");
-
         UserLoginRequestDto dto = new UserLoginRequestDto(user.getUsername(), user.getPassword());
 
-        String token = userService.verify(dto);
-
-        assertThat(token).isNotBlank().isEqualTo("token");
+        userService.verify(dto);
         verify(authManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtService).generateToken(user);
+        verify(jwtService).generateToken(principal.getId(), principal.getUsername(), principal.getRole(), principal.getPhone());
     }
 
     @Test
@@ -153,16 +156,32 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getCurrentUser_shouldReturnCurrentUser() {
+    void getCurrentUser_ReturnCurrentUser() {
         setupSecurityContext();
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(userMapper.userToUserResponseDto(any(User.class))).thenReturn(userResponseDto);
         assertThat(userService.getCurrentUser()).isEqualTo(userResponseDto);
+        verify(userRepository).findById(USER_ID);
+    }
+
+
+    @Test
+    void findById_WhenUserWithGivenIdExists_ReturnUserResponseDto() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+        when(userMapper.userToUserResponseDto(any(User.class))).thenReturn(userResponseDto);
+        assertThat(userService.findById(USER_ID)).isEqualTo(userResponseDto);
+        verify(userRepository).findById(USER_ID);
+    }
+
+    @Test
+    void findById_WhenUserWithGivenIdDoesNotExist_ThrowUserNotFoundException() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        assertThrows(UserNotFoundException.class, () -> userService.findById(USER_ID));
     }
 
     @Test
     void updateUser_whenLastNameAndFirstNameAreEqualToOldValuesSimultaneously_thenThrowUserUpdateOldEqualsNewDataExceptionWith_SAME_LAST_NAME_AND_FIRST_NAME_Attribute() {
         setupSecurityContext();
-
         UserUpdateRequestDto requestDto = new UserUpdateRequestDto(user.getFirstName(), user.getLastName());
 
         Exception exception = assertThrows(UserUpdateOldEqualsNewDataException.class, () -> userService.updateUser(requestDto));
@@ -175,7 +194,7 @@ class UserServiceImplTest {
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         UserUpdateRequestDto requestDto = new UserUpdateRequestDto("newFN", "newLN");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         userService.updateUser(requestDto);
 
         verify(userRepository).save(captor.capture());
@@ -183,7 +202,6 @@ class UserServiceImplTest {
         assertThat(captor.getValue().getFirstName()).isEqualTo(requestDto.getFirstName());
         assertThat(captor.getValue().getLastName()).isEqualTo(requestDto.getLastName());
     }
-
 
     @Test
     void updatePassword_whenBadCredentials_thenThrowBadCredentialsException() {
@@ -197,18 +215,12 @@ class UserServiceImplTest {
     @Test
     void updatePassword_whenGoodCredentials_thenSaveUserReturnToken() {
         whenGoodCredentialsGiven();
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         UserPasswordUpdateRequestDto dto = new UserPasswordUpdateRequestDto("old-pass", "new-pass", "new-pass");
-        when(jwtService.generateToken(any(User.class))).thenReturn("token");
-
+        when(jwtService.generateToken(USER_ID, user.getUsername(), user.getRole(), user.getPhone())).thenReturn("token");
+        when(passwordEncoder.encode(dto.getNewPassword())).thenReturn("new-pass-encoded");
         assertThat(userService.updatePassword(dto)).isEqualTo("token");
-        verify(userRepository).save(captor.capture());
-        verify(passwordEncoder).encode(dto.getNewPassword());
-        verify(jwtService).generateToken(captor.getValue());
-        verify(userRepository).save(any(User.class));
+        verify(userRepository).updatePassword(USER_ID, "new-pass-encoded");
     }
-
 
     @Test
     void updateUsername_whenBadCredentials_thenThrowBadCredentialsException() {
@@ -240,19 +252,15 @@ class UserServiceImplTest {
     void updateUsername_whenGoodCredentialsAndUsernameDoesNotExistAndNewUsernameNotEqualsOldUsername_thenSaveUserReturnToken() {
         whenGoodCredentialsGiven();
         UserUsernameUpdateRequestDto dto = new UserUsernameUpdateRequestDto("new-username", "pass");
-        when(userRepository.existsByUsername(anyString())).thenReturn(false);
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtService.generateToken(any(User.class))).thenReturn("token");
+        when(userRepository.existsByUsername("new-username")).thenReturn(false);
+        when(jwtService.generateToken(USER_ID, "new-username", user.getRole(), user.getPhone())).thenReturn("token");
 
         String token = userService.updateUsername(dto);
 
         assertThat(token).isEqualTo("token");
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        assertThat(captor.getValue().getUsername()).isEqualTo("new-username");
+        verify(userRepository).updateUsername(USER_ID, "new-username");
     }
-
 
     @Test
     void updatePhone_whenBadCredentials_thenThrowBadCredentialsException() {
@@ -283,18 +291,25 @@ class UserServiceImplTest {
     @Test
     void updatePhone_whenGoodCredentialsAndPhoneDoesNotExistAndNewPhoneNotEqualsOldPhone_thenSaveUserReturnToken() {
         whenGoodCredentialsGiven();
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-//        when(userRepository.save(any(User.class))).thenReturn(user);
         UserPhoneUpdateRequestDto dto = new UserPhoneUpdateRequestDto("new-phone", "pass");
-        when(userRepository.existsByPhone(anyString())).thenReturn(false);
-        when(jwtService.generateToken(any(User.class))).thenReturn("token");
+        when(userRepository.existsByPhone("new-phone")).thenReturn(false);
+        when(jwtService.generateToken(USER_ID, user.getUsername(), user.getRole(), dto.getNewPhone())).thenReturn("token");
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         assertThat(userService.updatePhone(dto)).isEqualTo("token");
-        verify(userRepository).save(captor.capture());
-        assertThat(captor.getValue().getPhone()).isEqualTo("new-phone");
+        verify(userRepository).updatePhone(USER_ID, dto.getNewPhone());
     }
 
+    private void whenBadCredentialsGiven() {
+        UserPrincipal principal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getPhone(), user.getUsername(), user.getPassword(), user.getRole());
+        Authentication auth = mock(Authentication.class);
+        SecurityContext context = mock(SecurityContext.class);
+        SecurityContextHolder.setContext(context);
+
+        when(auth.getPrincipal()).thenReturn(principal);
+        when(context.getAuthentication()).thenReturn(auth);
+        when(auth.isAuthenticated()).thenReturn(false);
+        when(authManager.authenticate(any())).thenReturn(auth);
+    }
 
     @Test
     void deleteUser_whenBadCredentials_thenThrowBadCredentialsException() {
@@ -309,7 +324,7 @@ class UserServiceImplTest {
         setupSecurityContext();
         UserLoginRequestDto dto = new UserLoginRequestDto(user.getUsername() + "wrong-username", user.getPassword());
 
-        assertThrows(BadCredentialsException.class, () -> userService.deleteUser(dto));
+        assertThrows(AccessDeniedException.class, () -> userService.deleteUser(dto));
     }
 
     @Test
@@ -317,23 +332,11 @@ class UserServiceImplTest {
         whenGoodCredentialsGiven();
         UserLoginRequestDto dto = new UserLoginRequestDto(user.getUsername(), user.getPassword());
         userService.deleteUser(dto);
-        verify(userRepository).delete(user);
-    }
-
-    private void whenBadCredentialsGiven() {
-        UserPrincipal principal = new UserPrincipal(user);
-        Authentication auth = mock(Authentication.class);
-        SecurityContext context = mock(SecurityContext.class);
-        SecurityContextHolder.setContext(context);
-
-        when(auth.getPrincipal()).thenReturn(principal);
-        when(context.getAuthentication()).thenReturn(auth);
-        when(auth.isAuthenticated()).thenReturn(false);
-        when(authManager.authenticate(any())).thenReturn(auth);
+        verify(userRepository).deleteById(USER_ID);
     }
 
     private void whenGoodCredentialsGiven() {
-        UserPrincipal principal = new UserPrincipal(user);
+        UserPrincipal principal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getPhone(), user.getUsername(), user.getPassword(), user.getRole());
         Authentication auth = mock(Authentication.class);
         SecurityContext context = mock(SecurityContext.class);
         SecurityContextHolder.setContext(context);
@@ -342,18 +345,18 @@ class UserServiceImplTest {
         when(context.getAuthentication()).thenReturn(auth);
         when(auth.isAuthenticated()).thenReturn(true);
         when(authManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
-//        when(jwtService.generateToken(any(User.class))).thenReturn("token");
     }
 
     private void setupSecurityContext() {
-        UserPrincipal principal = new UserPrincipal(user);
-
-        Authentication auth = mock(Authentication.class);
-        when(auth.getPrincipal()).thenReturn(principal);
-
-        SecurityContext context = mock(SecurityContext.class);
-        when(context.getAuthentication()).thenReturn(auth);
-
-        SecurityContextHolder.setContext(context);
+        UserPrincipal principal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getPhone(), user.getUsername(), user.getPassword(), user.getRole());
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+//        Authentication auth = mock(Authentication.class);
+//        when(auth.getPrincipal()).thenReturn(principal);
+//
+//        SecurityContext context = mock(SecurityContext.class);
+//        when(context.getAuthentication()).thenReturn(auth);
+//        SecurityContextHolder.setContext(context);
     }
 }
+

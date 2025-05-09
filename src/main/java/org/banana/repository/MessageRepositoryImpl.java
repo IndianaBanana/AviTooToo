@@ -1,5 +1,6 @@
 package org.banana.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.banana.dto.message.MessageFilterDto;
 import org.banana.dto.message.MessageResponseDto;
 import org.banana.entity.Message;
@@ -12,9 +13,10 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
+@Slf4j
 public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, UUID> implements MessageRepository {
 
-    public static final String CHAT_EXISTS_BY_AD_FIRST_USER_AND_SECOND_USER = """
+    public static final String CHAT_EXISTS = """
             SELECT 1
             FROM Message m
             WHERE
@@ -32,7 +34,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                 m.senderId,
                 m.recipientId,
                 m.messageText,
-                m.messageDate,
+                m.messageDateTime,
                 m.isRead
             )
             FROM Message m
@@ -45,7 +47,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
               AND (m.advertisementId = :advertisementId OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
             """;
     public static final String EXISTS_BY_UNREAD_MESSAGE = """
-            SELECT 1 FROM Message m
+            FROM Message m
             WHERE m.senderId = :secondUserId
             AND m.recipientId = :currentUserId
             AND (m.advertisementId = :advertisementId OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
@@ -54,8 +56,8 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
     private static final String UPDATE_MARK_READ = """
             update Message m
             set m.isRead = true
-            where m.senderId     = :fromUserId
-              and m.recipientId  = :toUserId
+            where m.senderId = :fromUserId
+              and m.recipientId = :toUserId
               and (
                     m.advertisementId = :advertisementId
                     or (m.advertisementId is null and :advertisementId is null)
@@ -63,23 +65,47 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
               and m.isRead = false
             """;
 
+    private static final String UPDATE_MARK_READ_UPTO = """
+            UPDATE Message m
+               SET m.isRead = true
+             WHERE m.recipientId = :recipientId
+               AND m.senderId = :secondUserId
+               AND (m.advertisementId = :advertisementId
+                    OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
+               AND m.messageDate <= :upToDateTime
+               AND m.isRead = false
+            """;
+
     public MessageRepositoryImpl() {
         super(Message.class);
     }
 
     @Override
-    public int markMessagesRead(UUID fromUserId, UUID toUserId, UUID advertisementId) {
-        var q = getSession()
-                .createMutationQuery(UPDATE_MARK_READ)
-                .setParameter("fromUserId", fromUserId)
-                .setParameter("toUserId", toUserId)
-                .setParameter("advertisementId", advertisementId);
-        return q.executeUpdate();
+    public int markMessagesReadUpTo(UUID recipientId, UUID secondUserId, UUID advertisementId, LocalDateTime upToDateTime) {
+        return getSession()
+                .createMutationQuery(UPDATE_MARK_READ_UPTO)
+                .setParameter("recipientId", recipientId)
+                .setParameter("secondUserId", secondUserId)
+                .setParameter("advertisementId", advertisementId)
+                .setParameter("upToDateTime", upToDateTime)
+                .executeUpdate();
     }
 
     @Override
-    public boolean existsByFirstUserIdAndSecondUserIdAndAdvertisementId(UUID user1, UUID user2, UUID advertisementId) {
-        Integer result = getSession().createQuery(CHAT_EXISTS_BY_AD_FIRST_USER_AND_SECOND_USER, Integer.class)
+    public int markAllMessagesRead(UUID fromUserId, UUID toUserId, UUID advertisementId) {
+        log.info("entering markAllMessagesRead({}, {}, {}) in {}", fromUserId, toUserId, advertisementId, getClass().getSimpleName());
+        return getSession()
+                .createMutationQuery(UPDATE_MARK_READ)
+                .setParameter("fromUserId", fromUserId)
+                .setParameter("toUserId", toUserId)
+                .setParameter("advertisementId", advertisementId)
+                .executeUpdate();
+    }
+
+    @Override
+    public boolean chatExists(UUID user1, UUID user2, UUID advertisementId) {
+        log.info("entering chatExists({}, {}, {}) in {}", user1, user2, advertisementId, getClass().getSimpleName());
+        Integer result = getSession().createQuery(CHAT_EXISTS, Integer.class)
                 .setParameter("user1", user1)
                 .setParameter("user2", user2)
                 .setParameter("advertisementId", advertisementId)
@@ -89,69 +115,77 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
     }
 
     @Override
-    public boolean existsBySenderIdAndRecipientIdAndIsReadFalse(UUID secondUserId, UUID currentUserId, UUID advertisementId) {
-        Integer result = getSession().createQuery(EXISTS_BY_UNREAD_MESSAGE, Integer.class)
+    public long hasUnreadMessages(UUID secondUserId, UUID currentUserId, UUID advertisementId) {
+        log.info("entering hasUnreadMessages({}, {}, {}) in {}", secondUserId, currentUserId, advertisementId, getClass().getSimpleName());
+        return getSession().createQuery(EXISTS_BY_UNREAD_MESSAGE, Long.class)
                 .setParameter("secondUserId", secondUserId)
                 .setParameter("currentUserId", currentUserId)
                 .setParameter("advertisementId", advertisementId)
-                .setMaxResults(1)
-                .getSingleResultOrNull();
-        return result != null;
+                .getResultCount();
     }
 
     @Override
     public List<MessageResponseDto> findAllByFilter(MessageFilterDto filter) {
-        StringBuilder jpql = new StringBuilder(SELECT_MESSAGES_BY_AD_FIRST_USER_AND_SECOND_USER);
-
-        // 2) Фильтр по advertisementId
+        log.info("entering findAllByFilter({}) in {}", filter, getClass().getSimpleName());
         UUID advertisementId = filter.getAdvertisementId();
-//        jpql.append(advertisementId != null ? " AND m.advertisementId = :advertisementId" : " AND m.advertisementId IS NULL");
-
-        // 3) Логика курсора или начальной выдачи
         LocalDateTime cursorDateTime = filter.getCursorDateTime();
         UUID cursorMessageId = filter.getCursorMessageId();
-        if (cursorDateTime != null && cursorMessageId != null) {
-            if (filter.getIsBefore()) {
-                jpql.append("""
-                          AND  m.messageDate < :cursorDateTime and m.id < :cursorMessageId
-                          ORDER BY m.messageDate DESC, m.id DESC
-                        """);
-            } else {
-                jpql.append("""
-                        
-                          AND  m.messageDate > :cursorDateTime and m.id > :cursorMessageId
-                          ORDER BY m.messageDate ASC, m.id ASC
-                        """);
-            }
-        } else {
-            if (filter.getIsCurrentUserHasUnreadMessages()) {
-                // если у текущего пользователя есть непрочитанные в этой переписке сообщения,
-                // то у его собеседника непрочитанных сообщений быть не может
-                jpql.append("""
-                          ORDER BY m.isRead ASC, m.messageDate ASC, m.id ASC
-                        """);
-            } else {
-                jpql.append("""
-                          ORDER BY m.messageDate DESC, m.id DESC
-                        """);
-            }
-        }
+
+        String jpql = getJpql(filter, cursorDateTime, cursorMessageId);
 
         Query<MessageResponseDto> query = getSession()
-                .createQuery(jpql.toString(), MessageResponseDto.class)
+                .createQuery(jpql, MessageResponseDto.class)
                 .setParameter("secondUserId", filter.getSecondUserId())
-                .setParameter("currentUserId", filter.getCurrentUserId());
+                .setParameter("currentUserId", filter.getCurrentUserId())
+                .setParameter("advertisementId", advertisementId);
 
-        if (advertisementId != null) {
-            query.setParameter("advertisementId", advertisementId);
-        }
+//        if (advertisementId != null) {
+//            query.setParameter("advertisementId", advertisementId);
+//        }
 
         if (cursorDateTime != null && cursorMessageId != null) {
             query.setParameter("cursorDateTime", cursorDateTime).setParameter("cursorMessageId", cursorMessageId);
         }
-
+        if (filter.getUnreadMessagesCount() > 0) {
+            double floor = Math.floor(filter.getLimit() / 1.5);
+            int offset = (int) (filter.getUnreadMessagesCount() - floor);
+            query.setFirstResult(offset);
+        }
         query.setMaxResults(filter.getLimit());
 
         return query.getResultList();
+    }
+
+    private String getJpql(MessageFilterDto filter, LocalDateTime cursorDateTime, UUID cursorMessageId) {
+        StringBuilder jpql = new StringBuilder(SELECT_MESSAGES_BY_AD_FIRST_USER_AND_SECOND_USER);
+        if (cursorDateTime != null && cursorMessageId != null) {
+            if (filter.getIsBefore() != null && filter.getIsBefore()) {
+                jpql.append("""
+                            AND (
+                                m.messageDateTime < :cursorDateTime
+                                OR (m.messageDateTime = :cursorDateTime AND m.id < :cursorMessageId)
+                            )
+                            ORDER BY m.messageDateTime DESC, m.id DESC
+                        """);
+            } else {
+                jpql.append("""
+                            AND (
+                                m.messageDateTime > :cursorDateTime
+                                OR (m.messageDateTime = :cursorDateTime AND m.id > :cursorMessageId)
+                            )
+                            ORDER BY m.messageDateTime ASC, m.id ASC
+                        """);
+            }
+        } else {
+//            if (filter.getUnreadMessagesCount() != null && filter.getUnreadMessagesCount() > 0) {
+//                // если у текущего пользователя есть непрочитанные в этой переписке сообщения,
+//                // то у его собеседника непрочитанных сообщений быть не может
+//                jpql.append(" And m.isRead = false ORDER BY m.messageDateTime ASC, m.id ASC\n");
+//            } else {
+//                jpql.append(" ORDER BY m.messageDateTime DESC, m.id DESC\n");
+//            }
+            jpql.append(" ORDER BY m.messageDateTime DESC, m.id DESC\n");
+        }
+        return jpql.toString();
     }
 }

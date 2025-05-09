@@ -24,6 +24,9 @@ public class AdvertisementTypeService {
 
     @Transactional(readOnly = true)
     public List<AdvertisementTypeDto> findByNameLike(String pattern) {
+        pattern = pattern.replace("\\", "\\\\")
+                .replace("_", "\\_")
+                .replace("%", "\\%");
         return advertisementTypeMapper.advertisementTypesToAdvertisementTypeDtos(advertisementTypeRepository.findByNameLike(pattern));
     }
 

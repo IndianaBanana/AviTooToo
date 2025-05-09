@@ -24,7 +24,11 @@ public class CityService {
 
     @Transactional(readOnly = true)
     public List<CityDto> findByNameLike(String pattern) {
-        return cityMapper.citiesToCityDtos(cityRepository.findByNameLike(pattern));
+        String safePattern = pattern.replace("\\", "\\\\")
+                .replace("_", "\\_")
+                .replace("%", "\\%");
+
+        return cityMapper.citiesToCityDtos(cityRepository.findByNameLike(safePattern));
     }
 
     @Transactional

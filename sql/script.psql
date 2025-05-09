@@ -79,8 +79,8 @@ create table if not exists advertisement (
     price numeric not null,
     quantity integer not null,
     is_paid boolean not null default false, -- if the advertisement is paid or not. for showing it in top
-    create_date timestamp not null default now(),
-    close_date timestamp,
+    create_date timestamp(3) not null default now(),
+    close_date timestamp(3),
     foreign key (user_id) references "user"(user_id) on delete cascade,
     foreign key (city_id) references city(city_id) on delete cascade,
     foreign key (advertisement_type_id) references advertisement_type(advertisement_type_id) on delete cascade
@@ -94,7 +94,7 @@ create table if not exists sale_history (
     sale_history_id uuid primary key default gen_random_uuid(),
     advertisement_id uuid not null,
     buyer_id uuid,
-    sale_date timestamp not null default now(),
+    sale_date timestamp(3) not null default now(),
     quantity smallint not null,
     foreign key (buyer_id) references "user"(user_id) on delete set null,
     foreign key (advertisement_id) references advertisement(advertisement_id) on delete cascade
@@ -108,7 +108,7 @@ create table if not exists comment (
     root_comment_id uuid, -- useful for selecting nested comments (less selections)
     parent_comment_id uuid, -- the comment to which the comment is attached
     comment_text text not null,
-    comment_date timestamp not null default now(),
+    comment_date timestamp(3) not null default now(),
     check (comment_id != parent_comment_id and comment_id != root_comment_id),
     foreign key (commenter_id) references "user"(user_id) on delete set null,
     foreign key (advertisement_id) references advertisement(advertisement_id) on delete cascade,
@@ -116,6 +116,10 @@ create table if not exists comment (
     foreign key (parent_comment_id) references comment(comment_id) on delete cascade
 );
 create index if not exists index_comment_advertisement_id on comment(advertisement_id);
+create index if not exists index_comment_date on comment(comment_date);
+create index if not exists index_comment_root_comment_id on comment(root_comment_id);
+create index if not exists index_comment_parent_comment_id on comment(parent_comment_id);
+create index if not exists index_comment_date_comment_id on comment(comment_date, comment_id);
 
 --6) Организация личной переписки покупателя и продавца.
 create table if not exists message (
@@ -124,13 +128,33 @@ create table if not exists message (
     sender_id uuid not null,
     recipient_id uuid not null,
     message_text text not null,
-    message_date timestamp not null default now(),
+    message_date_time timestamp(3) not null default now(),
     is_read boolean not null default false,
     foreign key (sender_id) references "user"(user_id) on delete set null,
     foreign key (recipient_id) references "user"(user_id) on delete set null,
     foreign key (advertisement_id) references advertisement(advertisement_id) on delete cascade,
     check (sender_id != recipient_id)
 );
+create index if not exists index_message_advertisement_id_sender_id_recipient_id on message(advertisement_id, sender_id, recipient_id);
+create index if not exists index_message_message_date_time_message_id on message(message_date_time, message_id);
+create index if not exists index_message_message_date_time on message(message_date_time);
+--create table if not exists message (
+--    message_id uuid primary key default gen_random_uuid(),
+--    advertisement_id uuid,
+--    sender_id uuid not null,
+--    recipient_id uuid not null,
+--    message_text text not null,
+--    message_date_time_millis bigint not null default (EXTRACT(EPOCH FROM now()) * 1000)::BIGINT,
+--    is_read boolean not null default false,
+--    foreign key (sender_id) references "user"(user_id) on delete set null,
+--    foreign key (recipient_id) references "user"(user_id) on delete set null,
+--    foreign key (advertisement_id) references advertisement(advertisement_id) on delete cascade,
+--    check (sender_id != recipient_id)
+--);
+--create index if not exists index_message_advertisement_id_sender_id_recipient_id on message(advertisement_id, sender_id, recipient_id);
+--create index if not exists index_message_message_date_time_millis_message_id on message(message_date_time_millis, message_id);
+--create index if not exists index_message_message_date_time_millis on message(message_date_time_millis);
+
 
 
 -- inserts

@@ -8,6 +8,14 @@ import java.util.UUID;
 
 public interface UserRepository extends CrudRepository<User, UUID> {
 
+//    void updateFirstNameAndLastName(UUID id, String firstName, String lastName);
+
+    void updatePassword(UUID id, String password);
+
+    void updateUsername(UUID id, String username);
+
+    void updatePhone(UUID id, String phone);
+
     Optional<User> findByUsername(String username);
 
 //    Optional<User> findByPhone(String phone);

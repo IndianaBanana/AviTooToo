@@ -8,11 +8,11 @@ import java.util.UUID;
 @Data
 public class MessageResponseDto {
 
-    private UUID id;
-    private UUID advertisementId;
-    private UUID senderId;
-    private UUID recipientId;
-    private String messageText;
-    private LocalDateTime messageDate;
-    private boolean isRead;
+    private final UUID id;
+    private final UUID advertisementId;
+    private final UUID senderId;
+    private final UUID recipientId;
+    private final String messageText;
+    private final LocalDateTime messageDateTime;
+    private final boolean isRead;
 }

@@ -45,7 +45,6 @@ public class Advertisement {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    // todo: может сделать optional = true (тогда придется переделать БД)
     @JoinColumn(name = "city_id")
     @ToString.Exclude
     private City city;
@@ -70,7 +69,7 @@ public class Advertisement {
     @Min(1)
     private Integer quantity;
 
-    private Boolean isPaid = false;
+    private Boolean isPromoted = false;
 
     private LocalDateTime createDate;
 
