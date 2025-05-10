@@ -6,6 +6,7 @@ import org.banana.exception.AdvertisementTypeNotFoundException;
 import org.banana.exception.AdvertisementUpdateException;
 import org.banana.exception.CityNotFoundException;
 import org.banana.exception.CommentNotFoundException;
+import org.banana.exception.ConversationNotFoundException;
 import org.banana.exception.MessageSendException;
 import org.banana.exception.SaleHistoryAccessDeniedException;
 import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedException;
@@ -40,9 +41,16 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler({UserNotFoundException.class, UsernameNotFoundException.class, AdvertisementNotFoundException.class,
-            CommentNotFoundException.class, CityNotFoundException.class, AdvertisementTypeNotFoundException.class,
-            SaleHistoryNotFoundException.class})
+    @ExceptionHandler({
+            UserNotFoundException.class,
+            UsernameNotFoundException.class,
+            AdvertisementNotFoundException.class,
+            CommentNotFoundException.class,
+            CityNotFoundException.class,
+            AdvertisementTypeNotFoundException.class,
+            SaleHistoryNotFoundException.class,
+            ConversationNotFoundException.class
+    })
     protected ResponseEntity<Object> handleNotFoundException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.NOT_FOUND);
     }
@@ -55,7 +63,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             AdvertisementUpdateException.class,
             MessageSendException.class,
             AddingCommentWhenParentCommenterIsNullException.class,
-            SaleHistoryAdvertisementQuantityIsLowerThanExpectedException.class
+            SaleHistoryAdvertisementQuantityIsLowerThanExpectedException.class,
     })
     protected ResponseEntity<Object> handleConflictDataException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.CONFLICT);

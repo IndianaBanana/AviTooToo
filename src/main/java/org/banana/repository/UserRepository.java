@@ -10,6 +10,8 @@ public interface UserRepository extends CrudRepository<User, UUID> {
 
 //    void updateFirstNameAndLastName(UUID id, String firstName, String lastName);
 
+    Optional<User> findFetchedById(UUID uuid);
+
     void updatePassword(UUID id, String password);
 
     void updateUsername(UUID id, String username);

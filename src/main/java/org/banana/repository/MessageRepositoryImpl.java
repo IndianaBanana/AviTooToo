@@ -47,6 +47,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
               AND (m.advertisementId = :advertisementId OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
             """;
     public static final String EXISTS_BY_UNREAD_MESSAGE = """
+            select count(m)
             FROM Message m
             WHERE m.senderId = :secondUserId
             AND m.recipientId = :currentUserId
@@ -72,7 +73,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                AND m.senderId = :secondUserId
                AND (m.advertisementId = :advertisementId
                     OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
-               AND m.messageDate <= :upToDateTime
+               AND m.messageDateTime <= :upToDateTime
                AND m.isRead = false
             """;
 
@@ -121,7 +122,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                 .setParameter("secondUserId", secondUserId)
                 .setParameter("currentUserId", currentUserId)
                 .setParameter("advertisementId", advertisementId)
-                .getResultCount();
+                .getSingleResultOrNull();
     }
 
     @Override
@@ -146,9 +147,11 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
         if (cursorDateTime != null && cursorMessageId != null) {
             query.setParameter("cursorDateTime", cursorDateTime).setParameter("cursorMessageId", cursorMessageId);
         }
-        if (filter.getUnreadMessagesCount() > 0) {
+        if (filter.getUnreadMessagesCount() != null && filter.getUnreadMessagesCount() > 0) {
             double floor = Math.floor(filter.getLimit() / 1.5);
             int offset = (int) (filter.getUnreadMessagesCount() - floor);
+            if (offset < 0) offset = 0;
+            log.info("setting offset to: {}", offset);
             query.setFirstResult(offset);
         }
         query.setMaxResults(filter.getLimit());

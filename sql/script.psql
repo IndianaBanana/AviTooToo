@@ -130,8 +130,8 @@ create table if not exists message (
     message_text text not null,
     message_date_time timestamp(3) not null default now(),
     is_read boolean not null default false,
-    foreign key (sender_id) references "user"(user_id) on delete set null,
-    foreign key (recipient_id) references "user"(user_id) on delete set null,
+    foreign key (sender_id) references "user"(user_id) on delete cascade,
+    foreign key (recipient_id) references "user"(user_id) on delete cascade,
     foreign key (advertisement_id) references advertisement(advertisement_id) on delete cascade,
     check (sender_id != recipient_id)
 );

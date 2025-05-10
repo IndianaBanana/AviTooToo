@@ -18,7 +18,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-    //    private final User user;
     private final UUID id;
     private String firstName;
     private String lastName;
@@ -30,7 +29,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-//        GrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().name());
         return Collections.singleton(role);
     }
 

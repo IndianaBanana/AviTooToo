@@ -8,10 +8,12 @@ import org.banana.dto.comment.CommentResponseDto;
 import org.banana.entity.Comment;
 import org.banana.entity.User;
 import org.banana.exception.AddingCommentWhenParentCommenterIsNullException;
+import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.CommentInAdvertisementNotFoundException;
 import org.banana.exception.CommentNotFoundException;
 import org.banana.exception.UserDeleteCommentException;
 import org.banana.exception.UserNotFoundException;
+import org.banana.repository.AdvertisementRepository;
 import org.banana.repository.CommentRepository;
 import org.banana.repository.UserRepository;
 import org.banana.security.UserRole;
@@ -36,6 +38,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final CommentMapper commentMapper;
+    private final AdvertisementRepository advertisementRepository;
 
 
     @Override
@@ -55,7 +58,6 @@ public class CommentServiceImpl implements CommentService {
                 rootCommentId = requestDto.getParentCommentId();
             }
         }
-        // fixme тут не нужен fetch
         User currentUser = userRepository.findById(currentUserPrincipal.getId())
                 .orElseThrow(() -> new UserNotFoundException(currentUserPrincipal.getId()));
         Comment comment = new Comment(
@@ -68,30 +70,31 @@ public class CommentServiceImpl implements CommentService {
         );
         comment = commentRepository.save(comment);
         return commentMapper.fromCommentToCommentResponseDto(comment);
-//        return null;
     }
 
     @Override
     @Transactional
     public void deleteComment(UUID commentId) {
         UserPrincipal currentUser = SecurityUtils.getCurrentUserPrincipal();
+
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
+
+        if (comment.getCommenter() == null) throw new UserDeleteCommentException();
+
         boolean isOwner = comment.getCommenter().getId().equals(currentUser.getId());
         boolean isAdmin = currentUser.getRole().equals(UserRole.ROLE_ADMIN);
-        if (!isOwner && !isAdmin) {
-            throw new UserDeleteCommentException();
-        }
+        if (!isOwner && !isAdmin) throw new UserDeleteCommentException();
+
         comment.setCommenter(null);
         comment.setCommentText("Comment deleted");
         commentRepository.save(comment);
     }
 
-    // fixme два запроса вместо одного
     @Override
     @Transactional(readOnly = true)
     public CommentResponseDto findCommentById(UUID commentId) {
-        Comment comment = commentRepository.findById(commentId)
+        Comment comment = commentRepository.findFetchedById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
         return commentMapper.fromCommentToCommentResponseDto(comment);
     }
@@ -99,13 +102,17 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponseDto> findAllByAdvertisementId(UUID advertisementId, int page, int size) {
-        List<Comment> allRootComments = commentRepository.findAllRootCommentsByAdvertisementId(advertisementId, page * size, size);
-        List<Comment> allCommentsInRootIds = commentRepository.findAllCommentsInRootIds(
-                allRootComments.stream().map(Comment::getId).toList());
+        if (!advertisementRepository.existsById(advertisementId)) throw new AdvertisementNotFoundException(advertisementId);
+
+        List<Comment> allRootComments = commentRepository
+                .findAllRootCommentsByAdvertisementId(advertisementId, page * size, size);
+
+        List<Comment> allCommentsInRootIds = commentRepository
+                .findAllCommentsInRootIds(allRootComments.stream().map(Comment::getId).toList());
+
         List<Comment> allComments = new ArrayList<>();
         allComments.addAll(allRootComments);
         allComments.addAll(allCommentsInRootIds);
         return commentMapper.fromCommentListToCommentResponseDtoList(allComments);
-//        return null;
     }
 }

@@ -17,4 +17,6 @@ public final class SecurityUtils {
         }
         return (UserPrincipal) authentication.getPrincipal();
     }
+
+
 }

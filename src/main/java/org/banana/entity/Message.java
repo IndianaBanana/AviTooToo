@@ -31,7 +31,6 @@ public class Message {
     @Column(name = "message_id", updatable = false, nullable = false)
     private UUID id;
 
-    //    @NotNull
     private UUID advertisementId;
 
     @NotNull
@@ -39,22 +38,6 @@ public class Message {
 
     @NotNull
     private UUID recipientId;
-//  @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "advertisement_id")
-//    @ToString.Exclude
-//    private Advertisement advertisement;
-//
-//    @NotNull
-//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "sender_id")
-//    @ToString.Exclude
-//    private User sender;
-//
-//    @NotNull
-//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "recipient_id")
-//    @ToString.Exclude
-//    private User recipient;
 
     @NotBlank
     private String messageText;

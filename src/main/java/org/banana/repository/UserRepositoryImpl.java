@@ -28,8 +28,8 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
     }
 
     @Override
-    public Optional<User> findById(UUID uuid) {
-        log.debug("entering `findById` method in {}", this.getClass().getSimpleName());
+    public Optional<User> findFetchedById(UUID uuid) {
+        log.debug("entering `findFetchedById` method in {}", this.getClass().getSimpleName());
         return Optional.ofNullable(getSession().createQuery(FIND_BY_ID, User.class)
                 .setParameter("id", uuid)
                 .getSingleResultOrNull());

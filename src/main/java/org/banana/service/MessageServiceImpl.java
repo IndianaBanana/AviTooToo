@@ -10,6 +10,7 @@ import org.banana.dto.message.MessageSendRequestDto;
 import org.banana.entity.Advertisement;
 import org.banana.entity.Message;
 import org.banana.exception.AdvertisementNotFoundException;
+import org.banana.exception.ConversationNotFoundException;
 import org.banana.exception.MessageSendException;
 import org.banana.exception.UserNotFoundException;
 import org.banana.repository.AdvertisementRepository;
@@ -69,11 +70,14 @@ public class MessageServiceImpl implements MessageService {
     public void markReadUpTo(MessageMarkReadRequestDto dto) {
         UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
 
-        if (!userRepository.existsById(dto.getSecondUserId())) {
-            throw new UserNotFoundException(dto.getSecondUserId());
-        }
+        validateRecipient(currentUserId, dto.getSecondUserId());
+
         if (dto.getAdvertisementId() != null && !advertisementRepository.existsById(dto.getAdvertisementId())) {
             throw new AdvertisementNotFoundException(dto.getAdvertisementId());
+        }
+
+        if (!messageRepository.chatExists(currentUserId, dto.getSecondUserId(), dto.getAdvertisementId())){
+            throw new ConversationNotFoundException(dto.getSecondUserId(), dto.getAdvertisementId());
         }
 
         messageRepository.markMessagesReadUpTo(
@@ -116,13 +120,13 @@ public class MessageServiceImpl implements MessageService {
 
         // если ни получатель, ни мы не владелец — запрещено
         boolean isSenderOwner = senderId.equals(ownerId);
-        if (!recipientId.equals(ownerId) && !isSenderOwner) {
+        boolean isRecipientOwner = recipientId.equals(ownerId);
+        if (!isRecipientOwner && !isSenderOwner) {
             throw new MessageSendException(RECIPIENT_IS_NOT_OWNER_OF_THE_ADVERTISEMENT);
         }
 
         // если мы — владелец и переписка ещё не начиналась — запрещено писать первым
-        if (isSenderOwner && !messageRepository.chatExists(
-                senderId, recipientId, advertisementId)) {
+        if (isSenderOwner && !messageRepository.chatExists(senderId, recipientId, advertisementId)) {
             throw new MessageSendException(OWNER_OF_THE_ADVERTISEMENT_CANT_MESSAGE_FIRST);
         }
     }

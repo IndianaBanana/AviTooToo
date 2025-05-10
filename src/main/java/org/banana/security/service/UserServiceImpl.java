@@ -73,13 +73,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto getCurrentUser() {
         UUID id = SecurityUtils.getCurrentUserPrincipal().getId();
-        return userMapper.userToUserResponseDto(userRepository.findById(id)
+        return userMapper.userToUserResponseDto(userRepository.findFetchedById(id)
                 .orElseThrow(() -> new UserNotFoundException(id)));
     }
 
     @Override
     public UserResponseDto findById(UUID id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        User user = userRepository.findFetchedById(id).orElseThrow(() -> new UserNotFoundException(id));
         return userMapper.userToUserResponseDto(user);
     }
 
@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
         if (userPrincipal.getFirstName().equals(userUpdateRequestDto.getFirstName()) && userPrincipal.getLastName().equals(userUpdateRequestDto.getLastName()))
             throw new UserUpdateOldEqualsNewDataException(SAME_FIRST_NAME_AND_LAST_NAME);
 
-        User user = userRepository.findById(userPrincipal.getId()).orElseThrow(() -> new UserNotFoundException(userPrincipal.getId()));
+        User user = userRepository.findFetchedById(userPrincipal.getId()).orElseThrow(() -> new UserNotFoundException(userPrincipal.getId()));
         user.setFirstName(userUpdateRequestDto.getFirstName());
         user.setLastName(userUpdateRequestDto.getLastName());
         user = userRepository.save(user);

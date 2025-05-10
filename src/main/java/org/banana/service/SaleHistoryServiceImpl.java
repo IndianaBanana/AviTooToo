@@ -12,7 +12,6 @@ import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.SaleHistoryAccessDeniedException;
 import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedException;
 import org.banana.exception.SaleHistoryNotFoundException;
-import org.banana.exception.UserNotFoundException;
 import org.banana.repository.AdvertisementRepository;
 import org.banana.repository.SaleHistoryRepository;
 import org.banana.repository.UserRepository;
@@ -36,7 +35,6 @@ import java.util.UUID;
 public class SaleHistoryServiceImpl implements SaleHistoryService {
 
     private final SaleHistoryRepository saleHistoryRepository;
-    private final UserRepository userRepository;
     private final AdvertisementRepository advertisementRepository;
     private final SaleHistoryMapper saleHistoryMapper;
 
@@ -44,17 +42,16 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
     @Override
     @Transactional
     public SaleHistoryResponseDto addSale(SaleHistoryAddRequestDto requestDto) {
-        UUID buyerId = requestDto.getBuyerId();
+        UUID currentUserPrincipalId = SecurityUtils.getCurrentUserPrincipal().getId();
         Advertisement advertisement = advertisementRepository.findById(requestDto.getAdvertisementId())
                 .orElseThrow(() -> new AdvertisementNotFoundException(requestDto.getAdvertisementId()));
         if (advertisement.getQuantity() < requestDto.getQuantity()) {
             throw new SaleHistoryAdvertisementQuantityIsLowerThanExpectedException(advertisement.getQuantity(), requestDto.getQuantity());
         }
-        if (!userRepository.existsById(buyerId)) throw new UserNotFoundException(buyerId);
-        SaleHistory saleHistory = new SaleHistory(advertisement, buyerId, requestDto.getQuantity(), LocalDateTime.now());
+        SaleHistory saleHistory = new SaleHistory(advertisement, currentUserPrincipalId, requestDto.getQuantity(), LocalDateTime.now());
         advertisement.setQuantity(advertisement.getQuantity() - requestDto.getQuantity());
-        saleHistory = saleHistoryRepository.save(saleHistory);
         advertisementRepository.save(advertisement);
+        saleHistory = saleHistoryRepository.save(saleHistory);
         return saleHistoryMapper.fromSaleHistoryToSaleHistoryResponseDto(saleHistory);
     }
 

@@ -16,6 +16,7 @@ import org.banana.security.dto.UserUsernameUpdateRequestDto;
 import org.banana.security.exception.UserPhoneAlreadyExistsException;
 import org.banana.security.exception.UserUpdateOldEqualsNewDataException;
 import org.banana.security.exception.UserUsernameAlreadyExistsException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,6 +78,14 @@ class UserServiceImplTest {
     void setup() {
         user = new User(USER_ID, "John", "Doe", "123", "com@com.com", "password", UserRole.ROLE_USER);
         userResponseDto = new UserResponseDto(USER_ID, "John", "Doe", "123", "com@com.com", null, null);
+        UserPrincipal principal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getPhone(), user.getUsername(), user.getPassword(), user.getRole());
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -157,31 +166,29 @@ class UserServiceImplTest {
 
     @Test
     void getCurrentUser_ReturnCurrentUser() {
-        setupSecurityContext();
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+        when(userRepository.findFetchedById(USER_ID)).thenReturn(Optional.of(user));
         when(userMapper.userToUserResponseDto(any(User.class))).thenReturn(userResponseDto);
         assertThat(userService.getCurrentUser()).isEqualTo(userResponseDto);
-        verify(userRepository).findById(USER_ID);
+        verify(userRepository).findFetchedById(USER_ID);
     }
 
 
     @Test
     void findById_WhenUserWithGivenIdExists_ReturnUserResponseDto() {
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+        when(userRepository.findFetchedById(USER_ID)).thenReturn(Optional.of(user));
         when(userMapper.userToUserResponseDto(any(User.class))).thenReturn(userResponseDto);
         assertThat(userService.findById(USER_ID)).isEqualTo(userResponseDto);
-        verify(userRepository).findById(USER_ID);
+        verify(userRepository).findFetchedById(USER_ID);
     }
 
     @Test
     void findById_WhenUserWithGivenIdDoesNotExist_ThrowUserNotFoundException() {
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findFetchedById(USER_ID)).thenReturn(Optional.empty());
         assertThrows(UserNotFoundException.class, () -> userService.findById(USER_ID));
     }
 
     @Test
     void updateUser_whenLastNameAndFirstNameAreEqualToOldValuesSimultaneously_thenThrowUserUpdateOldEqualsNewDataExceptionWith_SAME_LAST_NAME_AND_FIRST_NAME_Attribute() {
-        setupSecurityContext();
         UserUpdateRequestDto requestDto = new UserUpdateRequestDto(user.getFirstName(), user.getLastName());
 
         Exception exception = assertThrows(UserUpdateOldEqualsNewDataException.class, () -> userService.updateUser(requestDto));
@@ -190,11 +197,10 @@ class UserServiceImplTest {
 
     @Test
     void updateUser_whenLastNameAndFirstNameAreNotEqualToOldValuesSimultaneously_thenUpdateUser() {
-        setupSecurityContext();
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         UserUpdateRequestDto requestDto = new UserUpdateRequestDto("newFN", "newLN");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+        when(userRepository.findFetchedById(USER_ID)).thenReturn(Optional.of(user));
         userService.updateUser(requestDto);
 
         verify(userRepository).save(captor.capture());
@@ -241,7 +247,6 @@ class UserServiceImplTest {
 
     @Test
     void updateUsername_whenGoodCredentialsAndUsernameDoesNotExistAndNewUsernameEqualsOldUsername_thenThrowUserUpdateOldEqualsNewDataExceptionWith_SAME_USERNAME_Attribute() {
-        setupSecurityContext();
         UserUsernameUpdateRequestDto dto = new UserUsernameUpdateRequestDto(user.getUsername(), "pass");
 
         Exception exception = assertThrows(UserUpdateOldEqualsNewDataException.class, () -> userService.updateUsername(dto));
@@ -281,7 +286,6 @@ class UserServiceImplTest {
 
     @Test
     void updatePhone_whenGoodCredentialsAndPhoneDoesNotExistAndNewPhoneEqualsOldPhone_thenThrowUserUpdateOldEqualsNewDataExceptionWith_SAME_PHONE_Attribute() {
-        setupSecurityContext();
         UserPhoneUpdateRequestDto dto = new UserPhoneUpdateRequestDto(user.getPhone(), "pass");
 
         Exception exception = assertThrows(UserUpdateOldEqualsNewDataException.class, () -> userService.updatePhone(dto));
@@ -299,17 +303,7 @@ class UserServiceImplTest {
         verify(userRepository).updatePhone(USER_ID, dto.getNewPhone());
     }
 
-    private void whenBadCredentialsGiven() {
-        UserPrincipal principal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getPhone(), user.getUsername(), user.getPassword(), user.getRole());
-        Authentication auth = mock(Authentication.class);
-        SecurityContext context = mock(SecurityContext.class);
-        SecurityContextHolder.setContext(context);
 
-        when(auth.getPrincipal()).thenReturn(principal);
-        when(context.getAuthentication()).thenReturn(auth);
-        when(auth.isAuthenticated()).thenReturn(false);
-        when(authManager.authenticate(any())).thenReturn(auth);
-    }
 
     @Test
     void deleteUser_whenBadCredentials_thenThrowBadCredentialsException() {
@@ -321,7 +315,6 @@ class UserServiceImplTest {
 
     @Test
     void deleteUser_whenUsernameNotEqualsUserPrincipalUsername_thenThrowBadCredentialsException() {
-        setupSecurityContext();
         UserLoginRequestDto dto = new UserLoginRequestDto(user.getUsername() + "wrong-username", user.getPassword());
 
         assertThrows(AccessDeniedException.class, () -> userService.deleteUser(dto));
@@ -346,17 +339,16 @@ class UserServiceImplTest {
         when(auth.isAuthenticated()).thenReturn(true);
         when(authManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
     }
-
-    private void setupSecurityContext() {
+    private void whenBadCredentialsGiven() {
+        Authentication auth = mock(Authentication.class);
+        SecurityContext context = mock(SecurityContext.class);
         UserPrincipal principal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getPhone(), user.getUsername(), user.getPassword(), user.getRole());
-        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
-        SecurityContextHolder.getContext().setAuthentication(auth);
-//        Authentication auth = mock(Authentication.class);
-//        when(auth.getPrincipal()).thenReturn(principal);
-//
-//        SecurityContext context = mock(SecurityContext.class);
-//        when(context.getAuthentication()).thenReturn(auth);
-//        SecurityContextHolder.setContext(context);
+        SecurityContextHolder.setContext(context);
+
+        when(auth.getPrincipal()).thenReturn(principal);
+        when(context.getAuthentication()).thenReturn(auth);
+        when(auth.isAuthenticated()).thenReturn(false);
+        when(authManager.authenticate(any())).thenReturn(auth);
     }
 }
 

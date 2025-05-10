@@ -5,6 +5,7 @@ import org.banana.repository.crud.AbstractCrudRepositoryImpl;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -23,10 +24,19 @@ public class CommentRepositoryImpl extends AbstractCrudRepositoryImpl<Comment, U
             left join c.commenter
             where c.rootCommentId in :rootCommentIds
             order by c.rootCommentId DESC, c.parentCommentId DESC, c.commentDate DESC""";
-
+    private static final String FIND_BY_ID = "SELECT c FROM Comment c left join fetch c.commenter WHERE c.id = :id";
 
     public CommentRepositoryImpl() {
         super(Comment.class);
+    }
+
+    @Override
+    public Optional<Comment> findFetchedById(UUID id) {
+        return getSession()
+                .createQuery(FIND_BY_ID, Comment.class)
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst();
     }
 
     @Override

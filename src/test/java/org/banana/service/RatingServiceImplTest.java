@@ -59,7 +59,7 @@ class RatingServiceImplTest {
     @Test
     void rateUser_whenGivenValidRatingDto_thenShouldSaveRating() {
         when(userRepository.existsById(userId)).thenReturn(true);
-        var dto = new RatingDto(userId, ratingValue);
+        RatingDto dto = new RatingDto(userId, ratingValue);
 
         String result = ratingService.rateUser(dto);
 
@@ -69,7 +69,7 @@ class RatingServiceImplTest {
 
     @Test
     void rateUser_whenGivenRatingYourself_thenShouldThrowUserRatesTheSameUserException() {
-        var dto = new RatingDto(raterId, ratingValue);
+        RatingDto dto = new RatingDto(raterId, ratingValue);
 
         assertThrows(UserRatesTheSameUserException.class, () -> ratingService.rateUser(dto));
         verifyNoInteractions(ratingRepository);
@@ -78,7 +78,7 @@ class RatingServiceImplTest {
     @Test
     void rateUser_whenGivenNonExistentUser_thenShouldThrowUserNotFoundException() {
         when(userRepository.existsById(userId)).thenReturn(false);
-        var dto = new RatingDto(userId, ratingValue);
+        RatingDto dto = new RatingDto(userId, ratingValue);
 
         assertThrows(UserNotFoundException.class, () -> ratingService.rateUser(dto));
         verifyNoInteractions(ratingRepository);

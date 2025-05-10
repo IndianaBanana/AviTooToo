@@ -26,7 +26,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-//@Table(name = "comment")
 public class Comment {
 
     @Id

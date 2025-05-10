@@ -31,8 +31,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-//@Table(name = "user")
-//@Table(name = "user")
 public class User {
 
     @Id
@@ -63,7 +61,6 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
 
-    //     fixme n+1 problem возможно надо переделать все запросы так чтобы зависимость была у UserRatingView а не User и как то выбирать из него. или как то еще сделать.
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
