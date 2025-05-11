@@ -14,7 +14,6 @@ import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedE
 import org.banana.exception.SaleHistoryNotFoundException;
 import org.banana.repository.AdvertisementRepository;
 import org.banana.repository.SaleHistoryRepository;
-import org.banana.repository.UserRepository;
 import org.banana.security.UserRole;
 import org.banana.security.dto.UserPrincipal;
 import org.banana.util.SecurityUtils;

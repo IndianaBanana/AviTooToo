@@ -304,7 +304,6 @@ class UserServiceImplTest {
     }
 
 
-
     @Test
     void deleteUser_whenBadCredentials_thenThrowBadCredentialsException() {
         whenBadCredentialsGiven();
@@ -339,6 +338,7 @@ class UserServiceImplTest {
         when(auth.isAuthenticated()).thenReturn(true);
         when(authManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
     }
+
     private void whenBadCredentialsGiven() {
         Authentication auth = mock(Authentication.class);
         SecurityContext context = mock(SecurityContext.class);

@@ -76,7 +76,7 @@ public class MessageServiceImpl implements MessageService {
             throw new AdvertisementNotFoundException(dto.getAdvertisementId());
         }
 
-        if (!messageRepository.chatExists(currentUserId, dto.getSecondUserId(), dto.getAdvertisementId())){
+        if (!messageRepository.chatExists(currentUserId, dto.getSecondUserId(), dto.getAdvertisementId())) {
             throw new ConversationNotFoundException(dto.getSecondUserId(), dto.getAdvertisementId());
         }
 

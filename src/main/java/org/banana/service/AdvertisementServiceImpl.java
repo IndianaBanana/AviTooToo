@@ -97,7 +97,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
 
 
-    // !!! fixme переписать запрос чтобы не было миллиона запросов в БД
+    // todo переписать запрос чтобы не было миллиона запросов в БД
     @Override
     @Transactional
     public AdvertisementResponseDto updateAdvertisement(AdvertisementUpdateRequestDto requestDto) {
@@ -129,7 +129,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         if (requestDto.getQuantity() != null) {
             advertisement.setQuantity(requestDto.getQuantity());
         }
-
         advertisement = advertisementRepository.save(advertisement);
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
@@ -137,7 +136,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     @Override
     @Transactional
     public AdvertisementResponseDto closeAdvertisement(UUID advertisementId) {
-//        Advertisement advertisement = findAdvertisementByIdOrThrow(advertisementId);
         AdvertisementResponseDto advertisement = advertisementRepository.findDtoById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
         if (advertisement.getCloseDate() != null) {
@@ -160,7 +158,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto promoteAdvertisement(UUID advertisementId) {
         AdvertisementResponseDto advertisement = advertisementRepository.findDtoById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
-        if (advertisement.getIsPromoted()) {
+        if (advertisement.isPromoted()) {
             throw new AdvertisementUpdateException(ALREADY_PROMOTED);
         }
         if (advertisement.getCloseDate() != null) {
@@ -169,7 +167,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         if (!advertisement.getUserResponseDto().getId().equals(SecurityUtils.getCurrentUserPrincipal().getId())) {
             throw new AdvertisementUpdateException(NOT_OWNER);
         }
-        advertisement.setIsPromoted(true);
+        advertisement.setPromoted(true);
         advertisementRepository.promoteAdvertisement(advertisementId);
         return advertisement;
     }
@@ -178,4 +176,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         return advertisementRepository.findById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
     }
+
+
 }

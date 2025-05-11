@@ -28,7 +28,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -252,6 +251,7 @@ class CommentServiceImplTest {
         List<CommentResponseDto> result = service.findAllByAdvertisementId(adId, page, size);
         assertThat(result).isEqualTo(dtos);
     }
+
     @Test
     void findAllByAdvertisementId_whenAdvertisementDoesNotExist_callsRepoAndMaps() {
         int page = 0, size = 2;

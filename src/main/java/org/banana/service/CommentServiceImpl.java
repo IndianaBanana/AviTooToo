@@ -102,7 +102,8 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponseDto> findAllByAdvertisementId(UUID advertisementId, int page, int size) {
-        if (!advertisementRepository.existsById(advertisementId)) throw new AdvertisementNotFoundException(advertisementId);
+        if (!advertisementRepository.existsById(advertisementId))
+            throw new AdvertisementNotFoundException(advertisementId);
 
         List<Comment> allRootComments = commentRepository
                 .findAllRootCommentsByAdvertisementId(advertisementId, page * size, size);

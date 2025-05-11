@@ -1,9 +1,7 @@
 package org.banana.security.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Data;
 import org.banana.security.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,9 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 
-@Getter
-@ToString
-@EqualsAndHashCode
+@Data
 @AllArgsConstructor
 public class UserPrincipal implements UserDetails {
 
