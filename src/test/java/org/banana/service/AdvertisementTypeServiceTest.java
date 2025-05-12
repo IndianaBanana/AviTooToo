@@ -3,6 +3,7 @@ package org.banana.service;
 import org.banana.dto.advertisement.type.AdvertisementTypeDto;
 import org.banana.dto.advertisement.type.AdvertisementTypeMapper;
 import org.banana.entity.AdvertisementType;
+import org.banana.exception.AdvertisementTypeAlreadyExistsException;
 import org.banana.repository.AdvertisementTypeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,8 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -77,6 +80,7 @@ class AdvertisementTypeServiceTest {
 
         when(advertisementTypeRepository.save(any(AdvertisementType.class))).thenReturn(savedEntity);
         when(advertisementTypeMapper.advertisementTypeToAdvertisementTypeDto(savedEntity)).thenReturn(expectedDto);
+        when(advertisementTypeRepository.existsByName(name)).thenReturn(false);
 
         // when
         AdvertisementTypeDto result = advertisementTypeService.addAdvertisementType(name);
@@ -86,4 +90,17 @@ class AdvertisementTypeServiceTest {
         verify(advertisementTypeRepository).save(argThat(type -> type.getName().equals(name)));
         verify(advertisementTypeMapper).advertisementTypeToAdvertisementTypeDto(savedEntity);
     }
+
+    @Test
+    void addAdvertisementType_whenNameAlreadyExists_thenThrowAdvertisementTypeAlreadyExistsException() {
+        // given
+        String name = "Exchange";
+        when(advertisementTypeRepository.existsByName(name)).thenReturn(true);
+
+        // when and then
+        assertThrows(AdvertisementTypeAlreadyExistsException.class, () -> advertisementTypeService.addAdvertisementType(name));
+        verify(advertisementTypeRepository).existsByName(name);
+        verify(advertisementTypeRepository, never()).save(any(AdvertisementType.class));
+    }
+
 }

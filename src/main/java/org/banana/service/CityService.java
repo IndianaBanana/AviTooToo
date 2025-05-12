@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.banana.dto.city.CityDto;
 import org.banana.dto.city.CityMapper;
 import org.banana.entity.City;
+import org.banana.exception.CityAlreadyExistsException;
 import org.banana.repository.CityRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,9 @@ public class CityService {
 
     @Transactional
     public CityDto addCity(String name) {
+        if (cityRepository.existsByName(name)) {
+            throw new CityAlreadyExistsException(name);
+        }
         return cityMapper.cityToCityDto(cityRepository.save(new City(name)));
     }
 }

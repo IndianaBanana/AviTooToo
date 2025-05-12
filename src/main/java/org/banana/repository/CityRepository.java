@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface CityRepository extends CrudRepository<City, UUID> {
 
     List<City> findByNameLike(String pattern);
+
+    boolean existsByName(String name);
 }

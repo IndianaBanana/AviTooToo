@@ -22,7 +22,7 @@ import static org.banana.dto.ValidationConstants.PHONE_REGEX;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@PasswordOnRegisterValidation()
+@PasswordOnRegisterValidation
 public class UserRegisterRequestDto {
 
     @NotBlank

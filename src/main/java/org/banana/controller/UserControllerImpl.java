@@ -67,7 +67,7 @@ public class UserControllerImpl implements UserController {
     }
 
     @Override
-    @DeleteMapping("/security/delete")
+    @DeleteMapping("/security")
     public ResponseEntity<Void> deleteUser(@RequestBody @Valid UserLoginRequestDto requestDto) {
         userService.deleteUser(requestDto);
         return ResponseEntity.noContent().build();

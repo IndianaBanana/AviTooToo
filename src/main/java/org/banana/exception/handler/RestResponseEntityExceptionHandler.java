@@ -2,8 +2,10 @@ package org.banana.exception.handler;
 
 import org.banana.exception.AddingCommentWhenParentCommenterIsNullException;
 import org.banana.exception.AdvertisementNotFoundException;
+import org.banana.exception.AdvertisementTypeAlreadyExistsException;
 import org.banana.exception.AdvertisementTypeNotFoundException;
 import org.banana.exception.AdvertisementUpdateException;
+import org.banana.exception.CityAlreadyExistsException;
 import org.banana.exception.CityNotFoundException;
 import org.banana.exception.CommentNotFoundException;
 import org.banana.exception.ConversationNotFoundException;
@@ -64,6 +66,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             MessageSendException.class,
             AddingCommentWhenParentCommenterIsNullException.class,
             SaleHistoryAdvertisementQuantityIsLowerThanExpectedException.class,
+            CityAlreadyExistsException.class,
+            AdvertisementTypeAlreadyExistsException.class,
     })
     protected ResponseEntity<Object> handleConflictDataException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.CONFLICT);
@@ -71,7 +75,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @ExceptionHandler({
             BadCredentialsException.class,
-            AccessDeniedException.class,
+//            AccessDeniedException.class,
             SaleHistoryAccessDeniedException.class,
             UserDeleteCommentException.class,
     })
@@ -79,14 +83,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return buildErrorResponse(ex, request, HttpStatus.UNAUTHORIZED);
     }
 
-
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex,
-            HttpHeaders headers,
-            HttpStatusCode status,
-            WebRequest request
-    ) {
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problemDetail.setTitle("Validation failed");
         problemDetail.setDetail("One or more fields are invalid");

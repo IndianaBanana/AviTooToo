@@ -3,6 +3,7 @@ package org.banana.service;
 import org.banana.dto.city.CityDto;
 import org.banana.dto.city.CityMapper;
 import org.banana.entity.City;
+import org.banana.exception.CityAlreadyExistsException;
 import org.banana.repository.CityRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,11 +87,25 @@ class CityServiceTest {
 
         when(cityRepository.save(any(City.class))).thenReturn(savedCity);
         when(cityMapper.cityToCityDto(savedCity)).thenReturn(savedDto);
+        when(cityRepository.existsByName(name)).thenReturn(false);
 
         CityDto result = cityService.addCity(name);
 
         assertEquals(name, result.getName());
         verify(cityRepository).save(any(City.class));
         verify(cityMapper).cityToCityDto(savedCity);
+    }
+
+
+    @Test
+    void addCity_whenCalledWithNameThatAlreadyExists_thenThrowsException() {
+        String name = "Chicago";
+
+        when(cityRepository.existsByName(name)).thenReturn(true);
+
+        assertThrows(CityAlreadyExistsException.class, () -> cityService.addCity(name));
+
+        verify(cityRepository).existsByName(name);
+        verify(cityRepository, never()).save(any(City.class));
     }
 }

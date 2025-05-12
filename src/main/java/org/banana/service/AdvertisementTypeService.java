@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.banana.dto.advertisement.type.AdvertisementTypeDto;
 import org.banana.dto.advertisement.type.AdvertisementTypeMapper;
 import org.banana.entity.AdvertisementType;
+import org.banana.exception.AdvertisementTypeAlreadyExistsException;
 import org.banana.repository.AdvertisementTypeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,9 @@ public class AdvertisementTypeService {
 
     @Transactional
     public AdvertisementTypeDto addAdvertisementType(String name) {
+        if (advertisementTypeRepository.existsByName(name)) {
+            throw new AdvertisementTypeAlreadyExistsException(name);
+        }
         return advertisementTypeMapper.advertisementTypeToAdvertisementTypeDto(advertisementTypeRepository.save(new AdvertisementType(name)));
     }
 }

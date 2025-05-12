@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.banana.security.service.JwtService;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,16 +43,18 @@ public class JwtFilter extends OncePerRequestFilter {
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
-                        log.debug("Authenticated user: {}", userDetails.getUsername());
                     }
                 }
             }
         } catch (Exception ex) {
             log.info("Error with JWT: {}", ex.getMessage());
+//            throw new TokenException("For safety reasons, log in to system again.");
+//            throw new AuthenticationServiceException("For safety reasons, log in to system again.");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "For safety reasons, log in to system again.");
             return;
         }
         filterChain.doFilter(request, response);
+
     }
 
     private String resolveToken(HttpServletRequest request) {

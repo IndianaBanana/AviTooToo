@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface AdvertisementTypeRepository extends CrudRepository<AdvertisementType, UUID> {
 
     List<AdvertisementType> findByNameLike(String pattern);
+
+    boolean existsByName(String name);
 }

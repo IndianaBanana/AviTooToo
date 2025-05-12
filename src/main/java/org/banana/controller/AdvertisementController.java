@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -50,12 +51,10 @@ public class AdvertisementController {
         return ResponseEntity.created(uri).body(created);
     }
 
-    @PatchMapping
-    public ResponseEntity<AdvertisementResponseDto> updateAdvertisement(
-            @RequestBody @Valid AdvertisementUpdateRequestDto requestDto) {
-        return ResponseEntity.ok(advertisementService.updateAdvertisement(requestDto));
+    @PutMapping("/{id}")
+    public ResponseEntity<AdvertisementResponseDto> updateAdvertisement(@PathVariable("id") UUID advertisementId, @RequestBody @Valid AdvertisementRequestDto requestDto) {
+        return ResponseEntity.ok(advertisementService.updateAdvertisement(advertisementId, requestDto));
     }
-
     @PatchMapping("/{id}/close")
     public ResponseEntity<AdvertisementResponseDto> closeAdvertisement(@PathVariable UUID id) {
         return ResponseEntity.ok(advertisementService.closeAdvertisement(id));

@@ -6,19 +6,15 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
-                         AuthenticationException authException) throws IOException {
-
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
         response.setContentType("application/json");
-
-        PrintWriter writer = response.getWriter();
-        writer.write("{\"error\": \"Error authenticating. %s\"}".formatted(authException.getMessage()));
-        writer.flush();
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write(
+                String.format("{\"error\": \"%s\"}", authException.getMessage())
+        );
     }
 }
