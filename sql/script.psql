@@ -78,7 +78,7 @@ create table if not exists advertisement (
     description text not null,
     price numeric not null,
     quantity integer not null,
-    is_paid boolean not null default false, -- if the advertisement is paid or not. for showing it in top
+    is_promoted boolean not null default false, -- if the advertisement is paid or not. for showing it in top
     create_date timestamp(3) not null default now(),
     close_date timestamp(3),
     foreign key (user_id) references "user"(user_id) on delete cascade,

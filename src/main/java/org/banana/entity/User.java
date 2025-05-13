@@ -7,8 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,8 +18,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.banana.dto.ValidationConstants;
 import org.banana.security.UserRole;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -63,9 +60,12 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
 
-    @OneToOne(fetch = FetchType.LAZY)
-//    @MapsId
-    @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
+    /*
+     На самом деле связь один к одному, но использовать OneToOne не получается т.к. у него нет FetchType.LAZY,
+     а использование @MapsId не позволяет добавлять нового пользователя.
+    */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     @ToString.Exclude
     private UserRatingView userRatingView;
 

@@ -33,7 +33,7 @@ public class UserRatingView {
 //    @Id
 //    @MapsId
 //    @OneToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id")
+//    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
 //    private User userId;
     @Id
     private UUID userId;

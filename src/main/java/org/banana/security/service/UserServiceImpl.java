@@ -69,7 +69,6 @@ public class UserServiceImpl implements UserService {
         return jwtService.generateToken(principal.getId(), principal.getUsername(), principal.getRole(), principal.getPhone());
     }
 
-
     @Override
     public UserResponseDto getCurrentUser() {
         UUID id = SecurityUtils.getCurrentUserPrincipal().getId();
