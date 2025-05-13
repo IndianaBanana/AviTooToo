@@ -82,8 +82,10 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto createAdvertisement(AdvertisementRequestDto requestDto) {
         AdvertisementType advertisementType = advertisementTypeRepository.findById(requestDto.getAdvertisementTypeId())
                 .orElseThrow(() -> new AdvertisementTypeNotFoundException(requestDto.getAdvertisementTypeId()));
+
         City city = cityRepository.findById(requestDto.getCityId())
                 .orElseThrow(() -> new CityNotFoundException(requestDto.getCityId()));
+
         UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
         User currentUser = userRepository.findFetchedById(currentUserId).orElseThrow(() -> new UserNotFoundException(currentUserId));
         Advertisement advertisement = advertisementMapper.advertisementRequestDtoToAdvertisement(requestDto);
