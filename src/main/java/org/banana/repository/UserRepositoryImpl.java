@@ -14,11 +14,8 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
 
     private static final String EXISTS_BY_USERNAME = "SELECT 1 FROM User u WHERE u.username = :username";
     private static final String EXISTS_BY_PHONE = "SELECT 1 FROM User u WHERE u.phone = :phone";
-    //    private static final String FIND_BY_USERNAME = "SELECT u.id, u.firstName, u.lastName,u.phone,u.username, u.password,u.role FROM User u WHERE u.username = :username";
     private static final String FIND_BY_USERNAME = "SELECT u FROM User u WHERE u.username = :username";
-    //    private static final String FIND_BY_ID = "SELECT u FROM User u WHERE u.id = :id";
     private static final String FIND_BY_ID = "SELECT u FROM User u LEFT JOIN FETCH u.userRatingView WHERE u.id = :id";
-    //    private static final String FIND_BY_PHONE = "SELECT u FROM User u WHERE u.phone = :phone";
     private static final String UPDATE_PASSWORD = "UPDATE User u SET u.password = :password WHERE u.id = :id";
     private static final String UPDATE_USERNAME = "UPDATE User u SET u.username = :username WHERE u.id = :id";
     private static final String UPDATE_PHONE = "UPDATE User u SET u.phone = :phone WHERE u.id = :id";

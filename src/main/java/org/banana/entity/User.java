@@ -19,6 +19,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.banana.dto.ValidationConstants;
 import org.banana.security.UserRole;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -62,7 +64,7 @@ public class User {
     private UserRole role;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
+//    @MapsId
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", insertable = false, updatable = false)
     @ToString.Exclude
     private UserRatingView userRatingView;

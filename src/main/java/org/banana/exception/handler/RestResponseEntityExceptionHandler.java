@@ -75,7 +75,6 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @ExceptionHandler({
             BadCredentialsException.class,
-//            AccessDeniedException.class,
             SaleHistoryAccessDeniedException.class,
             UserDeleteCommentException.class,
     })
@@ -96,9 +95,10 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
                         (existing, replacement) -> existing
                 ));
 
-        ex.getBindingResult().getGlobalErrors().forEach(error -> {
-            fieldErrors.put("global", Optional.ofNullable(error.getDefaultMessage()).orElse("Invalid"));
-        });
+        ex.getBindingResult()
+                .getGlobalErrors()
+                .forEach(error -> fieldErrors.put("global", Optional.ofNullable(error.getDefaultMessage())
+                        .orElse("Invalid")));
 
         problemDetail.setProperty("errors", fieldErrors);
         problemDetail.setProperty("timestamp", Instant.now());

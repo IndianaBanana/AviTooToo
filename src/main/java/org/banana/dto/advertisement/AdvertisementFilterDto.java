@@ -14,11 +14,10 @@ public class AdvertisementFilterDto {
     private List<UUID> cityIds;
     private List<UUID> advertisementTypeIds;
     private String searchParam;
+
     @DecimalMin("0.00")
     private BigDecimal minPrice;
+
     @DecimalMin("0.00")
     private BigDecimal maxPrice;
-//    private LocalDateTime cursorDate;
-//    @Min(1)
-//    private int limit;
 }

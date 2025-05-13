@@ -114,7 +114,9 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     private Query<AdvertisementResponseDto> getAdvertisementResponseDtoTypedQuery(AdvertisementFilterDto filter) {
         StringBuilder jpql = new StringBuilder();
         jpql.append(FIND_FULL_ENTITY);
-        jpql.append(" WHERE a.closeDate IS NULL");
+        jpql.append(" WHERE 1=1");
+        if (filter.isOnlyOpened())
+            jpql.append(" AND a.closeDate IS NULL");
 
         if (filter.getCityIds() != null && !filter.getCityIds().isEmpty()) {
             jpql.append(" AND a.city.cityId IN :cityIds");
