@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.banana.dto.advertisement.AdvertisementFilterDto;
 import org.banana.dto.advertisement.AdvertisementRequestDto;
 import org.banana.dto.advertisement.AdvertisementResponseDto;
-import org.banana.dto.advertisement.AdvertisementUpdateRequestDto;
 import org.banana.service.AdvertisementService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,6 +27,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/advertisement")
 @RequiredArgsConstructor
+@Validated
 public class AdvertisementController {
 
     private final AdvertisementService advertisementService;
@@ -55,6 +56,7 @@ public class AdvertisementController {
     public ResponseEntity<AdvertisementResponseDto> updateAdvertisement(@PathVariable("id") UUID advertisementId, @RequestBody @Valid AdvertisementRequestDto requestDto) {
         return ResponseEntity.ok(advertisementService.updateAdvertisement(advertisementId, requestDto));
     }
+
     @PatchMapping("/{id}/close")
     public ResponseEntity<AdvertisementResponseDto> closeAdvertisement(@PathVariable UUID id) {
         return ResponseEntity.ok(advertisementService.closeAdvertisement(id));

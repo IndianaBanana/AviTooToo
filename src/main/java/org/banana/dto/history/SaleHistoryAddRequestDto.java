@@ -11,8 +11,7 @@ public class SaleHistoryAddRequestDto {
 
     @NotNull
     private final UUID advertisementId;
-    //    @NotNull
-//    private final UUID buyerId;
+
     @NotNull
     @Min(1)
     private final Integer quantity;

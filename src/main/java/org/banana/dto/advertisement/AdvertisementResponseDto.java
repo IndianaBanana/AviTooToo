@@ -25,5 +25,4 @@ public class AdvertisementResponseDto {
     private boolean isPromoted;
     private LocalDateTime createDate;
     private LocalDateTime closeDate;
-
 }

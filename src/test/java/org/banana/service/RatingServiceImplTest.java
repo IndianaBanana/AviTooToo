@@ -35,12 +35,16 @@ class RatingServiceImplTest {
     private final UUID userId = UUID.randomUUID();
     private final UUID raterId = UUID.randomUUID();
     private final short ratingValue = 4;
+
     @Mock
     private RatingRepository ratingRepository;
+
     @Mock
     private UserRatingViewRepository userRatingViewRepository;
+
     @Mock
     private UserRepository userRepository;
+
     @InjectMocks
     private RatingServiceImpl ratingService;
 

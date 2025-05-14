@@ -13,6 +13,7 @@ import java.util.UUID;
 public class CityDto {
 
     private UUID id;
+
     @NotBlank
     private String name;
 

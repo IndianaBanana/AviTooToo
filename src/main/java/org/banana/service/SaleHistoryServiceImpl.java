@@ -17,7 +17,6 @@ import org.banana.repository.SaleHistoryRepository;
 import org.banana.security.UserRole;
 import org.banana.security.dto.UserPrincipal;
 import org.banana.util.SecurityUtils;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,11 +41,13 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
     @Transactional
     public SaleHistoryResponseDto addSale(SaleHistoryAddRequestDto requestDto) {
         UUID currentUserPrincipalId = SecurityUtils.getCurrentUserPrincipal().getId();
+
         Advertisement advertisement = advertisementRepository.findById(requestDto.getAdvertisementId())
                 .orElseThrow(() -> new AdvertisementNotFoundException(requestDto.getAdvertisementId()));
-        if (advertisement.getQuantity() < requestDto.getQuantity()) {
+
+        if (advertisement.getQuantity() < requestDto.getQuantity())
             throw new SaleHistoryAdvertisementQuantityIsLowerThanExpectedException(advertisement.getQuantity(), requestDto.getQuantity());
-        }
+
         SaleHistory saleHistory = new SaleHistory(advertisement, currentUserPrincipalId, requestDto.getQuantity(), LocalDateTime.now());
         advertisement.setQuantity(advertisement.getQuantity() - requestDto.getQuantity());
         advertisementRepository.save(advertisement);
@@ -67,7 +68,7 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
         boolean isOwner = ad.getUser().getId().equals(current.getId());
         boolean isAdmin = current.getRole() == UserRole.ROLE_ADMIN;
         if (!isOwner && !isAdmin) {
-            throw new AccessDeniedException("Only owner or admin can cancel a sale");
+            throw new SaleHistoryAccessDeniedException();
         }
         ad.setQuantity(ad.getQuantity() + sh.getQuantity());
         advertisementRepository.save(ad);

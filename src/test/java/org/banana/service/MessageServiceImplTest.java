@@ -53,14 +53,19 @@ class MessageServiceImplTest {
     private final UUID currentUserId = UUID.randomUUID();
     private final UUID recipientId = UUID.randomUUID();
     private final UUID advertisementId = UUID.randomUUID();
+
     @Mock
     private MessageRepository messageRepository;
+
     @Mock
     private AdvertisementRepository advertisementRepository;
+
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private MessageMapper messageMapper;
+
     @InjectMocks
     private MessageServiceImpl messageService;
 

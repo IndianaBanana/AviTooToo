@@ -71,7 +71,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public void deleteById(UUID advertisementId) {
         Advertisement advertisement = findAdvertisementByIdOrThrow(advertisementId);
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUserPrincipal();
-        if (!advertisement.getUser().getId().equals(userPrincipal.getId()) && !userPrincipal.getRole().equals(UserRole.ROLE_ADMIN)) {
+        boolean isOwner = advertisement.getUser().getId().equals(userPrincipal.getId());
+        boolean isAdmin = userPrincipal.getRole().equals(UserRole.ROLE_ADMIN);
+        if (!isOwner && !isAdmin) {
             throw new AdvertisementUpdateException(NOT_OWNER);
         }
         advertisementRepository.delete(advertisement);
@@ -104,6 +106,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         UUID userId = SecurityUtils.getCurrentUserPrincipal().getId();
         if (!advertisement.getUser().getId().equals(userId))
             throw new AdvertisementUpdateException(NOT_OWNER);
+        if (advertisement.getCloseDate() != null)
+            throw new AdvertisementUpdateException(ALREADY_CLOSED);
 
         City city = cityRepository.findById(requestDto.getCityId())
                 .orElseThrow(() -> new CityNotFoundException(requestDto.getCityId()));

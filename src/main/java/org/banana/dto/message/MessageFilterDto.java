@@ -22,13 +22,16 @@ public class MessageFilterDto {
     @Min(10)
     private int limit = 10;
     private Boolean isBefore;
+
     @Null
     private Long unreadMessagesCount;
     private LocalDateTime cursorDateTime;
     private UUID cursorMessageId;
     private UUID advertisementId;
+
     @Null
     private UUID currentUserId;
+
     @NotNull
     private UUID secondUserId;
 }

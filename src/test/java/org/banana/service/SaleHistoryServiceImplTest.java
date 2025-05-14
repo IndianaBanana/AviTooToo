@@ -23,7 +23,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -45,10 +44,13 @@ class SaleHistoryServiceImplTest {
 
     @Mock
     private SaleHistoryRepository saleHistoryRepository;
+
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private AdvertisementRepository advertisementRepository;
+
     @Mock
     private SaleHistoryMapper saleHistoryMapper;
 
@@ -157,7 +159,7 @@ class SaleHistoryServiceImplTest {
         when(saleHistoryRepository.findById(saleId)).thenReturn(Optional.of(sale));
         mockCurrentUser(UUID.randomUUID(), UserRole.ROLE_USER);
 
-        assertThrows(AccessDeniedException.class, () -> saleHistoryService.cancelSale(saleId));
+        assertThrows(SaleHistoryAccessDeniedException.class, () -> saleHistoryService.cancelSale(saleId));
     }
 
     @Test

@@ -7,6 +7,7 @@ import org.banana.dto.message.MessageMarkReadRequestDto;
 import org.banana.dto.message.MessageResponseDto;
 import org.banana.dto.message.MessageSendRequestDto;
 import org.banana.service.MessageService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -27,11 +27,8 @@ public class MessageController {
     @PostMapping
     public ResponseEntity<MessageResponseDto> sendMessage(@RequestBody @Valid MessageSendRequestDto requestDto) {
         MessageResponseDto created = messageService.sendMessage(requestDto);
-
-        URI location = URI.create(String.format("/api/v1/messages/%s", created.getId()));
-
         return ResponseEntity
-                .created(location)
+                .status(HttpStatus.CREATED)
                 .body(created);
     }
 

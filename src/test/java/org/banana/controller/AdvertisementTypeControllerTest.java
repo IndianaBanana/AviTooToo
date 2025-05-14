@@ -46,7 +46,7 @@ class AdvertisementTypeControllerTest {
 
 
     @Test
-    @WithMockUser(username = "bob", roles = {"USER"})
+    @WithMockUser(username = "bob")
     void getAllAdvertisementTypes_whenCalled_thenReturnsList() throws Exception {
         List<AdvertisementTypeDto> types =
                 singletonList(new AdvertisementTypeDto(UUID.randomUUID(), "Banner"));
@@ -58,7 +58,7 @@ class AdvertisementTypeControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "bob", roles = {"USER"})
+    @WithMockUser(username = "bob")
     void searchAdvertisementTypes_whenCalledWithPattern_thenReturnsFilteredList() throws Exception {
         List<AdvertisementTypeDto> types =
                 singletonList(new AdvertisementTypeDto(UUID.randomUUID(), "Video"));
@@ -83,7 +83,7 @@ class AdvertisementTypeControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "bob", roles = {"USER"})
+    @WithMockUser(username = "bob")
     void addAdvertisementType_whenUserIsNotAdmin_thenReturnsForbidden() throws Exception {
 
         mvc.perform(post("/api/v1/advertisement-type/Interstitial"))

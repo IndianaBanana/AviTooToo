@@ -32,8 +32,7 @@ public class SaleHistoryController {
     }
 
     @GetMapping("/advertisement/{adId}")
-    public ResponseEntity<List<SaleHistoryResponseDto>> getSalesByAdvertisement(
-            @PathVariable("adId") UUID advertisementId) {
+    public ResponseEntity<List<SaleHistoryResponseDto>> getSalesByAdvertisement(@PathVariable("adId") UUID advertisementId) {
 
         List<SaleHistoryResponseDto> sales =
                 saleHistoryService.getSalesByAdvertisementId(advertisementId);

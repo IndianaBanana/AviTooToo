@@ -102,5 +102,4 @@ class AdvertisementTypeServiceTest {
         verify(advertisementTypeRepository).existsByName(name);
         verify(advertisementTypeRepository, never()).save(any(AdvertisementType.class));
     }
-
 }

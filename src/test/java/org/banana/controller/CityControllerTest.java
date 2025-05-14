@@ -4,16 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.banana.config.SecurityConfig;
 import org.banana.dto.city.CityDto;
 import org.banana.exception.CityAlreadyExistsException;
-import org.banana.security.UserRole;
 import org.banana.security.service.JwtService;
 import org.banana.service.CityService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -50,7 +46,7 @@ class CityControllerTest {
 
 
     @Test
-    @WithMockUser(username="bob", roles = {"USER"})
+    @WithMockUser(username = "bob")
     void getAllCities_whenCalled_thenReturnsCityList() throws Exception {
         List<CityDto> cities = singletonList(new CityDto(UUID.randomUUID(), "Paris"));
         when(cityService.findAll()).thenReturn(cities);
@@ -60,7 +56,7 @@ class CityControllerTest {
     }
 
     @Test
-    @WithMockUser(username="bob", roles = {"USER"})
+    @WithMockUser(username = "bob")
     void searchCities_whenCalledWithPattern_thenReturnsFilteredCityList() throws Exception {
         List<CityDto> cities = singletonList(new CityDto(UUID.randomUUID(), "London"));
         when(cityService.findByNameLike("Lon")).thenReturn(cities);
@@ -71,7 +67,7 @@ class CityControllerTest {
     }
 
     @Test
-    @WithMockUser(username="bob", roles = {"ADMIN"})
+    @WithMockUser(username = "bob", roles = {"ADMIN"})
     void addCity_whenUserIsAdmin_thenReturnsNewCity() throws Exception {
 
         CityDto added = new CityDto(UUID.randomUUID(), "Berlin");
@@ -83,7 +79,7 @@ class CityControllerTest {
     }
 
     @Test
-    @WithMockUser(username="bob", roles = {"USER"})
+    @WithMockUser(username = "bob")
     void addCity_whenUserIsNotAdmin_thenReturnsForbidden() throws Exception {
 
         mvc.perform(post("/api/v1/city/Rome"))
@@ -98,7 +94,7 @@ class CityControllerTest {
 
 
     @Test
-    @WithMockUser(username="bob", roles = {"ADMIN"})
+    @WithMockUser(username = "bob", roles = {"ADMIN"})
     void addCity_whenCityAlreadyExists_thenReturnsConflict() throws Exception {
         when(cityService.addCity("Berlin")).thenThrow(new CityAlreadyExistsException("Berlin"));
 

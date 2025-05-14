@@ -13,7 +13,7 @@ import java.util.UUID;
 public class SaleHistoryRepositoryImpl extends AbstractCrudRepositoryImpl<SaleHistory, UUID> implements SaleHistoryRepository {
 
     public static final String GET_TOTAL_FOR_SALES_IN_ADVERTISEMENTS = """
-            SELECT new org.banana.dto.sale.SaleHistoryTotalForAdvertisementsResponseDto(
+            SELECT new org.banana.dto.history.SaleHistoryTotalForAdvertisementsResponseDto(
                 a.id,
                 a.title,
                 SUM(sh.quantity * sh.advertisement.price),
@@ -22,20 +22,21 @@ public class SaleHistoryRepositoryImpl extends AbstractCrudRepositoryImpl<SaleHi
                 MAX(sh.saleDateTime)
             )
             FROM SaleHistory sh
-            join fetch sh.advertisement a
-            where a.user = :currentUserId
+            join sh.advertisement a
+            where a.user.id = :currentUserId
             GROUP BY a.id, a.title
             """;
     public static final String GET_SALES_BY_ADVERTISEMENT_ID = """
-            SELECT new org.banana.dto.sale.SaleHistoryResponseDto(
+            SELECT new org.banana.dto.history.SaleHistoryResponseDto(
                 sh.id,
-                sh.advertisement.title,
-                sh.advertisement.id,
+                a.title,
+                a.id,
                 sh.buyerId,
                 sh.saleDateTime,
                 sh.quantity
             )
             FROM SaleHistory sh
+            join sh.advertisement a
             WHERE a.id = :adId
             ORDER BY sh.saleDateTime ASC
             """;

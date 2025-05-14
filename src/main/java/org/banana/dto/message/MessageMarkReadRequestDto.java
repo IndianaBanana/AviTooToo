@@ -16,6 +16,7 @@ public class MessageMarkReadRequestDto {
     @NotNull
     private UUID secondUserId;
     private UUID advertisementId;
+
     @NotNull
     private LocalDateTime upToDateTime;
 }

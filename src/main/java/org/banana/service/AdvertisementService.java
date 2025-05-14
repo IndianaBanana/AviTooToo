@@ -3,7 +3,6 @@ package org.banana.service;
 import org.banana.dto.advertisement.AdvertisementFilterDto;
 import org.banana.dto.advertisement.AdvertisementRequestDto;
 import org.banana.dto.advertisement.AdvertisementResponseDto;
-import org.banana.dto.advertisement.AdvertisementUpdateRequestDto;
 
 import java.util.List;
 import java.util.UUID;

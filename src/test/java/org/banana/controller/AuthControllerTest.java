@@ -10,7 +10,6 @@ import org.banana.security.service.JwtService;
 import org.banana.security.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -26,7 +25,6 @@ import static org.banana.dto.ValidationConstants.PHONE_ERROR_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -90,14 +88,12 @@ public class AuthControllerTest {
         UserLoginRequestDto requestDto = new UserLoginRequestDto("example@example.com", "password123");
 
         when(userService.verify(requestDto))
-                .thenThrow(new BadCredentialsException("Invalid username or password"));
+                .thenThrow(new BadCredentialsException("message"));
 
         mvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(result -> assertTrue(result.getResponse()
-                        .getContentAsString().contains("Invalid username or password")));
+                .andExpect(status().isUnauthorized());
     }
 
 

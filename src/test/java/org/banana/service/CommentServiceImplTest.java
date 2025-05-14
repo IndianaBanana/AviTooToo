@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,6 +35,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -46,10 +48,13 @@ class CommentServiceImplTest {
 
     @Mock
     private CommentRepository commentRepository;
+
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private CommentMapper commentMapper;
+
     @Mock
     private AdvertisementRepository advertisementRepository;
 
@@ -134,7 +139,33 @@ class CommentServiceImplTest {
     }
 
     @Test
-    void addComment_whenValid_thenReturnsDto() {
+    void addComment_whenValidAndRootCommentIsNotNull_thenReturnsDto() {
+        CommentRequestDto dto = new CommentRequestDto(adId, parentId, "txt");
+        parentComment.setRootCommentId(rootId);
+        parentComment.setParentCommentId(rootId);
+        when(commentRepository.findById(parentId)).thenReturn(Optional.of(parentComment));
+        when(userRepository.findById(currentUserId)).thenReturn(Optional.of(user));
+
+        Comment toSave = new Comment(adId, parentId, rootId, "txt", user, LocalDateTime.now());
+        when(commentRepository.save(any())).thenReturn(toSave);
+        CommentResponseDto resp = new CommentResponseDto();
+        when(commentMapper.fromCommentToCommentResponseDto(toSave)).thenReturn(resp);
+        ArgumentCaptor<Comment> commentArgumentCaptor = ArgumentCaptor.forClass(Comment.class);
+        CommentResponseDto result = service.addComment(dto);
+        verify(commentRepository).save(commentArgumentCaptor.capture());
+        Comment saved = commentArgumentCaptor.getValue();
+        assertAll(
+                () -> assertThat(saved.getAdvertisementId()).isEqualTo(adId),
+                () -> assertThat(saved.getParentCommentId()).isEqualTo(parentId),
+                () -> assertThat(saved.getRootCommentId()).isEqualTo(rootId),
+                () -> assertThat(saved.getCommentText()).isEqualTo("txt"),
+                () -> assertThat(saved.getCommenter()).isEqualTo(user)
+        );
+        assertThat(result).isEqualTo(resp);
+    }
+
+    @Test
+    void addComment_whenValidAndRootCommentIsNull_thenReturnsDto() {
         CommentRequestDto dto = new CommentRequestDto(adId, parentId, "txt");
         when(commentRepository.findById(parentId)).thenReturn(Optional.of(parentComment));
         when(userRepository.findById(currentUserId)).thenReturn(Optional.of(user));
@@ -143,8 +174,17 @@ class CommentServiceImplTest {
         when(commentRepository.save(any())).thenReturn(toSave);
         CommentResponseDto resp = new CommentResponseDto();
         when(commentMapper.fromCommentToCommentResponseDto(toSave)).thenReturn(resp);
-
+        ArgumentCaptor<Comment> commentArgumentCaptor = ArgumentCaptor.forClass(Comment.class);
         CommentResponseDto result = service.addComment(dto);
+        verify(commentRepository).save(commentArgumentCaptor.capture());
+        Comment saved = commentArgumentCaptor.getValue();
+        assertAll(
+                () -> assertThat(saved.getAdvertisementId()).isEqualTo(adId),
+                () -> assertThat(saved.getParentCommentId()).isEqualTo(parentId),
+                () -> assertThat(saved.getRootCommentId()).isEqualTo(parentId),
+                () -> assertThat(saved.getCommentText()).isEqualTo("txt"),
+                () -> assertThat(saved.getCommenter()).isEqualTo(user)
+        );
         assertThat(result).isEqualTo(resp);
     }
 
@@ -198,9 +238,10 @@ class CommentServiceImplTest {
     @Test
     void deleteComment_whenAdmin_thenDeletes() {
         UUID id = UUID.randomUUID();
+        user.setId(UUID.randomUUID());
         Comment c = new Comment(adId, null, null, "t", user, LocalDateTime.now());
         c.setId(id);
-        mockCurrentUser(UUID.randomUUID(), UserRole.ROLE_ADMIN);
+        principal.setRole(UserRole.ROLE_ADMIN);
         when(commentRepository.findById(id)).thenReturn(Optional.of(c));
 
         service.deleteComment(id);
