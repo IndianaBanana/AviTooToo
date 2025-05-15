@@ -44,30 +44,39 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentResponseDto addComment(CommentRequestDto requestDto) {
-        UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
+        log.info("addComment({}) in {}", requestDto, getClass().getSimpleName());
+        UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
+        UUID parentCommentId = requestDto.getParentCommentId();
+        UUID advertisementId = requestDto.getAdvertisementId();
         UUID rootCommentId = null;
-        if (requestDto.getParentCommentId() != null) {
-            Comment parent = commentRepository.findById(requestDto.getParentCommentId())
-                    .orElseThrow(() -> new CommentNotFoundException(requestDto.getParentCommentId()));
-            if (parent.getCommenter() == null) throw new AddingCommentWhenParentCommenterIsNullException();
-            if (!parent.getAdvertisementId().equals(requestDto.getAdvertisementId()))
-                throw new CommentInAdvertisementNotFoundException(requestDto.getParentCommentId(), requestDto.getAdvertisementId());
+
+        if (parentCommentId != null) {
+            Comment parent = commentRepository.findById(parentCommentId)
+                    .orElseThrow(() -> new CommentNotFoundException(parentCommentId));
+
+            if (parent.getCommenter() == null)
+                throw new AddingCommentWhenParentCommenterIsNullException();
+
+            if (!parent.getAdvertisementId().equals(advertisementId))
+                throw new CommentInAdvertisementNotFoundException(parentCommentId, advertisementId);
 
             rootCommentId = parent.getRootCommentId();
-            if (rootCommentId == null) {
-                rootCommentId = requestDto.getParentCommentId();
-            }
+
+            if (rootCommentId == null) rootCommentId = parentCommentId;
         }
-        User currentUser = userRepository.findById(currentUserPrincipal.getId())
-                .orElseThrow(() -> new UserNotFoundException(currentUserPrincipal.getId()));
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new UserNotFoundException(currentUserId));
+
         Comment comment = new Comment(
-                requestDto.getAdvertisementId(),
+                advertisementId,
                 rootCommentId,
-                requestDto.getParentCommentId(),
+                parentCommentId,
                 requestDto.getCommentText(),
                 currentUser,
                 LocalDateTime.now()
         );
+
         comment = commentRepository.save(comment);
         return commentMapper.fromCommentToCommentResponseDto(comment);
     }
@@ -75,6 +84,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteComment(UUID commentId) {
+        log.info("deleteComment({}) in {}", commentId, getClass().getSimpleName());
         UserPrincipal currentUser = SecurityUtils.getCurrentUserPrincipal();
 
         Comment comment = commentRepository.findById(commentId)
@@ -94,14 +104,19 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public CommentResponseDto findCommentById(UUID commentId) {
+        log.info("findCommentById({}) in {}", commentId, getClass().getSimpleName());
+
         Comment comment = commentRepository.findFetchedById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
+
         return commentMapper.fromCommentToCommentResponseDto(comment);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponseDto> findAllByAdvertisementId(UUID advertisementId, int page, int size) {
+        log.info("findAllByAdvertisementId({}) in {}", advertisementId, getClass().getSimpleName());
+
         if (!advertisementRepository.existsById(advertisementId))
             throw new AdvertisementNotFoundException(advertisementId);
 

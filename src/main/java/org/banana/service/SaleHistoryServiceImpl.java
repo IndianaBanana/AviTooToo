@@ -40,17 +40,29 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
     @Override
     @Transactional
     public SaleHistoryResponseDto addSale(SaleHistoryAddRequestDto requestDto) {
-        UUID currentUserPrincipalId = SecurityUtils.getCurrentUserPrincipal().getId();
+        log.info("addSale({}) in {}", requestDto, getClass().getSimpleName());
+        UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
 
         Advertisement advertisement = advertisementRepository.findById(requestDto.getAdvertisementId())
                 .orElseThrow(() -> new AdvertisementNotFoundException(requestDto.getAdvertisementId()));
 
-        if (advertisement.getQuantity() < requestDto.getQuantity())
-            throw new SaleHistoryAdvertisementQuantityIsLowerThanExpectedException(advertisement.getQuantity(), requestDto.getQuantity());
+        Integer advertisementQuantity = advertisement.getQuantity();
+        Integer requestDtoQuantity = requestDto.getQuantity();
 
-        SaleHistory saleHistory = new SaleHistory(advertisement, currentUserPrincipalId, requestDto.getQuantity(), LocalDateTime.now());
-        advertisement.setQuantity(advertisement.getQuantity() - requestDto.getQuantity());
+        if (advertisementQuantity < requestDtoQuantity) {
+            throw new SaleHistoryAdvertisementQuantityIsLowerThanExpectedException(advertisementQuantity, requestDtoQuantity);
+        }
+
+        SaleHistory saleHistory = new SaleHistory(
+                advertisement,
+                currentUserId,
+                requestDtoQuantity,
+                LocalDateTime.now()
+        );
+
+        advertisement.setQuantity(advertisementQuantity - requestDtoQuantity);
         advertisementRepository.save(advertisement);
+
         saleHistory = saleHistoryRepository.save(saleHistory);
         return saleHistoryMapper.fromSaleHistoryToSaleHistoryResponseDto(saleHistory);
     }
@@ -58,41 +70,46 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
     @Override
     @Transactional
     public void cancelSale(UUID saleId) {
+        log.info("cancelSale({}) in {}", saleId, getClass().getSimpleName());
         UserPrincipal current = SecurityUtils.getCurrentUserPrincipal();
 
-        SaleHistory sh = saleHistoryRepository.findById(saleId)
+        SaleHistory saleHistory = saleHistoryRepository.findById(saleId)
                 .orElseThrow(() -> new SaleHistoryNotFoundException(saleId));
 
-        Advertisement ad = sh.getAdvertisement();
+        Advertisement advertisement = saleHistory.getAdvertisement();
 
-        boolean isOwner = ad.getUser().getId().equals(current.getId());
-        boolean isAdmin = current.getRole() == UserRole.ROLE_ADMIN;
-        if (!isOwner && !isAdmin) {
-            throw new SaleHistoryAccessDeniedException();
-        }
-        ad.setQuantity(ad.getQuantity() + sh.getQuantity());
-        advertisementRepository.save(ad);
+        isOwnerOrAdmin(advertisement, current);
 
-        saleHistoryRepository.delete(sh);
+        advertisement.setQuantity(advertisement.getQuantity() + saleHistory.getQuantity());
+        advertisementRepository.save(advertisement);
+
+        saleHistoryRepository.delete(saleHistory);
     }
 
 
     @Override
     @Transactional(readOnly = true)
     public List<SaleHistoryResponseDto> getSalesByAdvertisementId(UUID advertisementId) {
+        log.info("getSalesByAdvertisementId({}) in {}", advertisementId, getClass().getSimpleName());
+        UserPrincipal current = SecurityUtils.getCurrentUserPrincipal();
+
         Advertisement advertisement = advertisementRepository.findById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
-        UserPrincipal current = SecurityUtils.getCurrentUserPrincipal();
-        boolean isOwner = advertisement.getUser().getId().equals(current.getId());
-        boolean isAdmin = current.getRole().equals(UserRole.ROLE_ADMIN);
-        if (!isOwner && !isAdmin) {
-            throw new SaleHistoryAccessDeniedException();
-        }
+
+        isOwnerOrAdmin(advertisement, current);
+
         return saleHistoryRepository.getSalesByAdvertisementId(advertisementId);
     }
 
     @Override
     public List<SaleHistoryTotalForAdvertisementsResponseDto> getTotalForSalesInAdvertisements() {
+        log.info("getTotalForSalesInAdvertisements() in {}", getClass().getSimpleName());
         return saleHistoryRepository.getTotalForSalesInAdvertisements(SecurityUtils.getCurrentUserPrincipal().getId());
+    }
+
+    private static void isOwnerOrAdmin(Advertisement advertisement, UserPrincipal current) {
+        boolean isOwner = advertisement.getUser().getId().equals(current.getId());
+        boolean isAdmin = current.getRole().equals(UserRole.ROLE_ADMIN);
+        if (!isOwner && !isAdmin) throw new SaleHistoryAccessDeniedException();
     }
 }

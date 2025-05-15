@@ -29,7 +29,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-//@Table(name = "advertisement")
 public class Advertisement {
 
     @Id
@@ -68,11 +67,8 @@ public class Advertisement {
     @NotNull
     @Min(1)
     private Integer quantity;
-
     private Boolean isPromoted = false;
-
     private LocalDateTime createDate;
-
     private LocalDateTime closeDate;
 
     @Override

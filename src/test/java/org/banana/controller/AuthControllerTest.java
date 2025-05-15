@@ -18,9 +18,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
-
-import static org.banana.dto.ValidationConstants.PASSWORD_MIN_LENGTH;
 import static org.banana.dto.ValidationConstants.PHONE_ERROR_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

@@ -53,7 +53,7 @@ class RatingControllerTest {
     @WithMockUser
     void rateUser_whenValid_thenCreated() throws Exception {
         RatingDto dto = new RatingDto();
-        dto.setUserId(UUID.randomUUID());
+        dto.setRatedUserId(UUID.randomUUID());
         dto.setRatingValue((short) 4);
 
         when(ratingService.rateUser(dto)).thenReturn("Thanks for rating! User rating will be update in 15 minutes.");
@@ -74,7 +74,7 @@ class RatingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("userId")))
+                .andExpect(content().string(containsString("ratedUserId")))
                 .andExpect(content().string(containsString("ratingValue")));
     }
 
@@ -96,7 +96,7 @@ class RatingControllerTest {
     void rateUser_whenUserNotFound_thenNotFound() throws Exception {
         RatingDto dto = new RatingDto(UUID.randomUUID(), (short) 3);
 
-        doThrow(new UserNotFoundException(dto.getUserId())).when(ratingService).rateUser(dto);
+        doThrow(new UserNotFoundException(dto.getRatedUserId())).when(ratingService).rateUser(dto);
 
         mvc.perform(post("/api/v1/rating")
                         .contentType(MediaType.APPLICATION_JSON)

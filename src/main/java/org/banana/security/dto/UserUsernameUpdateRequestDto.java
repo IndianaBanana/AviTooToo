@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 
 import static org.banana.dto.ValidationConstants.EMAIL_REGEX;
 
@@ -19,5 +20,6 @@ public class UserUsernameUpdateRequestDto {
     private String newUsername;
 
     @NotBlank
+    @ToString.Exclude
     private String password;
 }

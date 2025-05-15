@@ -44,6 +44,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public MessageResponseDto sendMessage(MessageSendRequestDto requestDto) {
+        log.info("sendMessage({}) in {}", requestDto, getClass().getSimpleName());
         UUID senderId = SecurityUtils.getCurrentUserPrincipal().getId();
         UUID recipientId = requestDto.getRecipientId();
         UUID advertisementId = requestDto.getAdvertisementId();
@@ -68,66 +69,66 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public void markReadUpTo(MessageMarkReadRequestDto dto) {
+        log.info("markReadUpTo({}) in {}", dto, getClass().getSimpleName());
+
         UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
+        UUID secondUserId = dto.getSecondUserId();
+        UUID advertisementId = dto.getAdvertisementId();
 
-        validateRecipient(currentUserId, dto.getSecondUserId());
+        validateRecipient(currentUserId, secondUserId);
 
-        if (dto.getAdvertisementId() != null && !advertisementRepository.existsById(dto.getAdvertisementId())) {
-            throw new AdvertisementNotFoundException(dto.getAdvertisementId());
-        }
+        if (advertisementId != null && !advertisementRepository.existsById(advertisementId))
+            throw new AdvertisementNotFoundException(advertisementId);
 
-        if (!messageRepository.chatExists(currentUserId, dto.getSecondUserId(), dto.getAdvertisementId())) {
-            throw new ConversationNotFoundException(dto.getSecondUserId(), dto.getAdvertisementId());
-        }
+        if (!messageRepository.chatExists(currentUserId, secondUserId, advertisementId))
+            throw new ConversationNotFoundException(secondUserId, advertisementId);
 
-        messageRepository.markMessagesReadUpTo(
-                currentUserId,
-                dto.getSecondUserId(),
-                dto.getAdvertisementId(),
-                dto.getUpToDateTime()
-        );
+        messageRepository.markMessagesReadUpTo(currentUserId, secondUserId, advertisementId, dto.getUpToDateTime());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<MessageResponseDto> getListOfMessages(MessageFilterDto filter) {
+        log.info("getListOfMessages({}) in {}", filter, getClass().getSimpleName());
+
         filter.setCurrentUserId(SecurityUtils.getCurrentUserPrincipal().getId());
+
         validateRecipient(filter.getCurrentUserId(), filter.getSecondUserId());
+
         if (filter.getCursorMessageId() == null && filter.getCursorDateTime() == null) {
             long unreadMessagesCount = messageRepository
                     .hasUnreadMessages(filter.getSecondUserId(), filter.getCurrentUserId(), filter.getAdvertisementId());
             filter.setUnreadMessagesCount(unreadMessagesCount);
         }
+
         return messageRepository.findAllByFilter(filter);
     }
 
     private void validateRecipient(UUID senderId, UUID recipientId) {
-        if (senderId.equals(recipientId)) {
+        if (senderId.equals(recipientId))
             throw new MessageSendException(USER_MESSAGES_THE_SAME_USER);
-        }
-        if (!userRepository.existsById(recipientId)) {
+
+        if (!userRepository.existsById(recipientId))
             throw new UserNotFoundException(recipientId);
-        }
     }
 
     private void validateAdvertisementRules(UUID senderId, UUID recipientId, UUID advertisementId) {
-        if (advertisementId == null) {
-            return;
-        }
+        if (advertisementId == null) return;
+
         Advertisement ad = advertisementRepository.findById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
+
         UUID ownerId = ad.getUser().getId();
 
-        // если ни получатель, ни мы не владелец — запрещено
+        // если ни получатель, ни мы не владелец — запрещено переписываться насчет этого объявления
         boolean isSenderOwner = senderId.equals(ownerId);
         boolean isRecipientOwner = recipientId.equals(ownerId);
-        if (!isRecipientOwner && !isSenderOwner) {
+        if (!isRecipientOwner && !isSenderOwner)
             throw new MessageSendException(RECIPIENT_IS_NOT_OWNER_OF_THE_ADVERTISEMENT);
-        }
 
         // если мы — владелец и переписка ещё не начиналась — запрещено писать первым
-        if (isSenderOwner && !messageRepository.chatExists(senderId, recipientId, advertisementId)) {
+        if (isSenderOwner && !messageRepository.chatExists(senderId, recipientId, advertisementId))
             throw new MessageSendException(OWNER_OF_THE_ADVERTISEMENT_CANT_MESSAGE_FIRST);
-        }
+
     }
 }

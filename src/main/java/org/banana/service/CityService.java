@@ -1,6 +1,7 @@
 package org.banana.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.banana.dto.city.CityDto;
 import org.banana.dto.city.CityMapper;
 import org.banana.entity.City;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CityService {
@@ -20,23 +22,29 @@ public class CityService {
 
     @Transactional(readOnly = true)
     public List<CityDto> findAll() {
+        log.info("findAll() in {}", getClass().getSimpleName());
         return cityRepository.findAllDto();
     }
 
     @Transactional(readOnly = true)
     public List<CityDto> findByNameLike(String pattern) {
-        String safePattern = pattern.replace("\\", "\\\\")
+        log.info("findByNameLike({}) in {}", pattern, getClass().getSimpleName());
+
+        pattern = pattern
+                .replace("\\", "\\\\")
                 .replace("_", "\\_")
                 .replace("%", "\\%");
 
-        return cityRepository.findByNameLike(safePattern);
+        return cityRepository.findByNameLike(pattern);
     }
 
     @Transactional
     public CityDto addCity(String name) {
-        if (cityRepository.existsByName(name)) {
+        log.info("addCity({}) in {}", name, getClass().getSimpleName());
+
+        if (cityRepository.existsByName(name))
             throw new CityAlreadyExistsException(name);
-        }
+
         return cityMapper.cityToCityDto(cityRepository.save(new City(name)));
     }
 }

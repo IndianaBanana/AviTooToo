@@ -13,7 +13,7 @@ public interface RatingService {
 
     String rateUser(RatingDto dto);
 
-    String removeRating(UUID userId);
+    String removeRating(UUID ratedUserId);
 
     @Scheduled(initialDelayString = "${rating.view.update.initial-delay:10000}",
             fixedRateString = "${rating.view.update.rate:900000}")

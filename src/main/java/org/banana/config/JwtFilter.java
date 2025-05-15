@@ -57,8 +57,6 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } catch (Exception ex) {
             log.error("Error with JWT: {}", ex.getMessage());
-//            throw new TokenException("For safety reasons, log in to system again.");
-//            throw new AuthenticationServiceException("For safety reasons, log in to system again.");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             handlerExceptionResolver.resolveException(request, response, null, ex);
             return;

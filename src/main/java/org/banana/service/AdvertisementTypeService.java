@@ -1,6 +1,7 @@
 package org.banana.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.banana.dto.advertisement.type.AdvertisementTypeDto;
 import org.banana.dto.advertisement.type.AdvertisementTypeMapper;
 import org.banana.entity.AdvertisementType;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdvertisementTypeService {
@@ -20,22 +22,30 @@ public class AdvertisementTypeService {
 
     @Transactional(readOnly = true)
     public List<AdvertisementTypeDto> findAll() {
+        log.info("findAll() in {}", getClass().getSimpleName());
         return advertisementTypeRepository.findAllDto();
     }
 
     @Transactional(readOnly = true)
     public List<AdvertisementTypeDto> findByNameLike(String pattern) {
-        pattern = pattern.replace("\\", "\\\\")
+        log.info("findByNameLike({}) in {}", pattern, getClass().getSimpleName());
+
+        pattern = pattern
+                .replace("\\", "\\\\")
                 .replace("_", "\\_")
                 .replace("%", "\\%");
+
         return advertisementTypeRepository.findByNameLike(pattern);
     }
 
     @Transactional
     public AdvertisementTypeDto addAdvertisementType(String name) {
-        if (advertisementTypeRepository.existsByName(name)) {
+        log.info("addAdvertisementType({}) in {}", name, getClass().getSimpleName());
+
+        if (advertisementTypeRepository.existsByName(name))
             throw new AdvertisementTypeAlreadyExistsException(name);
-        }
-        return advertisementTypeMapper.advertisementTypeToAdvertisementTypeDto(advertisementTypeRepository.save(new AdvertisementType(name)));
+
+        return advertisementTypeMapper
+                .advertisementTypeToAdvertisementTypeDto(advertisementTypeRepository.save(new AdvertisementType(name)));
     }
 }

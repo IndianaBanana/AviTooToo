@@ -61,5 +61,4 @@ public class UserPrincipal implements UserDetails {
     public void erasePassword() {
         this.password = null;
     }
-
 }

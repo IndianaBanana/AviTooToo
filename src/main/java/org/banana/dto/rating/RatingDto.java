@@ -15,8 +15,8 @@ import java.util.UUID;
 public class RatingDto {
 
     @NotNull
-    private UUID userId;
-    //    private UUID raterId;
+    private UUID ratedUserId;
+
     @Min(1)
     @Max(5)
     @NotNull

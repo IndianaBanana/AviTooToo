@@ -28,7 +28,6 @@ public class CityRepositoryImpl extends AbstractCrudRepositoryImpl<City, UUID> i
     }
 
 
-
     @Override
     public List<CityDto> findByNameLike(String pattern) {
         log.info("findByNameLike() in {}", this.getClass().getSimpleName());

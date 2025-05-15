@@ -10,7 +10,6 @@ import org.banana.exception.UserRatesTheSameUserException;
 import org.banana.repository.RatingRepository;
 import org.banana.repository.UserRatingViewRepository;
 import org.banana.repository.UserRepository;
-import org.banana.security.dto.UserPrincipal;
 import org.banana.util.SecurityUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -34,20 +33,29 @@ public class RatingServiceImpl implements RatingService {
     @Override
     @Transactional
     public String rateUser(RatingDto dto) {
-        UserPrincipal currentUser = SecurityUtils.getCurrentUserPrincipal();
-        if (currentUser.getId().equals(dto.getUserId())) throw new UserRatesTheSameUserException();
-        if (!userRepository.existsById(dto.getUserId())) throw new UserNotFoundException(dto.getUserId());
-        ratingRepository.save(new Rating(dto.getUserId(), currentUser.getId(), dto.getRatingValue()));
+        log.info("rateUser({}) in {}", dto, getClass().getSimpleName());
+        UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
+        UUID ratedUser = dto.getRatedUserId();
+
+        if (currentUserId.equals(ratedUser)) throw new UserRatesTheSameUserException();
+
+        if (!userRepository.existsById(ratedUser)) throw new UserNotFoundException(ratedUser);
+
+        ratingRepository.save(new Rating(ratedUser, currentUserId, dto.getRatingValue()));
         return RATE_MESSAGE;
     }
 
     @Override
     @Transactional
-    public String removeRating(UUID userId) {
-        UserPrincipal currentUser = SecurityUtils.getCurrentUserPrincipal();
-        if (currentUser.getId().equals(userId)) throw new UserRatesTheSameUserException();
-        if (!userRepository.existsById(userId)) throw new UserNotFoundException(userId);
-        ratingRepository.deleteById(new RatingId(userId, currentUser.getId()));
+    public String removeRating(UUID ratedUserId) {
+        log.info("removeRating({}) in {}", ratedUserId, getClass().getSimpleName());
+        UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
+
+        if (currentUserId.equals(ratedUserId)) throw new UserRatesTheSameUserException();
+
+        if (!userRepository.existsById(ratedUserId)) throw new UserNotFoundException(ratedUserId);
+
+        ratingRepository.deleteById(new RatingId(ratedUserId, currentUserId));
         return RATE_MESSAGE;
     }
 
@@ -56,7 +64,7 @@ public class RatingServiceImpl implements RatingService {
     @Transactional
     @Override
     public void updateActualInformationAboutRating() {
-        log.info("Refreshing materialized view user_rating_view…");
+        log.info("Refreshing materialized view user_rating_view...");
         userRatingViewRepository.updateView();
     }
 }
