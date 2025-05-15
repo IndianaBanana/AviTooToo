@@ -146,7 +146,6 @@ public class AuthControllerTest {
     @Test
     public void register_whenPasswordLengthInvalid_thenStatus400() throws Exception {
         UserRegisterRequestDto requestDto = new UserRegisterRequestDto("John", "Doe", "1234567890", "john.doe@example.com", "1", "1");
-        System.out.println(Collections.nCopies(PASSWORD_MIN_LENGTH - 1, "a"));
         mvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))

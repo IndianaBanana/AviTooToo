@@ -55,7 +55,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
 
     @Override
     public Optional<AdvertisementResponseDto> findDtoById(UUID id) {
-        log.debug("findDtoById({}) in {}", id, getClass().getSimpleName());
+        log.info("findDtoById({}) in {}", id, getClass().getSimpleName());
         return getSession()
                 .createQuery(FIND_FULL_ENTITY + " WHERE a.id = :id", AdvertisementResponseDto.class)
                 .setParameter("id", id)
@@ -65,7 +65,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
 
     @Override
     public void promoteAdvertisement(UUID id) {
-        log.debug("promoteAdvertisement({}) in {}", id, getClass().getSimpleName());
+        log.info("promoteAdvertisement({}) in {}", id, getClass().getSimpleName());
         getSession()
                 .createMutationQuery(PROMOTE_ADVERTISEMENT)
                 .setParameter("id", id)
@@ -74,7 +74,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
 
     @Override
     public void closeAdvertisement(UUID id, LocalDateTime closeDate) {
-        log.debug("closeAdvertisement({}) in {}", id, getClass().getSimpleName());
+        log.info("closeAdvertisement({}) in {}", id, getClass().getSimpleName());
         getSession()
                 .createMutationQuery(CLOSE_ADVERTISEMENT)
                 .setParameter("id", id)
@@ -83,27 +83,24 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     }
 
     @Override
-    public List<AdvertisementResponseDto> findAllFiltered(@NotNull AdvertisementFilterDto filter,
-                                                          int page,
-                                                          int size) {
-        log.debug("findAllFiltered() in {}", getClass().getSimpleName());
+    public List<AdvertisementResponseDto> findAllFiltered(@NotNull AdvertisementFilterDto filter, int page, int size) {
+        log.info("findAllFiltered() in {}", getClass().getSimpleName());
         Query<AdvertisementResponseDto> query = getAdvertisementResponseDtoTypedQuery(filter);
 
-        if (filter.getCityIds() != null && !filter.getCityIds().isEmpty()) {
+        if (filter.getCityIds() != null && !filter.getCityIds().isEmpty())
             query.setParameter("cityIds", filter.getCityIds());
-        }
-        if (filter.getAdvertisementTypeIds() != null && !filter.getAdvertisementTypeIds().isEmpty()) {
+
+        if (filter.getAdvertisementTypeIds() != null && !filter.getAdvertisementTypeIds().isEmpty())
             query.setParameter("typeIds", filter.getAdvertisementTypeIds());
-        }
-        if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank()) {
+
+        if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank())
             query.setParameter("search", "%" + filter.getSearchParam().toLowerCase() + "%");
-        }
-        if (filter.getMinPrice() != null) {
+
+        if (filter.getMinPrice() != null)
             query.setParameter("minPrice", filter.getMinPrice());
-        }
-        if (filter.getMaxPrice() != null) {
+
+        if (filter.getMaxPrice() != null)
             query.setParameter("maxPrice", filter.getMaxPrice());
-        }
 
         query.setFirstResult(page * size);
         query.setMaxResults(size);
@@ -118,26 +115,23 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
         if (filter.isOnlyOpened())
             jpql.append(" AND a.closeDate IS NULL");
 
-        if (filter.getCityIds() != null && !filter.getCityIds().isEmpty()) {
+        if (filter.getCityIds() != null && !filter.getCityIds().isEmpty())
             jpql.append(" AND a.city.cityId IN :cityIds");
-        }
-        if (filter.getAdvertisementTypeIds() != null && !filter.getAdvertisementTypeIds().isEmpty()) {
+
+        if (filter.getAdvertisementTypeIds() != null && !filter.getAdvertisementTypeIds().isEmpty())
             jpql.append(" AND a.advertisementType.advertisementTypeId IN :typeIds");
-        }
-        if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank()) {
-            System.out.println("Search param: " + filter.getSearchParam());
+
+        if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank())
             jpql.append(" AND (LOWER(a.title) LIKE :search ESCAPE '\\' OR LOWER(a.description) LIKE :search ESCAPE '\\')");
-        }
-        if (filter.getMinPrice() != null) {
+
+        if (filter.getMinPrice() != null)
             jpql.append(" AND a.price >= :minPrice");
-        }
-        if (filter.getMaxPrice() != null) {
+
+        if (filter.getMaxPrice() != null)
             jpql.append(" AND a.price <= :maxPrice");
-        }
 
         jpql.append(" ORDER BY a.isPromoted DESC, ur.averageRating DESC, ur.ratingCount DESC, a.createDate DESC");
 
-        return getSession()
-                .createQuery(jpql.toString(), AdvertisementResponseDto.class);
+        return getSession().createQuery(jpql.toString(), AdvertisementResponseDto.class);
     }
 }

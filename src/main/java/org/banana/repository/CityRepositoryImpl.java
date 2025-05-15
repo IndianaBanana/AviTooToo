@@ -1,6 +1,7 @@
 package org.banana.repository;
 
 import lombok.extern.slf4j.Slf4j;
+import org.banana.dto.city.CityDto;
 import org.banana.entity.City;
 import org.banana.repository.crud.AbstractCrudRepositoryImpl;
 import org.springframework.stereotype.Repository;
@@ -13,22 +14,32 @@ import java.util.UUID;
 public class CityRepositoryImpl extends AbstractCrudRepositoryImpl<City, UUID> implements CityRepository {
 
     private static final String EXISTS_BY_NAME = "SELECT 1 FROM City c WHERE LOWER(c.name) = LOWER(:name)";
-
+    private static final String FIND_ALL_DTO = "SELECT new org.banana.dto.city.CityDto(c.id, c.name) FROM City c";
+    private static final String FIND_ALL_BY_NAME_DTO = "SELECT new org.banana.dto.city.CityDto(c.id, c.name) FROM City c WHERE LOWER(c.name) LIKE LOWER(:pattern) ESCAPE '\\'";
 
     public CityRepositoryImpl() {
         super(City.class);
     }
 
     @Override
-    public List<City> findByNameLike(String pattern) {
-        return getSession().createQuery("SELECT c FROM City c WHERE LOWER(c.name) LIKE LOWER(:pattern) ESCAPE '\\'", City.class)
+    public List<CityDto> findAllDto() {
+        log.info("findAllDto() in {}", this.getClass().getSimpleName());
+        return getSession().createQuery(FIND_ALL_DTO, CityDto.class).getResultList();
+    }
+
+
+
+    @Override
+    public List<CityDto> findByNameLike(String pattern) {
+        log.info("findByNameLike() in {}", this.getClass().getSimpleName());
+        return getSession().createQuery(FIND_ALL_BY_NAME_DTO, CityDto.class)
                 .setParameter("pattern", pattern + "%")
                 .getResultList();
     }
 
     @Override
     public boolean existsByName(String name) {
-        log.debug("entering `existsByName` method in {}", this.getClass().getSimpleName());
+        log.info("entering `existsByName` method in {}", this.getClass().getSimpleName());
         Integer result = getSession().createQuery(EXISTS_BY_NAME, Integer.class)
                 .setParameter("name", name)
                 .getSingleResultOrNull();

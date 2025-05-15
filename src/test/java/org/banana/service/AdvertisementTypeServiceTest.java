@@ -34,21 +34,18 @@ class AdvertisementTypeServiceTest {
     private AdvertisementTypeService advertisementTypeService;
 
     @Test
-    void findAll_whenCalled_thenReturnMappedDtos() {
+    void findAll_whenCalled_thenReturnDtos() {
         // given
-        List<AdvertisementType> types = List.of(new AdvertisementType("Sell"));
         List<AdvertisementTypeDto> dtos = List.of(new AdvertisementTypeDto("Sell"));
 
-        when(advertisementTypeRepository.findAll()).thenReturn(types);
-        when(advertisementTypeMapper.advertisementTypesToAdvertisementTypeDtos(types)).thenReturn(dtos);
+        when(advertisementTypeRepository.findAllDto()).thenReturn(dtos);
 
         // when
         List<AdvertisementTypeDto> result = advertisementTypeService.findAll();
 
         // then
         assertEquals(dtos, result);
-        verify(advertisementTypeRepository).findAll();
-        verify(advertisementTypeMapper).advertisementTypesToAdvertisementTypeDtos(types);
+        verify(advertisementTypeRepository).findAllDto();
     }
 
     @Test
@@ -56,11 +53,9 @@ class AdvertisementTypeServiceTest {
         // given
         String inputPattern = "%_type\\";
         String expectedEscapedPattern = "\\%\\_type\\\\";
-        List<AdvertisementType> types = List.of(new AdvertisementType("Rent"));
         List<AdvertisementTypeDto> dtos = List.of(new AdvertisementTypeDto("Rent"));
 
-        when(advertisementTypeRepository.findByNameLike(expectedEscapedPattern)).thenReturn(types);
-        when(advertisementTypeMapper.advertisementTypesToAdvertisementTypeDtos(types)).thenReturn(dtos);
+        when(advertisementTypeRepository.findByNameLike(expectedEscapedPattern)).thenReturn(dtos);
 
         // when
         List<AdvertisementTypeDto> result = advertisementTypeService.findByNameLike(inputPattern);
@@ -68,7 +63,6 @@ class AdvertisementTypeServiceTest {
         // then
         assertEquals(dtos, result);
         verify(advertisementTypeRepository).findByNameLike(expectedEscapedPattern);
-        verify(advertisementTypeMapper).advertisementTypesToAdvertisementTypeDtos(types);
     }
 
     @Test

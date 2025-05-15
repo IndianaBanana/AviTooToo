@@ -105,15 +105,15 @@ public class CommentServiceImpl implements CommentService {
         if (!advertisementRepository.existsById(advertisementId))
             throw new AdvertisementNotFoundException(advertisementId);
 
-        List<Comment> allRootComments = commentRepository
+        List<CommentResponseDto> allRootComments = commentRepository
                 .findAllRootCommentsByAdvertisementId(advertisementId, page * size, size);
 
-        List<Comment> allCommentsInRootIds = commentRepository
-                .findAllCommentsInRootIds(allRootComments.stream().map(Comment::getId).toList());
+        List<CommentResponseDto> allCommentsInRootIds = commentRepository
+                .findAllCommentsInRootIds(allRootComments.stream().map(CommentResponseDto::getId).toList());
 
-        List<Comment> allComments = new ArrayList<>();
+        List<CommentResponseDto> allComments = new ArrayList<>();
         allComments.addAll(allRootComments);
         allComments.addAll(allCommentsInRootIds);
-        return commentMapper.fromCommentListToCommentResponseDtoList(allComments);
+        return allComments;
     }
 }

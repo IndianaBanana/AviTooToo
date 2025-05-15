@@ -33,7 +33,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     @Override
     public <S extends T> S save(S entity) {
-        log.debug("save() in {}: {}", getClass().getSimpleName(), entity);
+        log.info("save() in {}: {}", getClass().getSimpleName(), entity);
         return getSession().merge(entity);
     }
 
@@ -48,25 +48,23 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     @Override
     public Optional<T> findById(ID id) {
-        log.debug("findById({}) in {}", id, getClass().getSimpleName());
+        log.info("findById({}) in {}", id, getClass().getSimpleName());
         return Optional.ofNullable(getSession().find(entityClass, id));
     }
 
     @Override
     public boolean existsById(ID id) {
-        String query = String.format(
-                EXISTS_BY_ID,
-                entityClass.getSimpleName(), idAttributeName
-        );
+        log.info("existsById({}) in {}", id, getClass().getSimpleName());
+        String query = String.format(EXISTS_BY_ID, entityClass.getSimpleName(), idAttributeName);
         Integer result = session.createQuery(query, Integer.class)
                 .setParameter("id", id)
                 .getSingleResultOrNull();
-        return result != null && result == 1;
+        return result != null;
     }
 
     @Override
     public List<T> findAll() {
-        log.debug("findAll() in {}", getClass().getSimpleName());
+        log.info("findAll() in {}", getClass().getSimpleName());
         return getSession()
                 .createQuery("FROM " + entityClass.getSimpleName(), entityClass)
                 .getResultList();
@@ -74,7 +72,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     @Override
     public List<T> findAllById(Iterable<ID> ids) {
-        log.debug("findAllById() in {}", getClass().getSimpleName());
+        log.info("findAllById() in {}", getClass().getSimpleName());
         List<T> list = new ArrayList<>();
         for (ID id : ids) {
             findById(id).ifPresent(list::add);
@@ -84,7 +82,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     @Override
     public long count() {
-        log.debug("count() in {}", getClass().getSimpleName());
+        log.info("count() in {}", getClass().getSimpleName());
         return getSession()
                 .createQuery("SELECT COUNT(e) FROM " + entityClass.getSimpleName() + " e", Long.class)
                 .getSingleResult();
@@ -92,19 +90,19 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     @Override
     public void deleteById(ID id) {
-        log.debug("deleteById({}) in {}", id, getClass().getSimpleName());
+        log.info("deleteById({}) in {}", id, getClass().getSimpleName());
         findById(id).ifPresent(getSession()::remove);
     }
 
     @Override
     public void delete(T entity) {
-        log.debug("delete({}) in {}", entity, getClass().getSimpleName());
+        log.info("delete({}) in {}", entity, getClass().getSimpleName());
         getSession().remove(entity);
     }
 
     @Override
     public void deleteAllById(Iterable<? extends ID> ids) {
-        log.debug("deleteAllById() in {}", getClass().getSimpleName());
+        log.info("deleteAllById() in {}", getClass().getSimpleName());
         for (ID id : ids) {
             deleteById(id);
         }
@@ -112,7 +110,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     @Override
     public void deleteAll(Iterable<? extends T> entities) {
-        log.debug("deleteAll(entities) in {}", getClass().getSimpleName());
+        log.info("deleteAll(entities) in {}", getClass().getSimpleName());
         for (T e : entities) {
             delete(e);
         }
@@ -120,7 +118,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     @Override
     public void deleteAll() {
-        log.debug("deleteAll() in {}", getClass().getSimpleName());
+        log.info("deleteAll() in {}", getClass().getSimpleName());
         getSession()
                 .createMutationQuery("DELETE FROM " + entityClass.getSimpleName())
                 .executeUpdate();
@@ -134,6 +132,6 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
                 break;
             }
         }
-        log.debug("Cached id property name for {}: {}", entityClass.getSimpleName(), idAttributeName);
+        log.info("Cached id property name for {}: {}", entityClass.getSimpleName(), idAttributeName);
     }
 }

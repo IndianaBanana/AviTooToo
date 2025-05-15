@@ -99,7 +99,6 @@ class AdvertisementControllerTest {
     @WithMockUser(username = "bob")
     void getFilteredAdvertisements_whenFilterIsValid_thenReturnsList() throws Exception {
         AdvertisementFilterDto filter = new AdvertisementFilterDto();
-        System.out.println(filter);
         List<AdvertisementResponseDto> dtos = Collections.emptyList();
         when(advertisementService.findAllFiltered(filter, 0, 5)).thenReturn(dtos);
 

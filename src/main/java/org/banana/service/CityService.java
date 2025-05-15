@@ -20,7 +20,7 @@ public class CityService {
 
     @Transactional(readOnly = true)
     public List<CityDto> findAll() {
-        return cityMapper.citiesToCityDtos(cityRepository.findAll());
+        return cityRepository.findAllDto();
     }
 
     @Transactional(readOnly = true)
@@ -29,7 +29,7 @@ public class CityService {
                 .replace("_", "\\_")
                 .replace("%", "\\%");
 
-        return cityMapper.citiesToCityDtos(cityRepository.findByNameLike(safePattern));
+        return cityRepository.findByNameLike(safePattern);
     }
 
     @Transactional

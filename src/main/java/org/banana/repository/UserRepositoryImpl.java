@@ -26,7 +26,7 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
 
     @Override
     public Optional<User> findFetchedById(UUID uuid) {
-        log.debug("entering `findFetchedById` method in {}", this.getClass().getSimpleName());
+        log.info("findFetchedById({})", uuid);
         return Optional.ofNullable(getSession().createQuery(FIND_BY_ID, User.class)
                 .setParameter("id", uuid)
                 .getSingleResultOrNull());
@@ -34,7 +34,7 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
 
     @Override
     public void updatePassword(UUID id, String password) {
-        log.debug("entering `updatePassword` method in {}", this.getClass().getSimpleName());
+        log.info("updatePassword({}, ...)", id);
         getSession().createMutationQuery(UPDATE_PASSWORD)
                 .setParameter("password", password)
                 .setParameter("id", id)
@@ -43,7 +43,7 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
 
     @Override
     public void updateUsername(UUID id, String username) {
-        log.debug("entering `updateUsername` method in {}", this.getClass().getSimpleName());
+        log.info("updateUsername({}, {})", id, username);
         getSession().createMutationQuery(UPDATE_USERNAME)
                 .setParameter("username", username)
                 .setParameter("id", id)
@@ -52,7 +52,7 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
 
     @Override
     public void updatePhone(UUID id, String phone) {
-        log.debug("entering `updatePhone` method in {}", this.getClass().getSimpleName());
+        log.info("updatePhone({}, {})", id, phone);
         getSession().createMutationQuery(UPDATE_PHONE)
                 .setParameter("phone", phone)
                 .setParameter("id", id)
@@ -61,7 +61,7 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
 
     @Override
     public Optional<User> findByUsername(String username) {
-        log.debug("entering `findByUsername` method in {}", this.getClass().getSimpleName());
+        log.info("findByUsername({})", username);
         return Optional.ofNullable(
                 getSession().createQuery(FIND_BY_USERNAME, User.class)
                         .setParameter("username", username)
@@ -71,19 +71,19 @@ public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> i
 
     @Override
     public boolean existsByUsername(String username) {
-        log.debug("entering `existsByUsername` method in {}", this.getClass().getSimpleName());
+        log.info("existsByUsername({})", username);
         Integer result = getSession().createQuery(EXISTS_BY_USERNAME, Integer.class)
                 .setParameter("username", username)
                 .getSingleResultOrNull();
-        return result != null && result == 1;
+        return result != null;
     }
 
     @Override
     public boolean existsByPhone(String phone) {
-        log.debug("entering `existsByPhone` method in {}", this.getClass().getSimpleName());
+        log.info("existsByPhone({})", phone);
         Integer result = getSession().createQuery(EXISTS_BY_PHONE, Integer.class)
                 .setParameter("phone", phone)
                 .getSingleResultOrNull();
-        return result != null && result == 1;
+        return result != null;
     }
 }

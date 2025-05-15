@@ -3,6 +3,7 @@ package org.banana.service;
 import org.banana.dto.comment.CommentMapper;
 import org.banana.dto.comment.CommentRequestDto;
 import org.banana.dto.comment.CommentResponseDto;
+import org.banana.dto.user.UserCommenterResponseDto;
 import org.banana.entity.Comment;
 import org.banana.entity.User;
 import org.banana.exception.AddingCommentWhenParentCommenterIsNullException;
@@ -276,18 +277,40 @@ class CommentServiceImplTest {
 
 
     @Test
-    void findAllByAdvertisementId_callsRepoAndMaps() {
+    void findAllByAdvertisementId_whenValid_thenReturnsListOfDto() {
         int page = 0, size = 2;
-        Comment a = new Comment(adId, null, null, "t1", user, LocalDateTime.now());
-        a.setId(rootId);
-        Comment b = new Comment(adId, rootId, rootId, "t2", user, LocalDateTime.now());
+        CommentResponseDto dtoWithRootNull = new CommentResponseDto(
+                rootId,
+                adId,
+                new UserCommenterResponseDto(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName()
+                ),
+                null,
+                null,
+                "t2",
+                LocalDateTime.now()
+        );
+        CommentResponseDto dtoWithRootNotNull = new CommentResponseDto(
+                UUID.randomUUID(),
+                adId,
+                new UserCommenterResponseDto(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName()
+                ),
+                rootId,
+                rootId,
+                "t2",
+                LocalDateTime.now()
+        );
         when(advertisementRepository.existsById(adId)).thenReturn(true);
         when(commentRepository.findAllRootCommentsByAdvertisementId(adId, 0, 2))
-                .thenReturn(List.of(a));
-        when(commentRepository.findAllCommentsInRootIds(List.of(a.getId())))
-                .thenReturn(List.of(b));
-        List<CommentResponseDto> dtos = List.of(new CommentResponseDto(), new CommentResponseDto());
-        when(commentMapper.fromCommentListToCommentResponseDtoList(List.of(a, b))).thenReturn(dtos);
+                .thenReturn(List.of(dtoWithRootNull));
+        when(commentRepository.findAllCommentsInRootIds(List.of(dtoWithRootNull.getId())))
+                .thenReturn(List.of(dtoWithRootNotNull));
+        List<CommentResponseDto> dtos = List.of(dtoWithRootNull, dtoWithRootNotNull);
 
         List<CommentResponseDto> result = service.findAllByAdvertisementId(adId, page, size);
         assertThat(result).isEqualTo(dtos);

@@ -1,5 +1,6 @@
 package org.banana.repository;
 
+import org.banana.dto.comment.CommentResponseDto;
 import org.banana.entity.Comment;
 import org.banana.repository.crud.CrudRepository;
 
@@ -11,7 +12,7 @@ public interface CommentRepository extends CrudRepository<Comment, UUID> {
 
     Optional<Comment> findFetchedById(UUID id);
 
-    List<Comment> findAllRootCommentsByAdvertisementId(UUID advertisementId, int offset, int limit);
+    List<CommentResponseDto> findAllRootCommentsByAdvertisementId(UUID advertisementId, int offset, int limit);
 
-    List<Comment> findAllCommentsInRootIds(List<UUID> rootCommentIds);
+    List<CommentResponseDto> findAllCommentsInRootIds(List<UUID> rootCommentIds);
 }

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.banana.security.dto.UserPrincipal;
 import org.banana.security.service.JwtService;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,15 +43,20 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                     if (jwtService.validateToken(token, userDetails)) {
+
+                        if (userDetails instanceof UserPrincipal userPrincipal)
+                            userPrincipal.erasePassword();
+
                         UsernamePasswordAuthenticationToken authToken =
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
                     }
                 }
             }
         } catch (Exception ex) {
-            log.info("Error with JWT: {}", ex.getMessage());
+            log.error("Error with JWT: {}", ex.getMessage());
 //            throw new TokenException("For safety reasons, log in to system again.");
 //            throw new AuthenticationServiceException("For safety reasons, log in to system again.");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

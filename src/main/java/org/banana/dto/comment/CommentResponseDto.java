@@ -20,4 +20,15 @@ public class CommentResponseDto {
     private UUID parentCommentId;
     private String commentText;
     private LocalDateTime commentDate;
+
+    public CommentResponseDto(UUID id, UUID advertisementId, UUID userId, String userFirstName, String userLastName, UUID rootCommentId, UUID parentCommentId, String commentText, LocalDateTime commentDate) {
+        this.id = id;
+        this.advertisementId = advertisementId;
+        this.rootCommentId = rootCommentId;
+        this.parentCommentId = parentCommentId;
+        this.commentText = commentText;
+        this.commentDate = commentDate;
+        if (userId != null) this.commenter = new UserCommenterResponseDto(userId, userFirstName, userLastName);
+        else this.commenter = null;
+    }
 }

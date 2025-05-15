@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public String register(UserRegisterRequestDto requestDto) {
-        log.debug("entering register method in {}", this.getClass().getSimpleName());
+        log.info("entering register method in {}", this.getClass().getSimpleName());
         if (userRepository.existsByUsername(requestDto.getUsername())) {
             throw new UserUsernameAlreadyExistsException(requestDto.getUsername());
         }

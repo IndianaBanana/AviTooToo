@@ -83,6 +83,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
 
     @Override
     public int markMessagesReadUpTo(UUID recipientId, UUID secondUserId, UUID advertisementId, LocalDateTime upToDateTime) {
+        log.info("entering markMessagesReadUpTo({}, {}, {}, {}) in {}", recipientId, secondUserId, advertisementId, upToDateTime, getClass().getSimpleName());
         return getSession()
                 .createMutationQuery(UPDATE_MARK_READ_UPTO)
                 .setParameter("recipientId", recipientId)
@@ -132,34 +133,27 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
         LocalDateTime cursorDateTime = filter.getCursorDateTime();
         UUID cursorMessageId = filter.getCursorMessageId();
 
-        String jpql = getJpql(filter, cursorDateTime, cursorMessageId);
-
-        Query<MessageResponseDto> query = getSession()
-                .createQuery(jpql, MessageResponseDto.class)
+        Query<MessageResponseDto> query = getFindAllByFilterQuery(filter, cursorDateTime, cursorMessageId)
                 .setParameter("secondUserId", filter.getSecondUserId())
                 .setParameter("currentUserId", filter.getCurrentUserId())
                 .setParameter("advertisementId", advertisementId);
 
-//        if (advertisementId != null) {
-//            query.setParameter("advertisementId", advertisementId);
-//        }
-
-        if (cursorDateTime != null && cursorMessageId != null) {
+        if (cursorDateTime != null && cursorMessageId != null)
             query.setParameter("cursorDateTime", cursorDateTime).setParameter("cursorMessageId", cursorMessageId);
-        }
+
         if (filter.getUnreadMessagesCount() != null && filter.getUnreadMessagesCount() > 0) {
             double floor = Math.floor(filter.getLimit() / 1.5);
             int offset = (int) (filter.getUnreadMessagesCount() - floor);
             if (offset < 0) offset = 0;
-            log.info("setting offset to: {}", offset);
+            log.debug("setting offset to: {}", offset);
             query.setFirstResult(offset);
         }
-        query.setMaxResults(filter.getLimit());
 
+        query.setMaxResults(filter.getLimit());
         return query.getResultList();
     }
 
-    private String getJpql(MessageFilterDto filter, LocalDateTime cursorDateTime, UUID cursorMessageId) {
+    private Query<MessageResponseDto> getFindAllByFilterQuery(MessageFilterDto filter, LocalDateTime cursorDateTime, UUID cursorMessageId) {
         StringBuilder jpql = new StringBuilder(SELECT_MESSAGES_BY_AD_FIRST_USER_AND_SECOND_USER);
         if (cursorDateTime != null && cursorMessageId != null) {
             if (filter.getIsBefore() != null && filter.getIsBefore()) {
@@ -180,15 +174,8 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                         """);
             }
         } else {
-//            if (filter.getUnreadMessagesCount() != null && filter.getUnreadMessagesCount() > 0) {
-//                // если у текущего пользователя есть непрочитанные в этой переписке сообщения,
-//                // то у его собеседника непрочитанных сообщений быть не может
-//                jpql.append(" And m.isRead = false ORDER BY m.messageDateTime ASC, m.id ASC\n");
-//            } else {
-//                jpql.append(" ORDER BY m.messageDateTime DESC, m.id DESC\n");
-//            }
-            jpql.append(" ORDER BY m.messageDateTime DESC, m.id DESC\n");
+            jpql.append(" ORDER BY m.messageDateTime DESC, m.id DESC");
         }
-        return jpql.toString();
+        return getSession().createQuery(jpql.toString(), MessageResponseDto.class);
     }
 }

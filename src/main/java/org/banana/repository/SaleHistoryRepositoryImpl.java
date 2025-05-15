@@ -1,5 +1,6 @@
 package org.banana.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.banana.dto.history.SaleHistoryResponseDto;
 import org.banana.dto.history.SaleHistoryTotalForAdvertisementsResponseDto;
 import org.banana.entity.SaleHistory;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Repository
 public class SaleHistoryRepositoryImpl extends AbstractCrudRepositoryImpl<SaleHistory, UUID> implements SaleHistoryRepository {
 
@@ -26,6 +28,7 @@ public class SaleHistoryRepositoryImpl extends AbstractCrudRepositoryImpl<SaleHi
             where a.user.id = :currentUserId
             GROUP BY a.id, a.title
             """;
+
     public static final String GET_SALES_BY_ADVERTISEMENT_ID = """
             SELECT new org.banana.dto.history.SaleHistoryResponseDto(
                 sh.id,
@@ -47,6 +50,7 @@ public class SaleHistoryRepositoryImpl extends AbstractCrudRepositoryImpl<SaleHi
 
     @Override
     public List<SaleHistoryTotalForAdvertisementsResponseDto> getTotalForSalesInAdvertisements(UUID currentUserId) {
+        log.info("getTotalForSalesInAdvertisements({})", currentUserId);
         return getSession()
                 .createQuery(GET_TOTAL_FOR_SALES_IN_ADVERTISEMENTS, SaleHistoryTotalForAdvertisementsResponseDto.class)
                 .setParameter("currentUserId", currentUserId)
@@ -55,6 +59,7 @@ public class SaleHistoryRepositoryImpl extends AbstractCrudRepositoryImpl<SaleHi
 
     @Override
     public List<SaleHistoryResponseDto> getSalesByAdvertisementId(UUID advertisementId) {
+        log.info("getSalesByAdvertisementId({})", advertisementId);
         return getSession()
                 .createQuery(GET_SALES_BY_ADVERTISEMENT_ID, SaleHistoryResponseDto.class)
                 .setParameter("adId", advertisementId)

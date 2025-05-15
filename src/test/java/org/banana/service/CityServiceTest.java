@@ -49,14 +49,12 @@ class CityServiceTest {
 
     @Test
     void findAll_whenCalled_thenReturnsAllCities() {
-        when(cityRepository.findAll()).thenReturn(cityList);
-        when(cityMapper.citiesToCityDtos(cityList)).thenReturn(cityDtoList);
+        when(cityRepository.findAllDto()).thenReturn(cityDtoList);
 
         List<CityDto> result = cityService.findAll();
 
         assertEquals(cityDtoList, result);
-        verify(cityRepository).findAll();
-        verify(cityMapper).citiesToCityDtos(cityList);
+        verify(cityRepository).findAllDto();
     }
 
     @Test
@@ -64,11 +62,9 @@ class CityServiceTest {
         // given
         String inputPattern = "%_test\\";
         String expectedEscapedPattern = "\\%\\_test\\\\";
-        List<City> cities = List.of(new City("Test City"));
         List<CityDto> cityDtos = List.of(new CityDto("Test City"));
 
-        when(cityRepository.findByNameLike(expectedEscapedPattern)).thenReturn(cities);
-        when(cityMapper.citiesToCityDtos(cities)).thenReturn(cityDtos);
+        when(cityRepository.findByNameLike(expectedEscapedPattern)).thenReturn(cityDtos);
 
         // when
         List<CityDto> result = cityService.findByNameLike(inputPattern);
@@ -76,7 +72,6 @@ class CityServiceTest {
         // then
         assertEquals(cityDtos, result);
         verify(cityRepository).findByNameLike(expectedEscapedPattern);
-        verify(cityMapper).citiesToCityDtos(cities);
     }
 
     @Test

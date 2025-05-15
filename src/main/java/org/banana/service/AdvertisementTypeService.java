@@ -20,7 +20,7 @@ public class AdvertisementTypeService {
 
     @Transactional(readOnly = true)
     public List<AdvertisementTypeDto> findAll() {
-        return advertisementTypeMapper.advertisementTypesToAdvertisementTypeDtos(advertisementTypeRepository.findAll());
+        return advertisementTypeRepository.findAllDto();
     }
 
     @Transactional(readOnly = true)
@@ -28,7 +28,7 @@ public class AdvertisementTypeService {
         pattern = pattern.replace("\\", "\\\\")
                 .replace("_", "\\_")
                 .replace("%", "\\%");
-        return advertisementTypeMapper.advertisementTypesToAdvertisementTypeDtos(advertisementTypeRepository.findByNameLike(pattern));
+        return advertisementTypeRepository.findByNameLike(pattern);
     }
 
     @Transactional
