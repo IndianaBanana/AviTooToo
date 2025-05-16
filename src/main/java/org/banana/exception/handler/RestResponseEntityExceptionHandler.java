@@ -2,6 +2,8 @@ package org.banana.exception.handler;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Path;
+import lombok.extern.slf4j.Slf4j;
 import org.banana.exception.AddingCommentWhenParentCommenterIsNullException;
 import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.AdvertisementTypeAlreadyExistsException;
@@ -26,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,8 +43,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
+
+    public static final String VALIDATION_FAILED = "Validation failed";
+    public static final String ONE_OR_MORE_PARAMETERS_ARE_INVALID = "One or more parameters are invalid";
+    public static final String ONE_OR_MORE_FIELDS_ARE_INVALID = "One or more fields are invalid";
+    public static final String INVALID = "Invalid";
+    public static final String ERRORS = "errors";
+    public static final String TIMESTAMP = "timestamp";
+    public static final String PATH = "path";
 
     @ExceptionHandler({
             UserNotFoundException.class,
@@ -83,59 +95,76 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        log.error("Error: {}", ex.getMessage(), ex);
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problemDetail.setTitle("Validation failed");
-        problemDetail.setDetail("One or more fields are invalid");
+        problemDetail.setTitle(VALIDATION_FAILED);
+        problemDetail.setDetail(ONE_OR_MORE_FIELDS_ARE_INVALID);
 
         Map<String, String> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
                         FieldError::getField,
-                        error -> Optional.ofNullable(error.getDefaultMessage()).orElse("Invalid"),
+                        error -> Optional.ofNullable(error.getDefaultMessage()).orElse(INVALID),
                         (existing, replacement) -> existing
                 ));
 
         ex.getBindingResult()
                 .getGlobalErrors()
                 .forEach(error -> fieldErrors.put("global", Optional.ofNullable(error.getDefaultMessage())
-                        .orElse("Invalid")));
+                        .orElse(INVALID)));
 
-        problemDetail.setProperty("errors", fieldErrors);
-        problemDetail.setProperty("timestamp", Instant.now());
-        problemDetail.setProperty("path", ((ServletWebRequest) request).getRequest().getRequestURI());
+        problemDetail.setProperty(ERRORS, fieldErrors);
+        problemDetail.setProperty(TIMESTAMP, Instant.now());
+        problemDetail.setProperty(PATH, ((ServletWebRequest) request).getRequest().getRequestURI());
 
         return handleExceptionInternal(ex, problemDetail, headers, HttpStatus.BAD_REQUEST, request);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    protected ResponseEntity<Object> handleConstraintViolation(
-            ConstraintViolationException ex, WebRequest request) {
+    protected ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
+        log.error("Error: {}", ex.getMessage(), ex);
 
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problemDetail.setTitle("Validation failed");
-        problemDetail.setDetail("One or more parameters are invalid");
+        problemDetail.setTitle(VALIDATION_FAILED);
+        problemDetail.setDetail(ONE_OR_MORE_PARAMETERS_ARE_INVALID);
 
-        Map<String, String> errors = ex.getConstraintViolations().stream()
+        Map<String,String> errors = ex.getConstraintViolations().stream()
                 .collect(Collectors.toMap(
                         cv -> {
-                            // Вычленяем имя параметра из пути, например "filter.page"
-                            String[] path = cv.getPropertyPath().toString().split("\\.");
-                            return path[path.length - 1];
+                            Path path = cv.getPropertyPath();
+                            String last = null;
+                            for (Path.Node node : path) {
+                                last = node.getName();
+                            }
+                            return last;
                         },
                         ConstraintViolation::getMessage,
                         (m1, m2) -> m1
                 ));
 
-        problemDetail.setProperty("errors", errors);
-        problemDetail.setProperty("timestamp", Instant.now());
-        problemDetail.setProperty("path",
-                ((ServletWebRequest) request).getRequest().getRequestURI());
+        problemDetail.setProperty(ERRORS, errors);
+        problemDetail.setProperty(TIMESTAMP, Instant.now());
+        problemDetail.setProperty(PATH, ((ServletWebRequest) request).getRequest().getRequestURI());
 
         return handleExceptionInternal(
                 ex, problemDetail, new HttpHeaders(),
                 HttpStatus.BAD_REQUEST, request);
     }
 
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<Object> handleAllUnhandledExceptions(Exception ex, WebRequest request) {
+        log.error("Unhandled exception: {}", ex.getMessage(), ex);
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        problemDetail.setTitle("Unexpected server error");
+        problemDetail.setDetail("An unexpected error occurred. Please contact support.");
+        problemDetail.setProperty(TIMESTAMP, Instant.now());
+        problemDetail.setProperty(PATH, ((ServletWebRequest) request).getRequest().getRequestURI());
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+
     private ResponseEntity<Object> buildErrorResponse(RuntimeException ex, WebRequest request, HttpStatus status) {
+        log.error("Error: {}", ex.getMessage(), ex);
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
         problemDetail.setTitle("Application error");
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);

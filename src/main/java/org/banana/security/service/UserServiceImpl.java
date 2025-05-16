@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(password);
         user.setRole(UserRole.ROLE_USER);
         user = userRepository.save(user);
-
+        log.debug("registered user {}", user);
         return jwtService.generateToken(user.getId(), user.getUsername(), user.getRole(), user.getPhone());
     }
 
@@ -87,6 +87,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findFetchedById(id).orElseThrow(() -> new UserNotFoundException(id));
 
+        log.debug("user found: {}", user);
         return userMapper.userToUserResponseDto(user);
     }
 
@@ -107,6 +108,7 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(newFirstName);
         user.setLastName(newLastName);
         user = userRepository.save(user);
+        log.debug("user updated: {}", user);
         return userMapper.userToUserResponseDto(user);
     }
 
@@ -122,6 +124,7 @@ public class UserServiceImpl implements UserService {
         String encodedPass = passwordEncoder.encode(requestDto.getNewPassword());
         userRepository.updatePassword(user.getId(), encodedPass);
 
+        log.debug("password updated for user {}", user);
         return jwtService.generateToken(user.getId(), user.getUsername(), user.getRole(), user.getPhone());
     }
 
@@ -141,6 +144,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.updateUsername(user.getId(), requestDto.getNewUsername());
 
+        log.debug("username updated");
         return jwtService.generateToken(user.getId(), requestDto.getNewUsername(), user.getRole(), user.getPhone());
     }
 
@@ -160,6 +164,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.updatePhone(user.getId(), requestDto.getNewPhone());
 
+        log.debug("phone updated");
         return jwtService.generateToken(user.getId(), user.getUsername(), user.getRole(), requestDto.getNewPhone());
     }
 
@@ -182,7 +187,7 @@ public class UserServiceImpl implements UserService {
 
         if (authentication == null || !authentication.isAuthenticated())
             throw new BadCredentialsException("Bad credentials");
-
+        log.debug("authenticated user {}", authentication.getPrincipal());
         return authentication;
     }
 }

@@ -1,0 +1,23 @@
+spring:
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+    out-of-order: false
+#    baseline-on-migrate: true
+#    baseline-version: 0
+#    locations: classpath:db/migration
+#    schemas:
+#      - public
+
+jwt:
+  secret: e5sOK79Mtn0KtbCwSMBiNUq+JC1pA1gozzliySnjz+4=
+
+rating:
+  view:
+    update:
+      initial-delay: 10000
+      rate: 900000

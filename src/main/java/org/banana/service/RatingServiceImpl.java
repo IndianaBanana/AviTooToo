@@ -41,7 +41,9 @@ public class RatingServiceImpl implements RatingService {
 
         if (!userRepository.existsById(ratedUser)) throw new UserNotFoundException(ratedUser);
 
-        ratingRepository.save(new Rating(ratedUser, currentUserId, dto.getRatingValue()));
+        Rating saved = ratingRepository.save(new Rating(ratedUser, currentUserId, dto.getRatingValue()));
+
+        log.debug("rating saved: {}", saved);
         return RATE_MESSAGE;
     }
 

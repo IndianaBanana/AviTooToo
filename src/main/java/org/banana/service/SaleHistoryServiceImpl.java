@@ -62,8 +62,10 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
 
         advertisement.setQuantity(advertisementQuantity - requestDtoQuantity);
         advertisementRepository.save(advertisement);
+        log.debug("advertisement updated: {}", advertisement);
 
         saleHistory = saleHistoryRepository.save(saleHistory);
+        log.debug("saleHistory created: {}", saleHistory);
         return saleHistoryMapper.fromSaleHistoryToSaleHistoryResponseDto(saleHistory);
     }
 
@@ -82,6 +84,7 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
 
         advertisement.setQuantity(advertisement.getQuantity() + saleHistory.getQuantity());
         advertisementRepository.save(advertisement);
+        log.debug("advertisement updated: {}", advertisement);
 
         saleHistoryRepository.delete(saleHistory);
     }

@@ -2,6 +2,7 @@ package org.banana.security.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 import org.banana.security.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +20,7 @@ public class UserPrincipal implements UserDetails {
     private String lastName;
     private String phone;
     private String username;
+    @ToString.Exclude
     private String password;
     private UserRole role;
 

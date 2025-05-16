@@ -29,12 +29,12 @@ public class CityService {
     @Transactional(readOnly = true)
     public List<CityDto> findByNameLike(String pattern) {
         log.info("findByNameLike({}) in {}", pattern, getClass().getSimpleName());
-
+        log.debug("pattern before: {}", pattern);
         pattern = pattern
                 .replace("\\", "\\\\")
                 .replace("_", "\\_")
                 .replace("%", "\\%");
-
+        log.debug("pattern after: {}", pattern);
         return cityRepository.findByNameLike(pattern);
     }
 

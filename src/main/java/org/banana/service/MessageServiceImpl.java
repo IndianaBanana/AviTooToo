@@ -63,6 +63,7 @@ public class MessageServiceImpl implements MessageService {
         );
         message = messageRepository.save(message);
 
+        log.debug("message saved: {}", message);
         return messageMapper.messageToMessageResponseDto(message);
     }
 

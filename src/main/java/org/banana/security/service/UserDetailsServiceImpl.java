@@ -24,6 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid password or login"));
 
+        log.debug("user found: {}", user);
         return new UserPrincipal(
                 user.getId(),
                 user.getFirstName(),

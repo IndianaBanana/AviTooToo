@@ -29,12 +29,13 @@ public class AdvertisementTypeService {
     @Transactional(readOnly = true)
     public List<AdvertisementTypeDto> findByNameLike(String pattern) {
         log.info("findByNameLike({}) in {}", pattern, getClass().getSimpleName());
-
+        log.debug("pattern before: {}", pattern);
         pattern = pattern
                 .replace("\\", "\\\\")
                 .replace("_", "\\_")
                 .replace("%", "\\%");
 
+        log.debug("pattern after: {}", pattern);
         return advertisementTypeRepository.findByNameLike(pattern);
     }
 

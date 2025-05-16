@@ -8,6 +8,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -61,8 +63,10 @@ public class User {
     private UserRole role;
 
     /*
-     На самом деле связь один к одному, но использовать OneToOne не получается т.к. у него нет FetchType.LAZY,
-     а использование @MapsId не позволяет добавлять нового пользователя.
+     На самом деле связь один к одному, но использовать OneToOne не получается, так как у него не будет FetchType.LAZY
+     (мы не владелец связи, и при запросе не узнаем, существует ли такая запись в RatingView,
+     поэтому hibernate полезет в RatingView, чтобы узнать, существует ли запись),
+     а использование @MapsId не позволяет добавлять нового пользователя или читать если записи в RatingView нет.
     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)

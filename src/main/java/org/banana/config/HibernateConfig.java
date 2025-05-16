@@ -1,6 +1,7 @@
 package org.banana.config;
 
 import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
@@ -17,13 +18,6 @@ import java.util.Properties;
 @Configuration
 @EnableTransactionManagement
 public class HibernateConfig {
-
-    @Bean
-    public static PropertySourcesPlaceholderConfigurer propertyConfigure() {
-        PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-        configurer.setLocation(new ClassPathResource("application.properties"));
-        return configurer;
-    }
 
     @Bean
     public LocalSessionFactoryBean sessionFactory() {

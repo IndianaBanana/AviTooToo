@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.banana.security.dto.UserPrincipal;
 import org.banana.security.service.JwtService;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -57,8 +58,8 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } catch (Exception ex) {
             log.error("Error with JWT: {}", ex.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            handlerExceptionResolver.resolveException(request, response, null, ex);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage());
+//            handlerExceptionResolver.resolveException(request, response, null, ex);
             return;
         }
         filterChain.doFilter(request, response);

@@ -110,8 +110,10 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         advertisement.setUser(currentUser);
         advertisement.setCity(city);
         advertisement.setCreateDate(LocalDateTime.now());
-        Advertisement save = advertisementRepository.save(advertisement);
-        return advertisementMapper.advertisementToAdvertisementResponseDto(save);
+        Advertisement saved = advertisementRepository.save(advertisement);
+
+        log.debug("advertisement created: {}", saved);
+        return advertisementMapper.advertisementToAdvertisementResponseDto(saved);
     }
 
     // todo подумать, можно ли сделать меньше запросов на обновление
@@ -146,6 +148,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         userRepository.findFetchedById(userId).orElseThrow(() -> new UserNotFoundException(userId));
 
         advertisement = advertisementRepository.save(advertisement);
+
+        log.debug("advertisement updated: {}", advertisement);
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
@@ -154,23 +158,25 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto closeAdvertisement(UUID advertisementId) {
         log.info("closeAdvertisement({}) in {}", advertisementId, getClass().getSimpleName());
 
-        AdvertisementResponseDto advertisement = advertisementRepository.findDtoById(advertisementId)
+        AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
 
-        if (advertisement.getCloseDate() != null)
+        if (advertisementDto.getCloseDate() != null)
             throw new AdvertisementUpdateException(ALREADY_CLOSED);
 
         UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
-        boolean isOwner = advertisement.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
+        boolean isOwner = advertisementDto.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
         boolean isAdmin = currentUserPrincipal.getRole().equals(UserRole.ROLE_ADMIN);
 
         if (!isOwner && !isAdmin)
             throw new AdvertisementUpdateException(NOT_OWNER);
 
         LocalDateTime closeDate = LocalDateTime.now();
-        advertisement.setCloseDate(closeDate);
+        advertisementDto.setCloseDate(closeDate);
         advertisementRepository.closeAdvertisement(advertisementId, closeDate);
-        return advertisement;
+
+        log.debug("advertisement closed: {}", advertisementDto);
+        return advertisementDto;
     }
 
     @Override
@@ -178,21 +184,23 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto promoteAdvertisement(UUID advertisementId) {
         log.info("promoteAdvertisement({}) in {}", advertisementId, getClass().getSimpleName());
 
-        AdvertisementResponseDto advertisement = advertisementRepository.findDtoById(advertisementId)
+        AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
 
-        if (advertisement.isPromoted())
+        if (advertisementDto.isPromoted())
             throw new AdvertisementUpdateException(ALREADY_PROMOTED);
 
-        if (advertisement.getCloseDate() != null)
+        if (advertisementDto.getCloseDate() != null)
             throw new AdvertisementUpdateException(ALREADY_CLOSED);
 
-        if (!advertisement.getUserResponseDto().getId().equals(SecurityUtils.getCurrentUserPrincipal().getId()))
+        if (!advertisementDto.getUserResponseDto().getId().equals(SecurityUtils.getCurrentUserPrincipal().getId()))
             throw new AdvertisementUpdateException(NOT_OWNER);
 
-        advertisement.setPromoted(true);
+        advertisementDto.setPromoted(true);
         advertisementRepository.promoteAdvertisement(advertisementId);
-        return advertisement;
+
+        log.debug("advertisement promoted: {}", advertisementDto);
+        return advertisementDto;
     }
 
     private Advertisement findAdvertisementByIdOrThrow(UUID advertisementId) {
