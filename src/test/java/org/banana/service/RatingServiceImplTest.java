@@ -68,7 +68,7 @@ class RatingServiceImplTest {
         String result = ratingService.rateUser(dto);
 
         verify(ratingRepository).save(new Rating(userId, raterId, ratingValue));
-        assertEquals("Thanks for rating! User rating will be update in 15 minutes.", result);
+        assertEquals("Thanks for rating! User rating will be updated in 15 minutes.", result);
     }
 
     @Test
@@ -95,7 +95,7 @@ class RatingServiceImplTest {
         String result = ratingService.removeRating(userId);
 
         verify(ratingRepository).deleteById(new RatingId(userId, raterId));
-        assertEquals("Thanks for rating! User rating will be update in 15 minutes.", result);
+        assertEquals("Thanks for rating! User rating will be updated in 15 minutes.", result);
     }
 
     @Test

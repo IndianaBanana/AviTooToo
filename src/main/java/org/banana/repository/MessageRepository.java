@@ -17,7 +17,7 @@ public interface MessageRepository extends CrudRepository<Message, UUID> {
 
     boolean chatExists(UUID user1, UUID user2, UUID advertisementId);
 
-    long hasUnreadMessages(UUID secondUserId, UUID currentUserId, UUID advertisementId);
+    long getUnreadMessagesCount(UUID secondUserId, UUID currentUserId, UUID advertisementId);
 
     List<MessageResponseDto> findAllByFilter(MessageFilterDto filter);
 }

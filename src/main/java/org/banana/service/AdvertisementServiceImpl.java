@@ -161,15 +161,15 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
 
-        if (advertisementDto.getCloseDate() != null)
-            throw new AdvertisementUpdateException(ALREADY_CLOSED);
-
         UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
         boolean isOwner = advertisementDto.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
         boolean isAdmin = currentUserPrincipal.getRole().equals(UserRole.ROLE_ADMIN);
 
         if (!isOwner && !isAdmin)
             throw new AdvertisementUpdateException(NOT_OWNER);
+
+        if (advertisementDto.getCloseDate() != null)
+            throw new AdvertisementUpdateException(ALREADY_CLOSED);
 
         LocalDateTime closeDate = LocalDateTime.now();
         advertisementDto.setCloseDate(closeDate);
@@ -187,14 +187,14 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
 
+        if (!advertisementDto.getUserResponseDto().getId().equals(SecurityUtils.getCurrentUserPrincipal().getId()))
+            throw new AdvertisementUpdateException(NOT_OWNER);
+
         if (advertisementDto.isPromoted())
             throw new AdvertisementUpdateException(ALREADY_PROMOTED);
 
         if (advertisementDto.getCloseDate() != null)
             throw new AdvertisementUpdateException(ALREADY_CLOSED);
-
-        if (!advertisementDto.getUserResponseDto().getId().equals(SecurityUtils.getCurrentUserPrincipal().getId()))
-            throw new AdvertisementUpdateException(NOT_OWNER);
 
         advertisementDto.setPromoted(true);
         advertisementRepository.promoteAdvertisement(advertisementId);

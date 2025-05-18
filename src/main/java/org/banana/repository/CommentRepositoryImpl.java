@@ -14,24 +14,22 @@ import java.util.UUID;
 @Repository
 public class CommentRepositoryImpl extends AbstractCrudRepositoryImpl<Comment, UUID> implements CommentRepository {
 
-    private static final String FIND_DTO_BY_ROOT_COMMENT_ID_IS_NULL = """
-            select new org.banana.dto.comment.CommentResponseDto(
-                c.id, c.advertisementId, c.commenter.id, c.commenter.firstName, c.commenter.lastName,
-                c.rootCommentId, c.parentCommentId, c.commentText, c.commentDate)
-            from Comment c
-            left join c.commenter cc
-            where c.rootCommentId is null and c.advertisementId = :advertisementId
-            order by c.commentDate desc, c.id desc""";
-
-    private static final String FIND_DTO_ALL_COMMENTS_IN_ROOT_IDS = """
+    private static final String FIND_ALL_DTO = """
             select new org.banana.dto.comment.CommentResponseDto(
                 c.id, c.advertisementId, c.commenter.id, c.commenter.firstName, c.commenter.lastName,
                 c.rootCommentId, c.parentCommentId, c.commentText, c.commentDate)
             from Comment c
             left join c.commenter
+            """;
+    private static final String FIND_DTO_BY_ROOT_COMMENT_ID_IS_NULL = FIND_ALL_DTO + """
+            where c.rootCommentId is null and c.advertisementId = :advertisementId
+            order by c.commentDate desc, c.id desc""";
+
+    private static final String FIND_DTO_ALL_COMMENTS_IN_ROOT_IDS = FIND_ALL_DTO + """
             where c.rootCommentId in :rootCommentIds
-            order by c.rootCommentId DESC, c.parentCommentId DESC, c.commentDate DESC""";
-    private static final String FIND_BY_ID = "SELECT c FROM Comment c left join fetch c.commenter WHERE c.id = :id";
+            order by c.rootCommentId desc, c.parentCommentId desc, c.commentDate desc""";
+
+    private static final String FIND_BY_ID = "select c from Comment c left join fetch c.commenter where c.id = :id";
 
     public CommentRepositoryImpl() {
         super(Comment.class);

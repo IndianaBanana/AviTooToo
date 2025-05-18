@@ -20,7 +20,7 @@ create table if not exists "user" (
     first_name varchar(255) not null,
     last_name varchar(255) not null,
     phone varchar(255) not null unique,
-    username varchar(255) not null unique, -- probably email
+    username varchar(255) not null unique,
     password varchar(255) not null,
     role varchar(255) not null
 );
@@ -81,14 +81,14 @@ create table if not exists advertisement (
     foreign key (advertisement_type_id) references advertisement_type(advertisement_type_id) on delete cascade
 );
 create index if not exists index_advertisement_user_id on advertisement(user_id);
-create index if not exists index_advertisement_city_id on advertisement(city_id);
+--create index if not exists index_advertisement_city_id on advertisement(city_id);
 create index if not exists index_advertisement_advertisement_type_id on advertisement(advertisement_type_id);
 
 --9) История продаж пользователя.
 create table if not exists sale_history (
     sale_history_id uuid primary key default gen_random_uuid(),
     advertisement_id uuid not null,
-    buyer_id uuid,
+    buyer_id uuid, -- buyer_id будет null только если пользователь который купил объявление удалился (чтобы не удалялась история продаж)
     sale_date_time timestamp(3) not null default now(),
     quantity smallint not null,
     foreign key (buyer_id) references "user"(user_id) on delete set null,
@@ -98,10 +98,10 @@ create table if not exists sale_history (
 --5) Возможность оставлять комментарии под объявлениями.
 create table if not exists comment (
     comment_id uuid primary key default gen_random_uuid(),
-    advertisement_id uuid not null, -- the advertisement to which the comment is attached
-    commenter_id uuid, -- the user who wrote the comment
-    root_comment_id uuid, -- useful for selecting nested comments (less selections)
-    parent_comment_id uuid, -- the comment to which the comment is attached
+    advertisement_id uuid not null, -- для какого объявления коммент
+    commenter_id uuid, -- при удалении пользователя комментарии остаются в базе, а пользователь null
+    root_comment_id uuid, -- полезно для выбора вложенных комментариев (меньше запросов)
+    parent_comment_id uuid,
     comment_text text not null,
     comment_date timestamp(3) not null default now(),
     check (comment_id != parent_comment_id and comment_id != root_comment_id),
@@ -110,11 +110,8 @@ create table if not exists comment (
     foreign key (root_comment_id) references comment(comment_id) on delete cascade,
     foreign key (parent_comment_id) references comment(comment_id) on delete cascade
 );
-create index if not exists index_comment_advertisement_id on comment(advertisement_id);
-create index if not exists index_comment_date on comment(comment_date);
+create index if not exists index_comment_advertisement_id_comment_date on comment(advertisement_id, comment_date);
 create index if not exists index_comment_root_comment_id on comment(root_comment_id);
-create index if not exists index_comment_parent_comment_id on comment(parent_comment_id);
-create index if not exists index_comment_date_comment_id on comment(comment_date, comment_id);
 
 --6) Организация личной переписки покупателя и продавца.
 create table if not exists message (
@@ -131,7 +128,6 @@ create table if not exists message (
     check (sender_id != recipient_id)
 );
 create index if not exists index_message_advertisement_id_sender_id_recipient_id on message(advertisement_id, sender_id, recipient_id);
-create index if not exists index_message_message_date_time_message_id on message(message_date_time, message_id);
 create index if not exists index_message_message_date_time on message(message_date_time);
 
 

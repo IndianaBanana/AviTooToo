@@ -58,9 +58,10 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } catch (Exception ex) {
             log.error("Error with JWT: {}", ex.getMessage());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage());
+            throw new AuthenticationServiceException(ex.getMessage());
+//            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage());
 //            handlerExceptionResolver.resolveException(request, response, null, ex);
-            return;
+//            return;
         }
         filterChain.doFilter(request, response);
     }

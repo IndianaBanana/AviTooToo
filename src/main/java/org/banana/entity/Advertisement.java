@@ -65,7 +65,7 @@ public class Advertisement {
     private BigDecimal price;
 
     @NotNull
-    @Min(1)
+    @Min(0)
     private Integer quantity;
     private Boolean isPromoted = false;
     private LocalDateTime createDate;

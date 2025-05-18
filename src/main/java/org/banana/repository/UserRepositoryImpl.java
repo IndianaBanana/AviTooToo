@@ -12,13 +12,13 @@ import java.util.UUID;
 @Slf4j
 public class UserRepositoryImpl extends AbstractCrudRepositoryImpl<User, UUID> implements UserRepository {
 
-    private static final String EXISTS_BY_USERNAME = "SELECT 1 FROM User u WHERE u.username = :username";
-    private static final String EXISTS_BY_PHONE = "SELECT 1 FROM User u WHERE u.phone = :phone";
-    private static final String FIND_BY_USERNAME = "SELECT u FROM User u WHERE u.username = :username";
-    private static final String FIND_BY_ID = "SELECT u FROM User u LEFT JOIN FETCH u.userRatingView WHERE u.id = :id";
-    private static final String UPDATE_PASSWORD = "UPDATE User u SET u.password = :password WHERE u.id = :id";
-    private static final String UPDATE_USERNAME = "UPDATE User u SET u.username = :username WHERE u.id = :id";
-    private static final String UPDATE_PHONE = "UPDATE User u SET u.phone = :phone WHERE u.id = :id";
+    private static final String EXISTS_BY_USERNAME = "select 1 from User u where u.username = :username";
+    private static final String EXISTS_BY_PHONE = "select 1 from User u where u.phone = :phone";
+    private static final String FIND_BY_USERNAME = "select u from User u where u.username = :username";
+    private static final String FIND_BY_ID = "select u from User u left join fetch u.userRatingView where u.id = :id";
+    private static final String UPDATE_PASSWORD = "update User u set u.password = :password where u.id = :id";
+    private static final String UPDATE_USERNAME = "update User u set u.username = :username where u.id = :id";
+    private static final String UPDATE_PHONE = "update User u set u.phone = :phone where u.id = :id";
 
     public UserRepositoryImpl() {
         super(User.class);

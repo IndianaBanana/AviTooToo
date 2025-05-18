@@ -87,6 +87,8 @@ public class MessageServiceImpl implements MessageService {
         messageRepository.markMessagesReadUpTo(currentUserId, secondUserId, advertisementId, dto.getUpToDateTime());
     }
 
+
+    // возвращает список сообщений, где первый элемент самое старое сообщение из выборки
     @Override
     @Transactional(readOnly = true)
     public List<MessageResponseDto> getListOfMessages(MessageFilterDto filter) {
@@ -98,7 +100,7 @@ public class MessageServiceImpl implements MessageService {
 
         if (filter.getCursorMessageId() == null && filter.getCursorDateTime() == null) {
             long unreadMessagesCount = messageRepository
-                    .hasUnreadMessages(filter.getSecondUserId(), filter.getCurrentUserId(), filter.getAdvertisementId());
+                    .getUnreadMessagesCount(filter.getSecondUserId(), filter.getCurrentUserId(), filter.getAdvertisementId());
             filter.setUnreadMessagesCount(unreadMessagesCount);
         }
 
@@ -130,6 +132,5 @@ public class MessageServiceImpl implements MessageService {
         // если мы — владелец и переписка ещё не начиналась — запрещено писать первым
         if (isSenderOwner && !messageRepository.chatExists(senderId, recipientId, advertisementId))
             throw new MessageSendException(OWNER_OF_THE_ADVERTISEMENT_CANT_MESSAGE_FIRST);
-
     }
 }

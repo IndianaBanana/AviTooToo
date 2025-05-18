@@ -21,7 +21,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-//@Table(name = "advertisement_type")
 public class AdvertisementType {
 
     @Id

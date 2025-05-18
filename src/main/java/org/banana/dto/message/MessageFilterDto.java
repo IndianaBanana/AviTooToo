@@ -1,5 +1,6 @@
 package org.banana.dto.message;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class MessageFilterDto {
 
     @Min(10)
+    @Max(100)
     private int limit = 10;
     private Boolean isBefore;
 

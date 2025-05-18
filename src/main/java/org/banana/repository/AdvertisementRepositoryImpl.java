@@ -10,7 +10,10 @@ import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,8 +21,8 @@ import java.util.UUID;
 @Slf4j
 public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Advertisement, UUID> implements AdvertisementRepository {
 
-    private static final String FIND_FULL_ENTITY = """
-                SELECT new org.banana.dto.advertisement.AdvertisementResponseDto(
+    private static final String FIND_FULL_DTO = """
+                select new org.banana.dto.advertisement.AdvertisementResponseDto(
                 a.id,
                 new org.banana.dto.user.UserResponseDto(
                     u.id,
@@ -40,14 +43,16 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
                 a.createDate,
                 a.closeDate
             )
-            FROM Advertisement a
-            JOIN a.city c
-            JOIN a.advertisementType at
-            JOIN a.user u
-            LEFT JOIN UserRatingView ur ON ur.id = u.id
+            from Advertisement a
+            join a.city c
+            join a.advertisementType at
+            join a.user u
+            left join UserRatingView ur on ur.userId = u.id
+            where 1=1
             """;
-    private static final String PROMOTE_ADVERTISEMENT = "UPDATE Advertisement a SET a.isPromoted = true WHERE a.id = :id";
-    private static final String CLOSE_ADVERTISEMENT = "UPDATE Advertisement a SET a.closeDate = :closeDate WHERE a.id = :id";
+    public static final String FIND_FULL_DTO_BY_ID = FIND_FULL_DTO + " and a.id = :id";
+    private static final String PROMOTE_ADVERTISEMENT = "update Advertisement a set a.isPromoted = true where a.id = :id";
+    private static final String CLOSE_ADVERTISEMENT = "update Advertisement a set a.closeDate = :closeDate where a.id = :id";
 
     public AdvertisementRepositoryImpl() {
         super(Advertisement.class);
@@ -56,11 +61,10 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     @Override
     public Optional<AdvertisementResponseDto> findDtoById(UUID id) {
         log.info("findDtoById({}) in {}", id, getClass().getSimpleName());
-        return getSession()
-                .createQuery(FIND_FULL_ENTITY + " WHERE a.id = :id", AdvertisementResponseDto.class)
+        return Optional.ofNullable(getSession()
+                .createQuery(FIND_FULL_DTO_BY_ID, AdvertisementResponseDto.class)
                 .setParameter("id", id)
-                .getResultStream()
-                .findFirst();
+                .getSingleResultOrNull());
     }
 
     @Override
@@ -85,52 +89,53 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     @Override
     public List<AdvertisementResponseDto> findAllFiltered(@NotNull AdvertisementFilterDto filter, int page, int size) {
         log.info("findAllFiltered() in {}", getClass().getSimpleName());
-        Query<AdvertisementResponseDto> query = getAdvertisementResponseDtoTypedQuery(filter);
-
-        if (filter.getCityIds() != null && !filter.getCityIds().isEmpty())
-            query.setParameter("cityIds", filter.getCityIds());
-
-        if (filter.getAdvertisementTypeIds() != null && !filter.getAdvertisementTypeIds().isEmpty())
-            query.setParameter("typeIds", filter.getAdvertisementTypeIds());
-
-        if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank())
-            query.setParameter("search", "%" + filter.getSearchParam().toLowerCase() + "%");
-
-        if (filter.getMinPrice() != null)
-            query.setParameter("minPrice", filter.getMinPrice());
-
-        if (filter.getMaxPrice() != null)
-            query.setParameter("maxPrice", filter.getMaxPrice());
-
+        Map<String, Object> params = new HashMap<>();
+        Query<AdvertisementResponseDto> query = getAdvertisementResponseDtoQuery(filter, params);
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            if (entry.getValue() instanceof Collection<?>) {
+                query.setParameterList(entry.getKey(), (Collection<?>) entry.getValue());
+            } else {
+                query.setParameter(entry.getKey(), entry.getValue());
+            }
+        }
         query.setFirstResult(page * size);
         query.setMaxResults(size);
 
         return query.getResultList();
     }
 
-    private Query<AdvertisementResponseDto> getAdvertisementResponseDtoTypedQuery(AdvertisementFilterDto filter) {
+    private Query<AdvertisementResponseDto> getAdvertisementResponseDtoQuery(AdvertisementFilterDto filter, Map<String, Object> params) {
         StringBuilder jpql = new StringBuilder();
-        jpql.append(FIND_FULL_ENTITY);
-        jpql.append(" WHERE 1=1");
+        jpql.append(FIND_FULL_DTO);
         if (filter.isOnlyOpened())
-            jpql.append(" AND a.closeDate IS NULL");
+            jpql.append(" and a.closeDate is null");
 
-        if (filter.getCityIds() != null && !filter.getCityIds().isEmpty())
-            jpql.append(" AND a.city.cityId IN :cityIds");
+        if (filter.getCityIds() != null && !filter.getCityIds().isEmpty()) {
+            jpql.append(" and a.city.id IN :cityIds");
+            params.put("cityIds", filter.getCityIds());
+        }
 
-        if (filter.getAdvertisementTypeIds() != null && !filter.getAdvertisementTypeIds().isEmpty())
-            jpql.append(" AND a.advertisementType.advertisementTypeId IN :typeIds");
+        if (filter.getAdvertisementTypeIds() != null && !filter.getAdvertisementTypeIds().isEmpty()) {
+            jpql.append(" and a.advertisementType.id IN :typeIds");
+            params.put("typeIds", filter.getAdvertisementTypeIds());
+        }
 
-        if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank())
-            jpql.append(" AND (LOWER(a.title) LIKE :search ESCAPE '\\' OR LOWER(a.description) LIKE :search ESCAPE '\\')");
+        if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank()) {
+            jpql.append(" and (lower(a.title) like :search escape '\\' or lower(a.description) like :search escape '\\')");
+            params.put("search", "%" + filter.getSearchParam().toLowerCase() + "%");
+        }
 
-        if (filter.getMinPrice() != null)
-            jpql.append(" AND a.price >= :minPrice");
+        if (filter.getMinPrice() != null) {
+            jpql.append(" and a.price >= :minPrice");
+            params.put("minPrice", filter.getMinPrice());
+        }
 
-        if (filter.getMaxPrice() != null)
-            jpql.append(" AND a.price <= :maxPrice");
+        if (filter.getMaxPrice() != null) {
+            jpql.append(" and a.price <= :maxPrice");
+            params.put("maxPrice", filter.getMaxPrice());
+        }
 
-        jpql.append(" ORDER BY a.isPromoted DESC, ur.averageRating DESC, ur.ratingCount DESC, a.createDate DESC");
+        jpql.append(" order by a.isPromoted desc, ur.averageRating desc, ur.ratingCount desc, a.createDate desc");
 
         return getSession().createQuery(jpql.toString(), AdvertisementResponseDto.class);
     }

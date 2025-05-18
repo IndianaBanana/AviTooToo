@@ -21,11 +21,12 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    public static final long VALID_PERIOD = 86_400_000; // 1 day
+    public final long validPeriod; // 1 day
     private final String secretkey;
 
-    public JwtService(@Value("${jwt.secret}") String secretkey) {
+    public JwtService(@Value("${jwt.secret}") String secretkey, @Value("${jwt.period}") long validPeriod) {
         this.secretkey = secretkey;
+        this.validPeriod = validPeriod;
     }
 
     public String generateToken(UUID userId, String username, UserRole role, String phone) {
@@ -41,7 +42,7 @@ public class JwtService {
                 .subject(userId.toString())
                 .id(UUID.randomUUID().toString())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + VALID_PERIOD))
+                .expiration(new Date(System.currentTimeMillis() + validPeriod))
                 .and()
                 .signWith(getKey())
                 .compact();

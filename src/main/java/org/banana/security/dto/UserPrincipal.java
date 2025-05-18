@@ -20,6 +20,7 @@ public class UserPrincipal implements UserDetails {
     private String lastName;
     private String phone;
     private String username;
+
     @ToString.Exclude
     private String password;
     private UserRole role;

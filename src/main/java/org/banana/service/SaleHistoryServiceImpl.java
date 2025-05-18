@@ -36,6 +36,12 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
     private final AdvertisementRepository advertisementRepository;
     private final SaleHistoryMapper saleHistoryMapper;
 
+    private static void isOwnerOrAdmin(Advertisement advertisement, UserPrincipal current) {
+        boolean isOwner = advertisement.getUser().getId().equals(current.getId());
+        boolean isAdmin = current.getRole().equals(UserRole.ROLE_ADMIN);
+        if (!isOwner && !isAdmin) throw new SaleHistoryAccessDeniedException();
+    }
+
     // ?todo надо ли менять статус объявления на закрытое если количество = 0?
     @Override
     @Transactional
@@ -89,7 +95,6 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
         saleHistoryRepository.delete(saleHistory);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<SaleHistoryResponseDto> getSalesByAdvertisementId(UUID advertisementId) {
@@ -108,11 +113,5 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
     public List<SaleHistoryTotalForAdvertisementsResponseDto> getTotalForSalesInAdvertisements() {
         log.info("getTotalForSalesInAdvertisements() in {}", getClass().getSimpleName());
         return saleHistoryRepository.getTotalForSalesInAdvertisements(SecurityUtils.getCurrentUserPrincipal().getId());
-    }
-
-    private static void isOwnerOrAdmin(Advertisement advertisement, UserPrincipal current) {
-        boolean isOwner = advertisement.getUser().getId().equals(current.getId());
-        boolean isAdmin = current.getRole().equals(UserRole.ROLE_ADMIN);
-        if (!isOwner && !isAdmin) throw new SaleHistoryAccessDeniedException();
     }
 }

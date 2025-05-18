@@ -28,7 +28,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -87,6 +88,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @ExceptionHandler({
             SaleHistoryAccessDeniedException.class,
+            AccessDeniedException.class,
             UserDeleteCommentException.class,
     })
     protected ResponseEntity<Object> handleAccessException(RuntimeException ex, WebRequest request) {
@@ -127,7 +129,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         problemDetail.setTitle(VALIDATION_FAILED);
         problemDetail.setDetail(ONE_OR_MORE_PARAMETERS_ARE_INVALID);
 
-        Map<String,String> errors = ex.getConstraintViolations().stream()
+        Map<String, String> errors = ex.getConstraintViolations().stream()
                 .collect(Collectors.toMap(
                         cv -> {
                             Path path = cv.getPropertyPath();
@@ -150,7 +152,12 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
                 HttpStatus.BAD_REQUEST, request);
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(BadCredentialsException.class)
+    protected ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+        return buildErrorResponse(ex, request, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
     protected ResponseEntity<Object> handleAllUnhandledExceptions(Exception ex, WebRequest request) {
         log.error("Unhandled exception: {}", ex.getMessage(), ex);
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -161,7 +168,6 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
-
 
     private ResponseEntity<Object> buildErrorResponse(RuntimeException ex, WebRequest request, HttpStatus status) {
         log.error("Error: {}", ex.getMessage(), ex);

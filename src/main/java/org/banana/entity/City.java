@@ -21,7 +21,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-//@Table(name = "city")
 public class City {
 
     @Id

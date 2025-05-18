@@ -441,6 +441,8 @@ class AdvertisementServiceImplTest {
     void closeAdvertisement_whenAlreadyClosed_thenShouldThrowAdvertisementUpdateException() {
         UUID adId = UUID.randomUUID();
         AdvertisementResponseDto dto = new AdvertisementResponseDto();
+        dto.setUserResponseDto(new UserResponseDto());
+        dto.getUserResponseDto().setId(userId);
         dto.setId(adId);
         dto.setCloseDate(LocalDateTime.now());
         when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));

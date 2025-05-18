@@ -17,7 +17,7 @@ import java.util.Optional;
 @Slf4j
 public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> implements CrudRepository<T, ID> {
 
-    public static final String EXISTS_BY_ID = "SELECT 1 FROM %s e WHERE e.%s = :id";
+    public static final String EXISTS_BY_ID = "select 1 from %s e where e.%s = :id";
     private final Class<T> entityClass;
 
     @Getter(AccessLevel.PROTECTED)
@@ -66,7 +66,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     public List<T> findAll() {
         log.info("findAll() in {}", getClass().getSimpleName());
         return getSession()
-                .createQuery("FROM " + entityClass.getSimpleName(), entityClass)
+                .createQuery("from " + entityClass.getSimpleName(), entityClass)
                 .getResultList();
     }
 
@@ -84,7 +84,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     public long count() {
         log.info("count() in {}", getClass().getSimpleName());
         return getSession()
-                .createQuery("SELECT COUNT(e) FROM " + entityClass.getSimpleName() + " e", Long.class)
+                .createQuery("select COUNT(e) from " + entityClass.getSimpleName() + " e", Long.class)
                 .getSingleResult();
     }
 
@@ -120,7 +120,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
     public void deleteAll() {
         log.info("deleteAll() in {}", getClass().getSimpleName());
         getSession()
-                .createMutationQuery("DELETE FROM " + entityClass.getSimpleName())
+                .createMutationQuery("DELETE from " + entityClass.getSimpleName())
                 .executeUpdate();
     }
 

@@ -335,13 +335,13 @@ class MessageServiceImplTest {
         filter.setSecondUserId(recipientId);
 
         when(userRepository.existsById(recipientId)).thenReturn(true);
-        when(messageRepository.hasUnreadMessages(recipientId, currentUserId, null))
+        when(messageRepository.getUnreadMessagesCount(recipientId, currentUserId, null))
                 .thenReturn(5L);
 
         messageService.getListOfMessages(filter);
 
         assertEquals(5L, filter.getUnreadMessagesCount());
-        verify(messageRepository).hasUnreadMessages(recipientId, currentUserId, null);
+        verify(messageRepository).getUnreadMessagesCount(recipientId, currentUserId, null);
         verify(messageRepository).findAllByFilter(filter);
     }
 
@@ -358,7 +358,7 @@ class MessageServiceImplTest {
         List<MessageResponseDto> result = messageService.getListOfMessages(filter);
 
         assertNotNull(result);
-        verify(messageRepository, never()).hasUnreadMessages(any(), any(), any());
+        verify(messageRepository, never()).getUnreadMessagesCount(any(), any(), any());
         verify(messageRepository).findAllByFilter(filter);
     }
 }

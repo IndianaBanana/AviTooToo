@@ -144,7 +144,7 @@ create index if not exists index_message_message_date_time on message(message_da
 --    sender_id uuid not null,
 --    recipient_id uuid not null,
 --    message_text text not null,
---    message_date_time_millis bigint not null default (EXTRACT(EPOCH FROM now()) * 1000)::BIGINT,
+--    message_date_time_millis bigint not null default (EXTRACT(EPOCH from now()) * 1000)::BIGINT,
 --    is_read boolean not null default false,
 --    foreign key (sender_id) references "user"(user_id) on delete set null,
 --    foreign key (recipient_id) references "user"(user_id) on delete set null,

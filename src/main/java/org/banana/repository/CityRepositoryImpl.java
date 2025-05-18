@@ -13,9 +13,9 @@ import java.util.UUID;
 @Slf4j
 public class CityRepositoryImpl extends AbstractCrudRepositoryImpl<City, UUID> implements CityRepository {
 
-    private static final String EXISTS_BY_NAME = "SELECT 1 FROM City c WHERE LOWER(c.name) = LOWER(:name)";
-    private static final String FIND_ALL_DTO = "SELECT new org.banana.dto.city.CityDto(c.id, c.name) FROM City c";
-    private static final String FIND_ALL_BY_NAME_DTO = "SELECT new org.banana.dto.city.CityDto(c.id, c.name) FROM City c WHERE LOWER(c.name) LIKE LOWER(:pattern) ESCAPE '\\'";
+    private static final String EXISTS_BY_NAME = "select 1 from City c where lower(c.name) = lower(:name)";
+    private static final String FIND_ALL_DTO = "select new org.banana.dto.city.CityDto(c.id, c.name) from City c";
+    private static final String FIND_ALL_DTO_BY_NAME = FIND_ALL_DTO + " where lower(c.name) like lower(:pattern) escape '\\'";
 
     public CityRepositoryImpl() {
         super(City.class);
@@ -31,7 +31,7 @@ public class CityRepositoryImpl extends AbstractCrudRepositoryImpl<City, UUID> i
     @Override
     public List<CityDto> findByNameLike(String pattern) {
         log.info("findByNameLike() in {}", this.getClass().getSimpleName());
-        return getSession().createQuery(FIND_ALL_BY_NAME_DTO, CityDto.class)
+        return getSession().createQuery(FIND_ALL_DTO_BY_NAME, CityDto.class)
                 .setParameter("pattern", pattern + "%")
                 .getResultList();
     }

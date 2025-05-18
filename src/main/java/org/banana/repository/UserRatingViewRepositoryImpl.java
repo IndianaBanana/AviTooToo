@@ -27,6 +27,6 @@ public class UserRatingViewRepositoryImpl implements UserRatingViewRepository {
     @Override
     public void updateView() {
         log.info("updateView()");
-        session.createNativeMutationQuery("REFRESH MATERIALIZED VIEW CONCURRENTLY user_rating_view").executeUpdate();
+        session.createNativeMutationQuery("refresh materialized view concurrently user_rating_view").executeUpdate();
     }
 }

@@ -9,6 +9,7 @@ import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,18 +18,18 @@ import java.util.UUID;
 public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, UUID> implements MessageRepository {
 
     public static final String CHAT_EXISTS = """
-            SELECT 1
-            FROM Message m
-            WHERE
+            select 1
+            from Message m
+            where
               (
-                (m.senderId = :user1 AND m.recipientId = :user2)
-                OR
-                (m.senderId = :user2 AND m.recipientId = :user1)
+                (m.senderId = :user1 and m.recipientId = :user2)
+                or
+                (m.senderId = :user2 and m.recipientId = :user1)
               )
-            AND (m.advertisementId = :advertisementId OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
+            and (m.advertisementId = :advertisementId or (m.advertisementId is null and :advertisementId is null))
             """;
     public static final String SELECT_MESSAGES_BY_AD_FIRST_USER_AND_SECOND_USER = """
-            SELECT new org.banana.dto.message.MessageResponseDto(
+            select new org.banana.dto.message.MessageResponseDto(
                 m.id,
                 m.advertisementId,
                 m.senderId,
@@ -37,44 +38,37 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                 m.messageDateTime,
                 m.isRead
             )
-            FROM Message m
-            WHERE
+            from Message m
+            where
               (
-                (m.senderId = :secondUserId AND m.recipientId = :currentUserId)
-                OR
-                (m.senderId = :currentUserId AND m.recipientId = :secondUserId)
+                (m.senderId = :secondUserId and m.recipientId = :currentUserId)
+                or
+                (m.senderId = :currentUserId and m.recipientId = :secondUserId)
               )
-              AND (m.advertisementId = :advertisementId OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
+              and (m.advertisementId = :advertisementId or (m.advertisementId is null and :advertisementId is null))
             """;
-    public static final String EXISTS_BY_UNREAD_MESSAGE = """
+    public static final String COUNT_UNREAD_MESSAGES = """
             select count(m)
-            FROM Message m
-            WHERE m.senderId = :secondUserId
-            AND m.recipientId = :currentUserId
-            AND (m.advertisementId = :advertisementId OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
-            AND m.isRead = false
+            from Message m
+            where m.senderId = :secondUserId
+            and m.recipientId = :currentUserId
+            and (m.advertisementId = :advertisementId or (m.advertisementId is null and :advertisementId is null))
+            and m.isRead = false
             """;
     private static final String UPDATE_MARK_READ = """
             update Message m
             set m.isRead = true
-            where m.senderId = :fromUserId
-              and m.recipientId = :toUserId
+            where m.senderId = :senderId
+              and m.recipientId = :recipientId
               and (
                     m.advertisementId = :advertisementId
                     or (m.advertisementId is null and :advertisementId is null)
                   )
               and m.isRead = false
             """;
-
-    private static final String UPDATE_MARK_READ_UPTO = """
-            UPDATE Message m
-               SET m.isRead = true
-             WHERE m.recipientId = :recipientId
-               AND m.senderId = :secondUserId
-               AND (m.advertisementId = :advertisementId
-                    OR (m.advertisementId IS NULL AND :advertisementId IS NULL))
-               AND m.messageDateTime <= :upToDateTime
-               AND m.isRead = false
+// todo возможно переписать надо запрос: and m.messageDateTime < :upToDateTime || (and m.messageDateTime = :upToDateTime && m.id <= :upToMessageId)
+    private static final String UPDATE_MARK_READ_UP_TO = UPDATE_MARK_READ + """
+               and m.messageDateTime <= :upToDateTime
             """;
 
     public MessageRepositoryImpl() {
@@ -82,24 +76,24 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
     }
 
     @Override
-    public int markMessagesReadUpTo(UUID recipientId, UUID secondUserId, UUID advertisementId, LocalDateTime upToDateTime) {
-        log.info("entering markMessagesReadUpTo({}, {}, {}, {}) in {}", recipientId, secondUserId, advertisementId, upToDateTime, getClass().getSimpleName());
+    public int markMessagesReadUpTo(UUID recipientId, UUID senderId, UUID advertisementId, LocalDateTime upToDateTime) {
+        log.info("entering markMessagesReadUpTo({}, {}, {}, {}) in {}", recipientId, senderId, advertisementId, upToDateTime, getClass().getSimpleName());
         return getSession()
-                .createMutationQuery(UPDATE_MARK_READ_UPTO)
+                .createMutationQuery(UPDATE_MARK_READ_UP_TO)
                 .setParameter("recipientId", recipientId)
-                .setParameter("secondUserId", secondUserId)
+                .setParameter("senderId", senderId)
                 .setParameter("advertisementId", advertisementId)
                 .setParameter("upToDateTime", upToDateTime)
                 .executeUpdate();
     }
 
     @Override
-    public int markAllMessagesRead(UUID fromUserId, UUID toUserId, UUID advertisementId) {
-        log.info("entering markAllMessagesRead({}, {}, {}) in {}", fromUserId, toUserId, advertisementId, getClass().getSimpleName());
+    public int markAllMessagesRead(UUID senderId, UUID recipientId, UUID advertisementId) {
+        log.info("entering markAllMessagesRead({}, {}, {}) in {}", senderId, recipientId, advertisementId, getClass().getSimpleName());
         return getSession()
                 .createMutationQuery(UPDATE_MARK_READ)
-                .setParameter("fromUserId", fromUserId)
-                .setParameter("toUserId", toUserId)
+                .setParameter("senderId", senderId)
+                .setParameter("recipientId", recipientId)
                 .setParameter("advertisementId", advertisementId)
                 .executeUpdate();
     }
@@ -117,9 +111,9 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
     }
 
     @Override
-    public long hasUnreadMessages(UUID secondUserId, UUID currentUserId, UUID advertisementId) {
-        log.info("entering hasUnreadMessages({}, {}, {}) in {}", secondUserId, currentUserId, advertisementId, getClass().getSimpleName());
-        return getSession().createQuery(EXISTS_BY_UNREAD_MESSAGE, Long.class)
+    public long getUnreadMessagesCount(UUID secondUserId, UUID currentUserId, UUID advertisementId) {
+        log.info("entering getUnreadMessagesCount({}, {}, {}) in {}", secondUserId, currentUserId, advertisementId, getClass().getSimpleName());
+        return getSession().createQuery(COUNT_UNREAD_MESSAGES, Long.class)
                 .setParameter("secondUserId", secondUserId)
                 .setParameter("currentUserId", currentUserId)
                 .setParameter("advertisementId", advertisementId)
@@ -138,43 +132,69 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                 .setParameter("currentUserId", filter.getCurrentUserId())
                 .setParameter("advertisementId", advertisementId);
 
-        if (cursorDateTime != null && cursorMessageId != null)
+        if (cursorDateTime != null && cursorMessageId != null) {
             query.setParameter("cursorDateTime", cursorDateTime).setParameter("cursorMessageId", cursorMessageId);
-
-        if (filter.getUnreadMessagesCount() != null && filter.getUnreadMessagesCount() > 0) {
-            double floor = Math.floor(filter.getLimit() / 1.5);
-            int offset = (int) (filter.getUnreadMessagesCount() - floor);
-            if (offset < 0) offset = 0;
+        } else if (filter.getUnreadMessagesCount() != null && filter.getUnreadMessagesCount() > 0) {
+            /*
+            todo
+              поправить. иногда получается меньше лимита если у пользователя много непрочитанных сообщений,
+              а прочитанных или его сообщений мало. Пример всего записей 15 и все они не прочитаны.
+              лимит 10, сдвиг будет 9 соответственно пользователю придет не 10 записей а 6.
+            */
+            int offset = calculateOffset(filter.getUnreadMessagesCount(), filter.getLimit());
             log.debug("setting offset to: {}", offset);
             query.setFirstResult(offset);
         }
 
         query.setMaxResults(filter.getLimit());
-        return query.getResultList();
+
+        List<MessageResponseDto> list = query.getResultList();
+
+        if (cursorDateTime != null && cursorMessageId != null) {
+            if (filter.getIsBefore() != null && filter.getIsBefore()) {
+                Collections.reverse(list);
+            }
+        } else {
+            Collections.reverse(list);
+        }
+
+        return list;
     }
 
+    private int calculateOffset(Long unreadCount, int limit) {
+        int offset = (int) (unreadCount - Math.floor(limit / 1.5));
+        if (offset > 0) {
+            long totalCount = count();
+            if ((totalCount - offset) < limit) {
+                offset = (int) (totalCount - limit);
+            }
+        } else {
+            offset = 0;
+        }
+        return Math.max(offset, 0);
+    }
     private Query<MessageResponseDto> getFindAllByFilterQuery(MessageFilterDto filter, LocalDateTime cursorDateTime, UUID cursorMessageId) {
         StringBuilder jpql = new StringBuilder(SELECT_MESSAGES_BY_AD_FIRST_USER_AND_SECOND_USER);
         if (cursorDateTime != null && cursorMessageId != null) {
             if (filter.getIsBefore() != null && filter.getIsBefore()) {
                 jpql.append("""
-                            AND (
+                            and (
                                 m.messageDateTime < :cursorDateTime
-                                OR (m.messageDateTime = :cursorDateTime AND m.id < :cursorMessageId)
+                                or (m.messageDateTime = :cursorDateTime and m.id < :cursorMessageId)
                             )
-                            ORDER BY m.messageDateTime DESC, m.id DESC
+                            order by m.messageDateTime desc, m.id desc
                         """);
             } else {
                 jpql.append("""
-                            AND (
+                            and (
                                 m.messageDateTime > :cursorDateTime
-                                OR (m.messageDateTime = :cursorDateTime AND m.id > :cursorMessageId)
+                                or (m.messageDateTime = :cursorDateTime and m.id > :cursorMessageId)
                             )
-                            ORDER BY m.messageDateTime ASC, m.id ASC
+                            order by m.messageDateTime asc, m.id asc
                         """);
             }
         } else {
-            jpql.append(" ORDER BY m.messageDateTime DESC, m.id DESC");
+            jpql.append(" order by m.messageDateTime desc, m.id desc");
         }
         return getSession().createQuery(jpql.toString(), MessageResponseDto.class);
     }

@@ -169,6 +169,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(UserLoginRequestDto requestDto) {
         log.info("deleteUser({}) in {}", requestDto, getClass().getSimpleName());
         UserPrincipal currentUser = SecurityUtils.getCurrentUserPrincipal();

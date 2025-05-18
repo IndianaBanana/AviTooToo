@@ -25,7 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RatingServiceImpl implements RatingService {
 
-    private static final String RATE_MESSAGE = "Thanks for rating! User rating will be update in 15 minutes.";
+    private static final String RATE_MESSAGE = "Thanks for rating! User rating will be updated in 15 minutes.";
     private final RatingRepository ratingRepository;
     private final UserRatingViewRepository userRatingViewRepository;
     private final UserRepository userRepository;
