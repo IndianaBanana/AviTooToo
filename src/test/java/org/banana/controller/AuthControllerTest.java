@@ -25,9 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Created by Banana on 12.05.2025
- */
+
 @WebMvcTest(controllers = AuthControllerImpl.class)
 @Import(SecurityConfig.class)
 public class AuthControllerTest {

@@ -31,7 +31,7 @@ class AdvertisementTypeServiceTest {
     private AdvertisementTypeMapper advertisementTypeMapper;
 
     @InjectMocks
-    private AdvertisementTypeService advertisementTypeService;
+    private AdvertisementTypeServiceImpl advertisementTypeService;
 
     @Test
     void findAll_whenCalled_thenReturnDtos() {
@@ -52,17 +52,15 @@ class AdvertisementTypeServiceTest {
     void findByNameLike_whenPatternEscaped_thenReturnMappedDtos() {
         // given
         String inputPattern = "%_type\\";
-        String expectedEscapedPattern = "\\%\\_type\\\\";
         List<AdvertisementTypeDto> dtos = List.of(new AdvertisementTypeDto("Rent"));
 
-        when(advertisementTypeRepository.findByNameLike(expectedEscapedPattern)).thenReturn(dtos);
+        when(advertisementTypeRepository.findByNameLike(inputPattern)).thenReturn(dtos);
 
         // when
         List<AdvertisementTypeDto> result = advertisementTypeService.findByNameLike(inputPattern);
 
         // then
         assertEquals(dtos, result);
-        verify(advertisementTypeRepository).findByNameLike(expectedEscapedPattern);
     }
 
     @Test

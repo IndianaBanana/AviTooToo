@@ -19,4 +19,7 @@ public class MessageMarkReadRequestDto {
 
     @NotNull
     private LocalDateTime upToDateTime;
+
+    @NotNull
+    private UUID upToMessageId;
 }

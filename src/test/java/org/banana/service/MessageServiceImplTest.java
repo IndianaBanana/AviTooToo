@@ -82,28 +82,28 @@ class MessageServiceImplTest {
     }
 
     @Test
-    void sendMessage_whenSenderEqualsRecipient_thenThrowMessageSendException() {
+    void sendMessage_whenSenderEqualsRecipient_thenThrowMessageAddException() {
         MessageSendRequestDto request = new MessageSendRequestDto();
         request.setRecipientId(currentUserId);
 
         MessageSendException exception = assertThrows(MessageSendException.class,
-                () -> messageService.sendMessage(request));
+                () -> messageService.addMessage(request));
 
         assertThat(exception.getMessage()).contains(USER_MESSAGES_THE_SAME_USER.getDescription());
     }
 
     @Test
-    void sendMessage_whenRecipientNotFound_thenThrowUserNotFoundException() {
+    void addMessage_whenRecipientNotFound_thenThrowUserNotFoundException() {
         MessageSendRequestDto request = new MessageSendRequestDto();
         request.setRecipientId(recipientId);
 
         when(userRepository.existsById(recipientId)).thenReturn(false);
 
-        assertThrows(UserNotFoundException.class, () -> messageService.sendMessage(request));
+        assertThrows(UserNotFoundException.class, () -> messageService.addMessage(request));
     }
 
     @Test
-    void sendMessage_whenAdvertisementNotExist_thenThrowAdvertisementNotFoundException() {
+    void addMessage_whenAdvertisementNotExist_thenThrowAdvertisementNotFoundException() {
         MessageSendRequestDto request = new MessageSendRequestDto();
         request.setRecipientId(recipientId);
         request.setAdvertisementId(advertisementId);
@@ -111,11 +111,11 @@ class MessageServiceImplTest {
         when(userRepository.existsById(recipientId)).thenReturn(true);
         when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.empty());
 
-        assertThrows(AdvertisementNotFoundException.class, () -> messageService.sendMessage(request));
+        assertThrows(AdvertisementNotFoundException.class, () -> messageService.addMessage(request));
     }
 
     @Test
-    void sendMessage_whenNeitherSenderNorRecipientIsOwner_thenThrowMessageSendException() {
+    void sendMessage_whenNeitherSenderNorRecipientIsOwner_thenThrowMessageAddException() {
         MessageSendRequestDto request = new MessageSendRequestDto();
         request.setRecipientId(recipientId);
         request.setAdvertisementId(advertisementId);
@@ -128,13 +128,13 @@ class MessageServiceImplTest {
         when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(ad));
 
         MessageSendException exception = assertThrows(MessageSendException.class,
-                () -> messageService.sendMessage(request));
+                () -> messageService.addMessage(request));
 
         assertThat(exception.getMessage()).contains(RECIPIENT_IS_NOT_OWNER_OF_THE_ADVERTISEMENT.getDescription());
     }
 
     @Test
-    void sendMessage_whenSenderIsOwnerAndChatNotExist_thenThrowMessageSendException() {
+    void sendMessage_whenSenderIsOwnerAndChatNotExist_thenThrowMessageAddException() {
         User adOwner = new User(currentUserId, "owner", "last", "phone", "email", "pass", UserRole.ROLE_USER);
         Advertisement ad = new Advertisement();
         ad.setUser(adOwner);
@@ -147,13 +147,13 @@ class MessageServiceImplTest {
         when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(ad));
         when(messageRepository.chatExists(currentUserId, recipientId, advertisementId)).thenReturn(false);
 
-        MessageSendException exception = assertThrows(MessageSendException.class, () -> messageService.sendMessage(request));
+        MessageSendException exception = assertThrows(MessageSendException.class, () -> messageService.addMessage(request));
 
         assertTrue(exception.getMessage().contains(OWNER_OF_THE_ADVERTISEMENT_CANT_MESSAGE_FIRST.getDescription()));
     }
 
     @Test
-    void sendMessage_whenSenderIsOwnerAndChatExist_thenReturnMessageResponseDto() {
+    void addMessage_whenSenderIsOwnerAndChatExist_thenReturnMessageResponseDto() {
         // Setup sender as ad owner
         User adOwner = new User(currentUserId, "owner", "last", "phone", "email", "pass", UserRole.ROLE_USER);
         Advertisement ad = new Advertisement();
@@ -174,7 +174,7 @@ class MessageServiceImplTest {
         when(messageRepository.save(messageArgumentCaptor.capture())).thenReturn(savedMessage);
         when(messageMapper.messageToMessageResponseDto(savedMessage)).thenReturn(expectedDto);
 
-        MessageResponseDto result = messageService.sendMessage(request);
+        MessageResponseDto result = messageService.addMessage(request);
         verify(messageRepository).markAllMessagesRead(recipientId, currentUserId, advertisementId);
         assertEquals(currentUserId, messageArgumentCaptor.getValue().getSenderId());
         assertEquals(recipientId, messageArgumentCaptor.getValue().getRecipientId());
@@ -183,7 +183,7 @@ class MessageServiceImplTest {
     }
 
     @Test
-    void sendMessage_whenSenderIsNotOwnerAndRecipientIsOwner_thenReturnMessageResponseDto() {
+    void addMessage_whenSenderIsNotOwnerAndRecipientIsOwner_thenReturnMessageResponseDto() {
         User adOwner = new User(recipientId, "owner", "last", "phone", "email", "pass", UserRole.ROLE_USER);
         Advertisement ad = new Advertisement();
         ad.setUser(adOwner);
@@ -201,7 +201,7 @@ class MessageServiceImplTest {
         when(messageRepository.save(messageArgumentCaptor.capture())).thenReturn(savedMessage);
         when(messageMapper.messageToMessageResponseDto(savedMessage)).thenReturn(expectedDto);
 
-        MessageResponseDto result = messageService.sendMessage(request);
+        MessageResponseDto result = messageService.addMessage(request);
         verify(messageRepository).markAllMessagesRead(recipientId, currentUserId, advertisementId);
         assertEquals(currentUserId, messageArgumentCaptor.getValue().getSenderId());
         assertEquals(recipientId, messageArgumentCaptor.getValue().getRecipientId());
@@ -211,7 +211,7 @@ class MessageServiceImplTest {
 
 
     @Test
-    void sendMessage_whenNoAdId_thenReturnMessageResponseDto() {
+    void addMessage_whenNoAdId_thenReturnMessageResponseDto() {
         User adOwner = new User(recipientId, "owner", "last", "phone", "email", "pass", UserRole.ROLE_USER);
         Advertisement ad = new Advertisement();
         ad.setUser(adOwner);
@@ -227,7 +227,7 @@ class MessageServiceImplTest {
         when(messageRepository.save(messageArgumentCaptor.capture())).thenReturn(savedMessage);
         when(messageMapper.messageToMessageResponseDto(savedMessage)).thenReturn(expectedDto);
 
-        MessageResponseDto result = messageService.sendMessage(request);
+        MessageResponseDto result = messageService.addMessage(request);
         verify(messageRepository, never()).chatExists(any(), any(), any());
         verify(advertisementRepository, never()).findById(any());
         assertEquals(currentUserId, messageArgumentCaptor.getValue().getSenderId());
@@ -285,6 +285,7 @@ class MessageServiceImplTest {
         MessageMarkReadRequestDto dto = new MessageMarkReadRequestDto();
         dto.setSecondUserId(recipientId);
         dto.setUpToDateTime(LocalDateTime.now());
+        dto.setUpToMessageId(UUID.randomUUID());
 
         when(userRepository.existsById(recipientId)).thenReturn(true);
         when(messageRepository.chatExists(currentUserId, recipientId, null)).thenReturn(true);
@@ -292,7 +293,7 @@ class MessageServiceImplTest {
         messageService.markReadUpTo(dto);
 
         verify(advertisementRepository, never()).existsById(any());
-        verify(messageRepository).markMessagesReadUpTo(currentUserId, recipientId, null, dto.getUpToDateTime());
+        verify(messageRepository).markMessagesReadUpTo(recipientId, currentUserId, null, dto.getUpToDateTime(), dto.getUpToMessageId());
     }
 
     @Test
@@ -301,6 +302,7 @@ class MessageServiceImplTest {
         dto.setSecondUserId(recipientId);
         dto.setAdvertisementId(advertisementId);
         dto.setUpToDateTime(LocalDateTime.now());
+        dto.setUpToMessageId(UUID.randomUUID());
 
         when(userRepository.existsById(recipientId)).thenReturn(true);
         when(messageRepository.chatExists(currentUserId, recipientId, advertisementId)).thenReturn(true);
@@ -308,7 +310,7 @@ class MessageServiceImplTest {
 
         messageService.markReadUpTo(dto);
 
-        verify(messageRepository).markMessagesReadUpTo(currentUserId, recipientId, advertisementId, dto.getUpToDateTime());
+        verify(messageRepository).markMessagesReadUpTo(recipientId, currentUserId, advertisementId, dto.getUpToDateTime(), dto.getUpToMessageId());
     }
 
     @Test

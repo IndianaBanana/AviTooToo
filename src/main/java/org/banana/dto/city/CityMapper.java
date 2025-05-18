@@ -5,9 +5,7 @@ import org.mapstruct.Mapper;
 
 import java.util.List;
 
-/**
- * Created by Banana on 25.04.2025
- */
+
 @Mapper(componentModel = "spring")
 public interface CityMapper {
 

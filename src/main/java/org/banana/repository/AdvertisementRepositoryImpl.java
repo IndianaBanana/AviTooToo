@@ -2,10 +2,12 @@ package org.banana.repository;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.banana.dto.advertisement.AdvertisementFilterDto;
 import org.banana.dto.advertisement.AdvertisementResponseDto;
 import org.banana.entity.Advertisement;
 import org.banana.repository.crud.AbstractCrudRepositoryImpl;
+import org.banana.util.JpqlHelper;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
@@ -21,6 +23,11 @@ import java.util.UUID;
 @Slf4j
 public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Advertisement, UUID> implements AdvertisementRepository {
 
+    public static final String UPDATE_ADVERTISEMENT_QUANTITY = """
+            update Advertisement a set a.quantity = :newQuantity
+            where a.id = :id
+            and a.quantity = :oldQuantity
+            and a.closeDate is null""";
     private static final String FIND_FULL_DTO = """
                 select new org.banana.dto.advertisement.AdvertisementResponseDto(
                 a.id,
@@ -68,21 +75,29 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     }
 
     @Override
-    public void promoteAdvertisement(UUID id) {
+    public int promoteAdvertisement(UUID id) {
         log.info("promoteAdvertisement({}) in {}", id, getClass().getSimpleName());
-        getSession()
+        return getSession()
                 .createMutationQuery(PROMOTE_ADVERTISEMENT)
                 .setParameter("id", id)
                 .executeUpdate();
     }
 
     @Override
-    public void closeAdvertisement(UUID id, LocalDateTime closeDate) {
+    public int closeAdvertisement(UUID id, LocalDateTime closeDate) {
         log.info("closeAdvertisement({}) in {}", id, getClass().getSimpleName());
-        getSession()
+        return getSession()
                 .createMutationQuery(CLOSE_ADVERTISEMENT)
                 .setParameter("id", id)
                 .setParameter("closeDate", closeDate)
+                .executeUpdate();
+    }
+
+    @Override
+    public int reopenAdvertisement(UUID id) {
+        log.info("reopenAdvertisement({}) in {}", id, getClass().getSimpleName());
+        return getSession().createMutationQuery("update Advertisement a set a.closeDate = null where a.id = :id")
+                .setParameter("id", id)
                 .executeUpdate();
     }
 
@@ -91,6 +106,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
         log.info("findAllFiltered() in {}", getClass().getSimpleName());
         Map<String, Object> params = new HashMap<>();
         Query<AdvertisementResponseDto> query = getAdvertisementResponseDtoQuery(filter, params);
+
         for (Map.Entry<String, Object> entry : params.entrySet()) {
             if (entry.getValue() instanceof Collection<?>) {
                 query.setParameterList(entry.getKey(), (Collection<?>) entry.getValue());
@@ -102,6 +118,15 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
         query.setMaxResults(size);
 
         return query.getResultList();
+    }
+
+    @Override
+    public int updateAdvertisementQuantity(UUID id, int oldQuantity, int newQuantity) {
+        return getSession().createMutationQuery(UPDATE_ADVERTISEMENT_QUANTITY)
+                .setParameter("id", id)
+                .setParameter("oldQuantity", oldQuantity)
+                .setParameter("newQuantity", newQuantity)
+                .executeUpdate();
     }
 
     private Query<AdvertisementResponseDto> getAdvertisementResponseDtoQuery(AdvertisementFilterDto filter, Map<String, Object> params) {
@@ -120,9 +145,9 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
             params.put("typeIds", filter.getAdvertisementTypeIds());
         }
 
-        if (filter.getSearchParam() != null && !filter.getSearchParam().isBlank()) {
+        if (StringUtils.isNotBlank(filter.getSearchParam())) {
             jpql.append(" and (lower(a.title) like :search escape '\\' or lower(a.description) like :search escape '\\')");
-            params.put("search", "%" + filter.getSearchParam().toLowerCase() + "%");
+            params.put("search", "%" + JpqlHelper.formatSearchParam(filter.getSearchParam()) + "%");
         }
 
         if (filter.getMinPrice() != null) {

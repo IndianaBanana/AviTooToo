@@ -29,13 +29,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_CLOSED;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_CLOSED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_PROMOTED;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_NOT_CLOSED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.NOT_OWNER;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.UNEXPECTED_ERROR;
 
-/**
- * Created by Banana on 25.04.2025
- */
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -48,7 +48,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     private final AdvertisementMapper advertisementMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public AdvertisementResponseDto findById(UUID advertisementId) {
         log.info("findById({}) in {}", advertisementId, getClass().getSimpleName());
 
@@ -59,32 +58,21 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     @Override
     public List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size) {
         log.info("findAllFiltered({}) in {}", filter, getClass().getSimpleName());
-
-        if (filter.getSearchParam() != null) {
-            log.debug("search param before: {}", filter.getSearchParam());
-
-            filter.setSearchParam(filter.getSearchParam()
-                    .replace("\\", "\\\\")
-                    .replace("_", "\\_")
-                    .replace("%", "\\%"));
-
-            log.debug("search param after: {}", filter.getSearchParam());
-        }
-
         return advertisementRepository.findAllFiltered(filter, page, size);
     }
 
 
     @Override
     @Transactional
-    public void deleteById(UUID advertisementId) {
-        log.info("deleteById({}) in {}", advertisementId, getClass().getSimpleName());
+    public void deleteAdvertisement(UUID advertisementId) {
+        log.info("deleteAdvertisement({}) in {}", advertisementId, getClass().getSimpleName());
 
-        Advertisement advertisement = findAdvertisementByIdOrThrow(advertisementId);
+        Advertisement advertisement = advertisementRepository.findById(advertisementId)
+                .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
 
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUserPrincipal();
         boolean isOwner = advertisement.getUser().getId().equals(userPrincipal.getId());
-        boolean isAdmin = userPrincipal.getRole().equals(UserRole.ROLE_ADMIN);
+        boolean isAdmin = UserRole.ROLE_ADMIN.equals(userPrincipal.getRole());
 
         if (!isOwner && !isAdmin)
             throw new AdvertisementUpdateException(NOT_OWNER);
@@ -94,8 +82,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
     @Override
     @Transactional
-    public AdvertisementResponseDto createAdvertisement(AdvertisementRequestDto requestDto) {
-        log.info("createAdvertisement({}) in {}", requestDto, getClass().getSimpleName());
+    public AdvertisementResponseDto addAdvertisement(AdvertisementRequestDto requestDto) {
+        log.info("addAdvertisement({}) in {}", requestDto, getClass().getSimpleName());
 
         AdvertisementType advertisementType = advertisementTypeRepository.findById(requestDto.getAdvertisementTypeId())
                 .orElseThrow(() -> new AdvertisementTypeNotFoundException(requestDto.getAdvertisementTypeId()));
@@ -104,16 +92,20 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                 .orElseThrow(() -> new CityNotFoundException(requestDto.getCityId()));
 
         UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
-        User currentUser = userRepository.findFetchedById(currentUserId).orElseThrow(() -> new UserNotFoundException(currentUserId));
+
+        User currentUser = userRepository.findFetchedById(currentUserId)
+                .orElseThrow(() -> new UserNotFoundException(currentUserId));
+
         Advertisement advertisement = advertisementMapper.advertisementRequestDtoToAdvertisement(requestDto);
         advertisement.setAdvertisementType(advertisementType);
         advertisement.setUser(currentUser);
         advertisement.setCity(city);
         advertisement.setCreateDate(LocalDateTime.now());
-        Advertisement saved = advertisementRepository.save(advertisement);
 
-        log.debug("advertisement created: {}", saved);
-        return advertisementMapper.advertisementToAdvertisementResponseDto(saved);
+        advertisement = advertisementRepository.save(advertisement);
+
+        log.debug("advertisement created: {}", advertisement);
+        return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
     // todo подумать, можно ли сделать меньше запросов на обновление
@@ -122,20 +114,22 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto updateAdvertisement(UUID advertisementId, AdvertisementRequestDto requestDto) {
         log.info("updateAdvertisement({}) in {}", requestDto, getClass().getSimpleName());
 
-        Advertisement advertisement = findAdvertisementByIdOrThrow(advertisementId);
+        Advertisement advertisement = advertisementRepository.findById(advertisementId)
+                .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
+
         UUID userId = SecurityUtils.getCurrentUserPrincipal().getId();
 
         if (!advertisement.getUser().getId().equals(userId))
             throw new AdvertisementUpdateException(NOT_OWNER);
 
         if (advertisement.getCloseDate() != null)
-            throw new AdvertisementUpdateException(ALREADY_CLOSED);
-
-        City city = cityRepository.findById(requestDto.getCityId())
-                .orElseThrow(() -> new CityNotFoundException(requestDto.getCityId()));
+            throw new AdvertisementUpdateException(ADVERTISEMENT_CLOSED);
 
         AdvertisementType advertisementType = advertisementTypeRepository.findById(requestDto.getAdvertisementTypeId())
                 .orElseThrow(() -> new AdvertisementTypeNotFoundException(requestDto.getAdvertisementTypeId()));
+
+        City city = cityRepository.findById(requestDto.getCityId())
+                .orElseThrow(() -> new CityNotFoundException(requestDto.getCityId()));
 
         advertisement.setCity(city);
         advertisement.setAdvertisementType(advertisementType);
@@ -159,23 +153,51 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         log.info("closeAdvertisement({}) in {}", advertisementId, getClass().getSimpleName());
 
         AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
-                .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
+                .orElseThrow(() -> new AdvertisementUpdateException(ADVERTISEMENT_CLOSED));
 
         UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
-        boolean isOwner = advertisementDto.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
-        boolean isAdmin = currentUserPrincipal.getRole().equals(UserRole.ROLE_ADMIN);
 
-        if (!isOwner && !isAdmin)
+        boolean isOwner = advertisementDto.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
+        if (!isOwner)
             throw new AdvertisementUpdateException(NOT_OWNER);
 
         if (advertisementDto.getCloseDate() != null)
-            throw new AdvertisementUpdateException(ALREADY_CLOSED);
+            throw new AdvertisementUpdateException(ADVERTISEMENT_CLOSED);
 
         LocalDateTime closeDate = LocalDateTime.now();
         advertisementDto.setCloseDate(closeDate);
-        advertisementRepository.closeAdvertisement(advertisementId, closeDate);
+        if (advertisementRepository.closeAdvertisement(advertisementId, closeDate) != 1) {
+            throw new AdvertisementUpdateException(UNEXPECTED_ERROR);
+        }
 
         log.debug("advertisement closed: {}", advertisementDto);
+        return advertisementDto;
+    }
+
+    @Override
+    @Transactional
+    public AdvertisementResponseDto reopenAdvertisement(UUID advertisementId) {
+        log.info("reopenAdvertisement({}) in {}", advertisementId, getClass().getSimpleName());
+
+        AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
+                .orElseThrow(() -> new AdvertisementUpdateException(ADVERTISEMENT_CLOSED));
+
+        UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
+        boolean isOwner = advertisementDto.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
+        if (!isOwner)
+            throw new AdvertisementUpdateException(NOT_OWNER);
+
+        if (advertisementDto.getCloseDate() == null)
+            throw new AdvertisementUpdateException(ADVERTISEMENT_NOT_CLOSED);
+
+        advertisementDto.setCloseDate(null);
+
+        if (advertisementRepository.reopenAdvertisement(advertisementId) != 1) {
+            throw new AdvertisementUpdateException(UNEXPECTED_ERROR);
+        }
+
+        log.debug("advertisement reopened: {}", advertisementDto);
+
         return advertisementDto;
     }
 
@@ -194,17 +216,15 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             throw new AdvertisementUpdateException(ALREADY_PROMOTED);
 
         if (advertisementDto.getCloseDate() != null)
-            throw new AdvertisementUpdateException(ALREADY_CLOSED);
+            throw new AdvertisementUpdateException(ADVERTISEMENT_CLOSED);
 
         advertisementDto.setPromoted(true);
-        advertisementRepository.promoteAdvertisement(advertisementId);
+
+        if (advertisementRepository.promoteAdvertisement(advertisementId) != 1) {
+            throw new AdvertisementUpdateException(UNEXPECTED_ERROR);
+        }
 
         log.debug("advertisement promoted: {}", advertisementDto);
         return advertisementDto;
-    }
-
-    private Advertisement findAdvertisementByIdOrThrow(UUID advertisementId) {
-        return advertisementRepository.findById(advertisementId)
-                .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
     }
 }

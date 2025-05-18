@@ -47,7 +47,7 @@ class RatingControllerTest {
     @MockitoBean
     private UserDetailsService userDetailsService;
 
-    // --- rateUser ---
+    // --- addRating ---
 
     @Test
     @WithMockUser
@@ -56,13 +56,13 @@ class RatingControllerTest {
         dto.setRatedUserId(UUID.randomUUID());
         dto.setRatingValue((short) 4);
 
-        when(ratingService.rateUser(dto)).thenReturn("Thanks for rating! User rating will be update in 15 minutes.");
+        when(ratingService.addRating(dto)).thenReturn("User rating will be update in 15 minutes.");
 
         mvc.perform(post("/api/v1/rating")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andExpect(content().string(containsString("Thanks for rating")));
+                .andExpect(content().string(containsString("User rating will be update in 15 minutes.")));
     }
 
     @Test
@@ -83,7 +83,7 @@ class RatingControllerTest {
     void rateUser_whenSameUser_thenConflict() throws Exception {
         RatingDto dto = new RatingDto(UUID.randomUUID(), (short) 3);
 
-        doThrow(new UserRatesTheSameUserException()).when(ratingService).rateUser(dto);
+        doThrow(new UserRatesTheSameUserException()).when(ratingService).addRating(dto);
 
         mvc.perform(post("/api/v1/rating")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -96,7 +96,7 @@ class RatingControllerTest {
     void rateUser_whenUserNotFound_thenNotFound() throws Exception {
         RatingDto dto = new RatingDto(UUID.randomUUID(), (short) 3);
 
-        doThrow(new UserNotFoundException(dto.getRatedUserId())).when(ratingService).rateUser(dto);
+        doThrow(new UserNotFoundException(dto.getRatedUserId())).when(ratingService).addRating(dto);
 
         mvc.perform(post("/api/v1/rating")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -115,24 +115,24 @@ class RatingControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // --- removeRating ---
+    // --- deleteRating ---
 
     @Test
     @WithMockUser
     void removeRating_whenValid_thenOk() throws Exception {
         UUID userId = UUID.randomUUID();
-        when(ratingService.removeRating(userId)).thenReturn("Thanks for rating! User rating will be update in 15 minutes.");
+        when(ratingService.deleteRating(userId)).thenReturn("User rating will be update in 15 minutes.");
 
         mvc.perform(delete("/api/v1/rating/{userId}", userId))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Thanks for rating")));
+                .andExpect(content().string(containsString("User rating will be update in 15 minutes.")));
     }
 
     @Test
     @WithMockUser
     void removeRating_whenSameUser_thenConflict() throws Exception {
         UUID userId = UUID.randomUUID();
-        doThrow(new UserRatesTheSameUserException()).when(ratingService).removeRating(userId);
+        doThrow(new UserRatesTheSameUserException()).when(ratingService).deleteRating(userId);
 
         mvc.perform(delete("/api/v1/rating/{userId}", userId))
                 .andExpect(status().isConflict());
@@ -142,7 +142,7 @@ class RatingControllerTest {
     @WithMockUser
     void removeRating_whenUserNotFound_thenNotFound() throws Exception {
         UUID userId = UUID.randomUUID();
-        doThrow(new UserNotFoundException(userId)).when(ratingService).removeRating(userId);
+        doThrow(new UserNotFoundException(userId)).when(ratingService).deleteRating(userId);
 
         mvc.perform(delete("/api/v1/rating/{userId}", userId))
                 .andExpect(status().isNotFound());

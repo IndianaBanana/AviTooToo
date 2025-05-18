@@ -1,11 +1,10 @@
 package org.banana.security.exception;
 
 import lombok.Getter;
+import org.banana.exception.AbstractConflictException;
 
-/**
- * Created by Banana on 29.04.2025
- */
-public class UserUpdateOldEqualsNewDataException extends RuntimeException {
+
+public class UserUpdateOldEqualsNewDataException extends AbstractConflictException {
 
     private static final String MESSAGE = "New %s should be different from the old %s";
 

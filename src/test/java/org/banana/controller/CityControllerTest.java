@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CityController.class)
@@ -74,7 +75,8 @@ class CityControllerTest {
         when(cityService.addCity("Berlin")).thenReturn(added);
 
         mvc.perform(post("/api/v1/city/Berlin"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/v1/city/" + added.getName()))
                 .andExpect(content().json(objectMapper.writeValueAsString(added)));
     }
 

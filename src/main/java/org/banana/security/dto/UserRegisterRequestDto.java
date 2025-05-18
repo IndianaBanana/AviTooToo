@@ -16,9 +16,7 @@ import static org.banana.dto.ValidationConstants.PASSWORD_MIN_LENGTH;
 import static org.banana.dto.ValidationConstants.PHONE_ERROR_MESSAGE;
 import static org.banana.dto.ValidationConstants.PHONE_REGEX;
 
-/**
- * Created by Banana on 27.04.2025
- */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

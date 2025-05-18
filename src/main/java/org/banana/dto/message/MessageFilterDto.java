@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Created by Banana on 07.05.2025
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

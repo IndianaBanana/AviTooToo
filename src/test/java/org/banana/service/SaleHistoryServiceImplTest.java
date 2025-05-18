@@ -11,19 +11,23 @@ import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.SaleHistoryAccessDeniedException;
 import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedException;
 import org.banana.exception.SaleHistoryNotFoundException;
+import org.banana.exception.SaleHistoryUnexpectedException;
 import org.banana.repository.AdvertisementRepository;
 import org.banana.repository.SaleHistoryRepository;
 import org.banana.repository.UserRepository;
 import org.banana.security.UserRole;
 import org.banana.security.dto.UserPrincipal;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
@@ -61,6 +65,7 @@ class SaleHistoryServiceImplTest {
     private UUID advertisementId;
     private UUID userId;
     private User owner;
+    private UserPrincipal principal;
 
     @BeforeEach
     void setUp() {
@@ -73,6 +78,15 @@ class SaleHistoryServiceImplTest {
         advertisement.setId(advertisementId);
         advertisement.setQuantity(5);
         advertisement.setUser(owner);
+
+        principal = new UserPrincipal(userId, "First", "Last", "123", "user", "pass", UserRole.ROLE_USER);
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -96,79 +110,137 @@ class SaleHistoryServiceImplTest {
                 .isInstanceOf(SaleHistoryAdvertisementQuantityIsLowerThanExpectedException.class);
     }
 
+
     @Test
-    void addSale_whenValidRequest_thenShouldReturnSaleHistoryResponseDto() {
-        mockCurrentUser(userId, UserRole.ROLE_USER);
+    void addSale_whenAdvertisementIsAlreadyClosed_thenShouldThrowSaleHistoryAdvertisementAlreadyClosedException() {
+        advertisement.setCloseDate(LocalDateTime.now());
+        when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(advertisement));
+
+        SaleHistoryAddRequestDto dto = new SaleHistoryAddRequestDto(advertisementId, 1);
+
+        assertThatThrownBy(() -> saleHistoryService.addSale(dto))
+                .isInstanceOf(AdvertisementNotFoundException.class);
+    }
+
+    @Test
+    void addSale_whenValidRequestAndUpdateQuantityIsSuccessful_thenShouldReturnSaleHistoryResponseDto() {
         SaleHistory saleHistory = new SaleHistory(advertisement, userId, 2, LocalDateTime.now());
         ArgumentCaptor<SaleHistory> historyArgumentCaptor = ArgumentCaptor.forClass(SaleHistory.class);
+        SaleHistoryAddRequestDto dto = new SaleHistoryAddRequestDto(advertisementId, 2);
+        advertisement.setQuantity(5);
+        advertisement.setCloseDate(null);
+
         when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(advertisement));
         when(saleHistoryRepository.save(any(SaleHistory.class))).thenReturn(saleHistory);
-        when(advertisementRepository.save(any(Advertisement.class))).thenReturn(advertisement);
+        when(advertisementRepository.updateAdvertisementQuantity(
+                advertisementId,
+                advertisement.getQuantity(),
+                advertisement.getQuantity() - dto.getQuantity()))
+                .thenReturn(1);
         when(saleHistoryMapper.fromSaleHistoryToSaleHistoryResponseDto(saleHistory)).thenReturn(mock(SaleHistoryResponseDto.class));
 
-        SaleHistoryAddRequestDto dto = new SaleHistoryAddRequestDto(advertisementId, 2);
         SaleHistoryResponseDto response = saleHistoryService.addSale(dto);
+
         verify(saleHistoryRepository).save(historyArgumentCaptor.capture());
         assertThat(historyArgumentCaptor.getValue()).extracting("advertisement", "buyerId", "quantity")
                 .contains(advertisement, userId, 2);
         assertThat(response).isNotNull();
-        assertThat(advertisement.getQuantity()).isEqualTo(3);
     }
 
     @Test
-    void cancelSale_whenOwner_thenDeletesAndRestoresQuantity() {
+    void addSale_whenUpdateAdvertisementQuantityUnsuccessful_thenShouldThrowAdvertisementNotFoundException() {
+        SaleHistory saleHistory = new SaleHistory(advertisement, userId, 2, LocalDateTime.now());
+        ArgumentCaptor<SaleHistory> historyArgumentCaptor = ArgumentCaptor.forClass(SaleHistory.class);
+        SaleHistoryAddRequestDto dto = new SaleHistoryAddRequestDto(advertisementId, 2);
+
+        when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(advertisement));
+        when(advertisementRepository.updateAdvertisementQuantity(
+                advertisementId,
+                advertisement.getQuantity(),
+                advertisement.getQuantity() - dto.getQuantity()))
+                .thenReturn(0);
+
+        assertThatThrownBy(() -> saleHistoryService.addSale(dto)).isInstanceOf(SaleHistoryUnexpectedException.class);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"ROLE_USER", "ROLE_ADMIN"})
+    void deleteSale_whenAllValidAndUpdateQuantityIsSuccessful_thenDeletesAndRestoresQuantity(UserRole role) {
         UUID saleId = UUID.randomUUID();
         advertisement.setQuantity(5);
+        advertisement.setCloseDate(null);
+        principal.setId(UserRole.ROLE_USER.equals(role) ? owner.getId() : UUID.randomUUID());
+        principal.setRole(role);
         SaleHistory sale = new SaleHistory(advertisement, userId, 2, LocalDateTime.now());
         sale.setId(saleId);
 
         when(saleHistoryRepository.findById(saleId)).thenReturn(Optional.of(sale));
 
-        mockCurrentUser(owner.getId(), UserRole.ROLE_USER);
+        when(advertisementRepository.updateAdvertisementQuantity(
+                advertisementId,
+                advertisement.getQuantity(),
+                advertisement.getQuantity() + sale.getQuantity()))
+                .thenReturn(1);
 
-        saleHistoryService.cancelSale(saleId);
+        saleHistoryService.deleteSale(saleId);
 
-        verify(advertisementRepository).save(advertisement);
-        assertThat(advertisement.getQuantity()).isEqualTo(7);
         verify(saleHistoryRepository).delete(sale);
     }
 
     @Test
-    void cancelSale_whenAdmin_thenDeletesAndRestoresQuantity() {
+    void deleteSale_whenUpdateAdvertisementQuantityUnsuccessful_thenShouldThrowSaleHistoryUnexpectedException() {
         UUID saleId = UUID.randomUUID();
         advertisement.setQuantity(5);
+        advertisement.setCloseDate(null);
         SaleHistory sale = new SaleHistory(advertisement, userId, 2, LocalDateTime.now());
+        principal.setId(owner.getId());
         sale.setId(saleId);
 
         when(saleHistoryRepository.findById(saleId)).thenReturn(Optional.of(sale));
-        mockCurrentUser(UUID.randomUUID(), UserRole.ROLE_ADMIN);
+        when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(advertisement));
 
-        saleHistoryService.cancelSale(saleId);
+        when(advertisementRepository.updateAdvertisementQuantity(
+                advertisementId,
+                advertisement.getQuantity(),
+                advertisement.getQuantity() + sale.getQuantity()))
+                .thenReturn(0);
 
-        verify(advertisementRepository).save(advertisement);
-        assertThat(advertisement.getQuantity()).isEqualTo(7);
-        verify(saleHistoryRepository).delete(sale);
+        assertThatThrownBy(() -> saleHistoryService.deleteSale(saleId))
+                .isInstanceOf(SaleHistoryUnexpectedException.class);
     }
 
     @Test
-    void cancelSale_whenNotAuthorized_thenShouldThrowAccessDeniedException() {
+    void deleteSale_whenNotAuthorized_thenShouldThrowAccessDeniedException() {
         UUID saleId = UUID.randomUUID();
         SaleHistory sale = new SaleHistory(advertisement, userId, 2, LocalDateTime.now());
         sale.setId(saleId);
+        principal.setId(UUID.randomUUID());
 
         when(saleHistoryRepository.findById(saleId)).thenReturn(Optional.of(sale));
-        mockCurrentUser(UUID.randomUUID(), UserRole.ROLE_USER);
 
-        assertThrows(SaleHistoryAccessDeniedException.class, () -> saleHistoryService.cancelSale(saleId));
+        assertThrows(SaleHistoryAccessDeniedException.class, () -> saleHistoryService.deleteSale(saleId));
     }
 
     @Test
-    void cancelSale_whenSaleNotFound_thenShouldThrowSaleHistoryNotFoundException() {
+    void deleteSale_whenSaleNotFound_thenShouldThrowSaleHistoryNotFoundException() {
         UUID saleId = UUID.randomUUID();
 
         when(saleHistoryRepository.findById(saleId)).thenReturn(Optional.empty());
 
-        assertThrows(SaleHistoryNotFoundException.class, () -> saleHistoryService.cancelSale(saleId));
+        assertThrows(SaleHistoryNotFoundException.class, () -> saleHistoryService.deleteSale(saleId));
+    }
+
+    @Test
+    void deleteSale_whenAdvertisementClosed_thenShouldThrowAdvertisementNotFoundException() {
+        UUID saleId = UUID.randomUUID();
+        principal.setId(owner.getId());
+        SaleHistory sale = new SaleHistory(advertisement, userId, 2, LocalDateTime.now());
+        sale.setId(saleId);
+        advertisement.setCloseDate(LocalDateTime.now());
+
+        when(saleHistoryRepository.findById(saleId)).thenReturn(Optional.of(sale));
+
+        assertThrows(AdvertisementNotFoundException.class, () -> saleHistoryService.deleteSale(saleId));
     }
 
     @Test
@@ -182,7 +254,7 @@ class SaleHistoryServiceImplTest {
 
     @Test
     void getSalesByAdvertisementId_shouldThrow_whenUserNotOwnerAndNotAdmin() {
-        mockCurrentUser(UUID.randomUUID(), UserRole.ROLE_USER);
+        principal.setId(UUID.randomUUID());
 
         when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(advertisement));
 
@@ -190,11 +262,13 @@ class SaleHistoryServiceImplTest {
                 .isInstanceOf(SaleHistoryAccessDeniedException.class);
     }
 
-    @Test
-    void getSalesByAdvertisementId_shouldReturnSales_whenOwner() {
+    @ParameterizedTest
+    @CsvSource({"ROLE_USER", "ROLE_ADMIN"})
+    void getSalesByAdvertisementId_shouldReturnSales_whenOwnerOrAdmin(UserRole role) {
 
         List<SaleHistoryResponseDto> expected = List.of();
-        mockCurrentUser(owner.getId(), UserRole.ROLE_USER);
+        principal.setId(UserRole.ROLE_USER.equals(role) ? owner.getId() : UUID.randomUUID());
+        principal.setRole(role);
 
         when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(advertisement));
         when(saleHistoryRepository.getSalesByAdvertisementId(advertisementId)).thenReturn(expected);
@@ -204,23 +278,10 @@ class SaleHistoryServiceImplTest {
         assertThat(result).isEqualTo(expected);
     }
 
-    @Test
-    void getSalesByAdvertisementId_shouldReturnSales_whenAdmin() {
-        mockCurrentUser(UUID.randomUUID(), UserRole.ROLE_ADMIN);
-
-        List<SaleHistoryResponseDto> expected = List.of();
-
-        when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(advertisement));
-        when(saleHistoryRepository.getSalesByAdvertisementId(advertisementId)).thenReturn(expected);
-
-        List<SaleHistoryResponseDto> result = saleHistoryService.getSalesByAdvertisementId(advertisementId);
-
-        assertThat(result).isEqualTo(expected);
-    }
 
     @Test
     void getTotalForSalesInAdvertisements_shouldReturnAggregatedSales() {
-        mockCurrentUser(owner.getId(), UserRole.ROLE_USER);
+        principal.setId(owner.getId());
 
         List<SaleHistoryTotalForAdvertisementsResponseDto> expected = List.of();
 
@@ -231,10 +292,10 @@ class SaleHistoryServiceImplTest {
         assertThat(result).isEqualTo(expected);
     }
 
-    private void mockCurrentUser(UUID id, UserRole role) {
-        UserPrincipal principal = new UserPrincipal(id, "First", "Last", "123", "user", "pass", role);
-        Authentication auth = mock(Authentication.class);
-        when(auth.getPrincipal()).thenReturn(principal);
-        SecurityContextHolder.getContext().setAuthentication(auth);
-    }
+//    private void mockCurrentUser(UUID id, UserRole role) {
+//        principal = new UserPrincipal(id, "First", "Last", "123", "user", "pass", role);
+//        Authentication auth = mock(Authentication.class);
+//        when(auth.getPrincipal()).thenReturn(principal);
+//        SecurityContextHolder.getContext().setAuthentication(auth);
+//    }
 }

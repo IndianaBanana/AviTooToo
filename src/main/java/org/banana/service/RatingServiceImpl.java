@@ -17,23 +17,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * Created by Banana on 25.04.2025
- */
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class RatingServiceImpl implements RatingService {
 
-    private static final String RATE_MESSAGE = "Thanks for rating! User rating will be updated in 15 minutes.";
+    private static final String RATE_MESSAGE = "User rating will be updated in 15 minutes.";
     private final RatingRepository ratingRepository;
     private final UserRatingViewRepository userRatingViewRepository;
     private final UserRepository userRepository;
 
     @Override
     @Transactional
-    public String rateUser(RatingDto dto) {
-        log.info("rateUser({}) in {}", dto, getClass().getSimpleName());
+    public String addRating(RatingDto dto) {
+        log.info("addRating({}) in {}", dto, getClass().getSimpleName());
         UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
         UUID ratedUser = dto.getRatedUserId();
 
@@ -41,16 +39,16 @@ public class RatingServiceImpl implements RatingService {
 
         if (!userRepository.existsById(ratedUser)) throw new UserNotFoundException(ratedUser);
 
-        Rating saved = ratingRepository.save(new Rating(ratedUser, currentUserId, dto.getRatingValue()));
+        Rating rating = ratingRepository.save(new Rating(ratedUser, currentUserId, dto.getRatingValue()));
 
-        log.debug("rating saved: {}", saved);
+        log.debug("rating rating: {}", rating);
         return RATE_MESSAGE;
     }
 
     @Override
     @Transactional
-    public String removeRating(UUID ratedUserId) {
-        log.info("removeRating({}) in {}", ratedUserId, getClass().getSimpleName());
+    public String deleteRating(UUID ratedUserId) {
+        log.info("deleteRating({}) in {}", ratedUserId, getClass().getSimpleName());
         UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
 
         if (currentUserId.equals(ratedUserId)) throw new UserRatesTheSameUserException();

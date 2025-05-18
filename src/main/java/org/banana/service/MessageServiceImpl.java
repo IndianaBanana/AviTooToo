@@ -28,9 +28,7 @@ import static org.banana.exception.MessageSendException.MessageSendExceptionMess
 import static org.banana.exception.MessageSendException.MessageSendExceptionMessage.RECIPIENT_IS_NOT_OWNER_OF_THE_ADVERTISEMENT;
 import static org.banana.exception.MessageSendException.MessageSendExceptionMessage.USER_MESSAGES_THE_SAME_USER;
 
-/**
- * Created by Banana on 25.04.2025
- */
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -43,8 +41,8 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageResponseDto sendMessage(MessageSendRequestDto requestDto) {
-        log.info("sendMessage({}) in {}", requestDto, getClass().getSimpleName());
+    public MessageResponseDto addMessage(MessageSendRequestDto requestDto) {
+        log.info("addMessage({}) in {}", requestDto, getClass().getSimpleName());
         UUID senderId = SecurityUtils.getCurrentUserPrincipal().getId();
         UUID recipientId = requestDto.getRecipientId();
         UUID advertisementId = requestDto.getAdvertisementId();
@@ -52,6 +50,7 @@ public class MessageServiceImpl implements MessageService {
         validateRecipient(senderId, recipientId);
         validateAdvertisementRules(senderId, recipientId, advertisementId);
 
+        // Помечаем все непрочитанные текущим пользователем сообщения как прочитанные. Отправил - значит прочитал.
         messageRepository.markAllMessagesRead(recipientId, senderId, advertisementId);
 
         Message message = new Message(
@@ -84,11 +83,13 @@ public class MessageServiceImpl implements MessageService {
         if (!messageRepository.chatExists(currentUserId, secondUserId, advertisementId))
             throw new ConversationNotFoundException(secondUserId, advertisementId);
 
-        messageRepository.markMessagesReadUpTo(currentUserId, secondUserId, advertisementId, dto.getUpToDateTime());
+        messageRepository.markMessagesReadUpTo(secondUserId, currentUserId, advertisementId, dto.getUpToDateTime(), dto.getUpToMessageId());
     }
 
 
-    // возвращает список сообщений, где первый элемент самое старое сообщение из выборки
+    /**
+     * Возвращает список сообщений, где первый элемент самое старое сообщение из выборки
+     */
     @Override
     @Transactional(readOnly = true)
     public List<MessageResponseDto> getListOfMessages(MessageFilterDto filter) {
@@ -97,7 +98,7 @@ public class MessageServiceImpl implements MessageService {
         filter.setCurrentUserId(SecurityUtils.getCurrentUserPrincipal().getId());
 
         validateRecipient(filter.getCurrentUserId(), filter.getSecondUserId());
-
+        // если не задали курсоры, то предполагаем, что чат еще не смотрели и надо проверить есть ли непрочитанные сообщения
         if (filter.getCursorMessageId() == null && filter.getCursorDateTime() == null) {
             long unreadMessagesCount = messageRepository
                     .getUnreadMessagesCount(filter.getSecondUserId(), filter.getCurrentUserId(), filter.getAdvertisementId());

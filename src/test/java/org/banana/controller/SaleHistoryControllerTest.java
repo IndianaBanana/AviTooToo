@@ -9,6 +9,7 @@ import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.SaleHistoryAccessDeniedException;
 import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedException;
 import org.banana.exception.SaleHistoryNotFoundException;
+import org.banana.exception.SaleHistoryUnexpectedException;
 import org.banana.security.service.JwtService;
 import org.banana.service.SaleHistoryService;
 import org.junit.jupiter.api.Test;
@@ -121,6 +122,20 @@ class SaleHistoryControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+
+    @Test
+    @WithMockUser
+    void addSale_whenUnexpectedException_thenInternalServerError() throws Exception {
+        SaleHistoryAddRequestDto req = new SaleHistoryAddRequestDto(UUID.randomUUID(), 1);
+        when(saleHistoryService.addSale(req))
+                .thenThrow(new SaleHistoryUnexpectedException());
+
+        mvc.perform(post("/api/v1/sale-history")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isInternalServerError());
+    }
+
     // --- getSalesByAdvertisement ---
 
     @Test
@@ -190,7 +205,7 @@ class SaleHistoryControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // --- cancelSale ---
+    // --- deleteSale ---
 
     @Test
     @WithMockUser
@@ -205,7 +220,7 @@ class SaleHistoryControllerTest {
     @WithMockUser
     void cancelSale_whenNotFound_thenNotFound() throws Exception {
         UUID saleId = UUID.randomUUID();
-        doThrow(new SaleHistoryNotFoundException(saleId)).when(saleHistoryService).cancelSale(saleId);
+        doThrow(new SaleHistoryNotFoundException(saleId)).when(saleHistoryService).deleteSale(saleId);
 
         mvc.perform(delete("/api/v1/sale-history/{saleId}", saleId))
                 .andExpect(status().isNotFound());
@@ -215,7 +230,7 @@ class SaleHistoryControllerTest {
     @WithMockUser
     void cancelSale_whenAccessDenied_thenForbidden() throws Exception {
         UUID saleId = UUID.randomUUID();
-        doThrow(new SaleHistoryAccessDeniedException()).when(saleHistoryService).cancelSale(saleId);
+        doThrow(new SaleHistoryAccessDeniedException()).when(saleHistoryService).deleteSale(saleId);
 
         mvc.perform(delete("/api/v1/sale-history/{saleId}", saleId))
                 .andExpect(status().isForbidden());
@@ -226,5 +241,15 @@ class SaleHistoryControllerTest {
     void cancelSale_whenAnonymous_thenUnauthorized() throws Exception {
         mvc.perform(delete("/api/v1/sale-history/{saleId}", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser
+    void cancelSale_whenUnexpectedException_thenInternalServerError() throws Exception {
+        UUID saleId = UUID.randomUUID();
+        doThrow(new SaleHistoryUnexpectedException()).when(saleHistoryService).deleteSale(saleId);
+
+        mvc.perform(delete("/api/v1/sale-history/{saleId}", saleId))
+                .andExpect(status().isInternalServerError());
     }
 }

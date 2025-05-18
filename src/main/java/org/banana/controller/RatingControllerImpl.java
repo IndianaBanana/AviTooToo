@@ -25,12 +25,12 @@ public class RatingControllerImpl implements RatingController {
     @PostMapping("")
     @Override
     public ResponseEntity<String> rateUser(@Valid @RequestBody RatingDto ratingDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ratingService.rateUser(ratingDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ratingService.addRating(ratingDto));
     }
 
     @DeleteMapping("/{userId}")
     @Override
     public ResponseEntity<String> removeRating(@Valid @PathVariable UUID userId) {
-        return ResponseEntity.ok(ratingService.removeRating(userId));
+        return ResponseEntity.ok(ratingService.deleteRating(userId));
     }
 }

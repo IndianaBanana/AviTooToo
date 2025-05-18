@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,16 +22,15 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 @ExtendWith(MockitoExtension.class)
 class UserDetailsServiceImplTest {
 
+    private final UUID userId = UUID.randomUUID();
+    private final User testUser = new User(userId, "John", "Doe", "phone", "username", "hashed_password", UserRole.ROLE_USER);
+    private final UserPrincipal testPrincipal = new UserPrincipal(userId, "John", "Doe", "phone", "username", "hashed_password", UserRole.ROLE_USER);
+
     @Mock
     private UserRepository userRepository;
 
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
-
-    private final UUID userId = UUID.randomUUID();
-
-    private final User testUser = new User(userId, "John", "Doe", "phone","username", "hashed_password", UserRole.ROLE_USER);
-    private final UserPrincipal testPrincipal = new UserPrincipal(userId, "John", "Doe", "phone","username", "hashed_password", UserRole.ROLE_USER);
 
     @Test
     void loadUserByUsername_whenUserExists_thenReturnsUserPrincipal() {

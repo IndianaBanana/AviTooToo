@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AdvertisementTypeController.class)
@@ -78,7 +79,8 @@ class AdvertisementTypeControllerTest {
         when(advertisementTypeService.addAdvertisementType("Popup")).thenReturn(added);
 
         mvc.perform(post("/api/v1/advertisement-type/Popup"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/v1/advertisement-type/" + added.getName()))
                 .andExpect(content().json(objectMapper.writeValueAsString(added)));
     }
 

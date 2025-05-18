@@ -27,8 +27,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_CLOSED;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_CLOSED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_PROMOTED;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_NOT_CLOSED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.NOT_OWNER;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
@@ -163,7 +164,7 @@ class AdvertisementControllerTest {
         AdvertisementResponseDto response = new AdvertisementResponseDto();
         response.setId(UUID.randomUUID());
 
-        when(advertisementService.createAdvertisement(request)).thenReturn(response);
+        when(advertisementService.addAdvertisement(request)).thenReturn(response);
 
         mvc.perform(post("/api/v1/advertisement")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -200,7 +201,7 @@ class AdvertisementControllerTest {
         AdvertisementRequestDto request = new AdvertisementRequestDto(
                 UUID.randomUUID(), UUID.randomUUID(), "Title", "Desc", BigDecimal.valueOf(10), 1);
 
-        when(advertisementService.createAdvertisement(request))
+        when(advertisementService.addAdvertisement(request))
                 .thenThrow(new AdvertisementTypeNotFoundException(request.getAdvertisementTypeId()));
 
         mvc.perform(post("/api/v1/advertisement")
@@ -215,7 +216,7 @@ class AdvertisementControllerTest {
         AdvertisementRequestDto request = new AdvertisementRequestDto(
                 UUID.randomUUID(), UUID.randomUUID(), "Title", "Desc", BigDecimal.valueOf(10), 1);
 
-        when(advertisementService.createAdvertisement(request))
+        when(advertisementService.addAdvertisement(request))
                 .thenThrow(new CityNotFoundException(request.getCityId()));
 
         mvc.perform(post("/api/v1/advertisement")
@@ -302,13 +303,13 @@ class AdvertisementControllerTest {
     void updateAdvertisement_whenAlreadyClosed_thenBadRequest() throws Exception {
         UUID id = UUID.randomUUID();
         AdvertisementRequestDto request = new AdvertisementRequestDto(UUID.randomUUID(), UUID.randomUUID(), "t", "d", BigDecimal.ZERO, 1);
-        when(advertisementService.updateAdvertisement(eq(id), eq(request))).thenThrow(new AdvertisementUpdateException(ALREADY_CLOSED));
+        when(advertisementService.updateAdvertisement(eq(id), eq(request))).thenThrow(new AdvertisementUpdateException(ADVERTISEMENT_CLOSED));
 
         mvc.perform(put("/api/v1/advertisement/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(ALREADY_CLOSED.getDescription())));
+                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(ADVERTISEMENT_CLOSED.getDescription())));
     }
 
 
@@ -332,11 +333,11 @@ class AdvertisementControllerTest {
     void closeAdvertisement_whenAlreadyClosed_thenBadRequest() throws Exception {
         UUID id = UUID.randomUUID();
         when(advertisementService.closeAdvertisement(id))
-                .thenThrow(new AdvertisementUpdateException(ALREADY_CLOSED));
+                .thenThrow(new AdvertisementUpdateException(ADVERTISEMENT_CLOSED));
 
         mvc.perform(patch("/api/v1/advertisement/{id}/close", id))
                 .andExpect(status().isConflict())
-                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(ALREADY_CLOSED.getDescription())));
+                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(ADVERTISEMENT_CLOSED.getDescription())));
     }
 
     @Test
@@ -367,6 +368,64 @@ class AdvertisementControllerTest {
     @WithAnonymousUser
     void closeAdvertisement_whenNotAuthenticated_thenUnauthorized() throws Exception {
         mvc.perform(patch("/api/v1/advertisement/{id}/close", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+    // --- reopenAdvertisement ---
+
+
+    @Test
+    @WithMockUser
+    void reopenAdvertisement_whenValid_thenOk() throws Exception {
+        UUID id = UUID.randomUUID();
+        AdvertisementResponseDto dto = new AdvertisementResponseDto();
+        dto.setId(id);
+
+        when(advertisementService.reopenAdvertisement(id)).thenReturn(dto);
+
+        mvc.perform(patch("/api/v1/advertisement/{id}/reopen", id))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void reopenAdvertisement_whenNotOwnerOrNotAdmin_thenBadRequest() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(advertisementService.reopenAdvertisement(id))
+                .thenThrow(new AdvertisementUpdateException(NOT_OWNER));
+
+        mvc.perform(patch("/api/v1/advertisement/{id}/reopen", id))
+                .andExpect(status().isConflict())
+                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(NOT_OWNER.getDescription())));
+    }
+
+    @Test
+    @WithMockUser
+    void reopenAdvertisement_whenAlreadyOpen_thenBadRequest() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(advertisementService.reopenAdvertisement(id))
+                .thenThrow(new AdvertisementUpdateException(ADVERTISEMENT_NOT_CLOSED));
+
+        mvc.perform(patch("/api/v1/advertisement/{id}/reopen", id))
+                .andExpect(status().isConflict())
+                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(ADVERTISEMENT_NOT_CLOSED.getDescription())));
+    }
+
+    @Test
+    @WithMockUser
+    void reopenAdvertisement_whenNotFound_thenNotFound() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(advertisementService.reopenAdvertisement(id))
+                .thenThrow(new AdvertisementNotFoundException(id));
+
+        mvc.perform(patch("/api/v1/advertisement/{id}/reopen", id))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(String.valueOf(id))));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void reopenAdvertisement_whenNotAuthenticated_thenUnauthorized() throws Exception {
+        mvc.perform(patch("/api/v1/advertisement/{id}/reopen", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -427,11 +486,11 @@ class AdvertisementControllerTest {
     void promoteAdvertisement_whenAlreadyClosed_thenBadRequest() throws Exception {
         UUID id = UUID.randomUUID();
         when(advertisementService.promoteAdvertisement(id))
-                .thenThrow(new AdvertisementUpdateException(ALREADY_CLOSED));
+                .thenThrow(new AdvertisementUpdateException(ADVERTISEMENT_CLOSED));
 
         mvc.perform(patch("/api/v1/advertisement/{id}/promote", id))
                 .andExpect(status().isConflict())
-                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(ALREADY_CLOSED.getDescription())));
+                .andExpect(result -> assertTrue(result.getResponse().getContentAsString().contains(ADVERTISEMENT_CLOSED.getDescription())));
     }
 
     @Test
@@ -456,7 +515,7 @@ class AdvertisementControllerTest {
     void deleteAdvertisement_whenNotOwnerOrNotAdmin_thenBadRequest() throws Exception {
         UUID id = UUID.randomUUID();
         doThrow(new AdvertisementUpdateException(NOT_OWNER))
-                .when(advertisementService).deleteById(id);
+                .when(advertisementService).deleteAdvertisement(id);
 
         mvc.perform(delete("/api/v1/advertisement/{id}", id))
                 .andExpect(status().isConflict());
@@ -468,7 +527,7 @@ class AdvertisementControllerTest {
     void deleteAdvertisement_whenNotFound_thenNotFound() throws Exception {
         UUID id = UUID.randomUUID();
         doThrow(new AdvertisementNotFoundException(id))
-                .when(advertisementService).deleteById(id);
+                .when(advertisementService).deleteAdvertisement(id);
 
         mvc.perform(delete("/api/v1/advertisement/{id}", id))
                 .andExpect(status().isNotFound())

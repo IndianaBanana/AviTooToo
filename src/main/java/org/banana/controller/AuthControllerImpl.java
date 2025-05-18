@@ -13,9 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
-/**
- * Created by Banana on 30.04.2025
- */
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor

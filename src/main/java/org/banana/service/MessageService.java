@@ -7,12 +7,10 @@ import org.banana.dto.message.MessageSendRequestDto;
 
 import java.util.List;
 
-/**
- * Created by Banana on 04.05.2025
- */
+
 public interface MessageService {
 
-    MessageResponseDto sendMessage(MessageSendRequestDto requestDto);
+    MessageResponseDto addMessage(MessageSendRequestDto requestDto);
 
     void markReadUpTo(MessageMarkReadRequestDto dto);
 

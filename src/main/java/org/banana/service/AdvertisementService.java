@@ -13,13 +13,15 @@ public interface AdvertisementService {
 
     List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size);
 
-    void deleteById(UUID advertisementId);
+    void deleteAdvertisement(UUID advertisementId);
 
-    AdvertisementResponseDto createAdvertisement(AdvertisementRequestDto requestDto);
+    AdvertisementResponseDto addAdvertisement(AdvertisementRequestDto requestDto);
 
     AdvertisementResponseDto updateAdvertisement(UUID advertisementId, AdvertisementRequestDto requestDto);
 
     AdvertisementResponseDto closeAdvertisement(UUID advertisementId);
+
+    AdvertisementResponseDto reopenAdvertisement(UUID advertisementId);
 
     AdvertisementResponseDto promoteAdvertisement(UUID advertisementId);
 }

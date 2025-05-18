@@ -8,9 +8,7 @@ import lombok.ToString;
 
 import static org.banana.dto.ValidationConstants.EMAIL_REGEX;
 
-/**
- * Created by Banana on 29.04.2025
- */
+
 @Data
 @AllArgsConstructor
 public class UserUsernameUpdateRequestDto {

@@ -1,6 +1,8 @@
 package org.banana.security.exception;
 
-public class UserUsernameAlreadyExistsException extends RuntimeException {
+import org.banana.exception.AbstractConflictException;
+
+public class UserUsernameAlreadyExistsException extends AbstractConflictException {
 
     private static final String MESSAGE = "User with username <<%s>> already exists.";
 

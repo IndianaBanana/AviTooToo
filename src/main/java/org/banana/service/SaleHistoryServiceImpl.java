@@ -12,6 +12,7 @@ import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.SaleHistoryAccessDeniedException;
 import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedException;
 import org.banana.exception.SaleHistoryNotFoundException;
+import org.banana.exception.SaleHistoryUnexpectedException;
 import org.banana.repository.AdvertisementRepository;
 import org.banana.repository.SaleHistoryRepository;
 import org.banana.security.UserRole;
@@ -24,14 +25,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by Banana on 25.04.2025
- */
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class SaleHistoryServiceImpl implements SaleHistoryService {
 
+    private static final int ATTEMPTS = 5;
     private final SaleHistoryRepository saleHistoryRepository;
     private final AdvertisementRepository advertisementRepository;
     private final SaleHistoryMapper saleHistoryMapper;
@@ -42,57 +42,84 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
         if (!isOwner && !isAdmin) throw new SaleHistoryAccessDeniedException();
     }
 
-    // ?todo надо ли менять статус объявления на закрытое если количество = 0?
     @Override
     @Transactional
     public SaleHistoryResponseDto addSale(SaleHistoryAddRequestDto requestDto) {
         log.info("addSale({}) in {}", requestDto, getClass().getSimpleName());
         UUID currentUserId = SecurityUtils.getCurrentUserPrincipal().getId();
-
-        Advertisement advertisement = advertisementRepository.findById(requestDto.getAdvertisementId())
-                .orElseThrow(() -> new AdvertisementNotFoundException(requestDto.getAdvertisementId()));
-
-        Integer advertisementQuantity = advertisement.getQuantity();
         Integer requestDtoQuantity = requestDto.getQuantity();
 
-        if (advertisementQuantity < requestDtoQuantity) {
-            throw new SaleHistoryAdvertisementQuantityIsLowerThanExpectedException(advertisementQuantity, requestDtoQuantity);
+        // используя оптимистичную блокировку пробуем обновить количество объявления
+        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
+            Advertisement advertisement = advertisementRepository.findById(requestDto.getAdvertisementId())
+                    .orElseThrow(() -> new AdvertisementNotFoundException(requestDto.getAdvertisementId()));
+
+            if (advertisement.getCloseDate() != null) {
+                throw new AdvertisementNotFoundException(requestDto.getAdvertisementId());
+            }
+
+            Integer advertisementQuantity = advertisement.getQuantity();
+
+            if (advertisementQuantity < requestDtoQuantity) {
+                throw new SaleHistoryAdvertisementQuantityIsLowerThanExpectedException(advertisementQuantity, requestDtoQuantity);
+            }
+
+            int rowsUpdated = advertisementRepository.updateAdvertisementQuantity(
+                    requestDto.getAdvertisementId(),
+                    advertisementQuantity,
+                    advertisementQuantity - requestDtoQuantity);
+            if (rowsUpdated == 1) {
+                // если получилось обновить - выходим из цикла
+                SaleHistory saleHistory = new SaleHistory(advertisement, currentUserId, requestDtoQuantity, LocalDateTime.now());
+                saleHistory = saleHistoryRepository.save(saleHistory);
+                log.debug("saleHistory created: {}", saleHistory);
+                return saleHistoryMapper.fromSaleHistoryToSaleHistoryResponseDto(saleHistory);
+            }
         }
-
-        SaleHistory saleHistory = new SaleHistory(
-                advertisement,
-                currentUserId,
-                requestDtoQuantity,
-                LocalDateTime.now()
-        );
-
-        advertisement.setQuantity(advertisementQuantity - requestDtoQuantity);
-        advertisementRepository.save(advertisement);
-        log.debug("advertisement updated: {}", advertisement);
-
-        saleHistory = saleHistoryRepository.save(saleHistory);
-        log.debug("saleHistory created: {}", saleHistory);
-        return saleHistoryMapper.fromSaleHistoryToSaleHistoryResponseDto(saleHistory);
+        // не удалось обновить за пять попыток поэтому кидаем исключение
+        throw new SaleHistoryUnexpectedException();
     }
 
     @Override
     @Transactional
-    public void cancelSale(UUID saleId) {
-        log.info("cancelSale({}) in {}", saleId, getClass().getSimpleName());
+    public void deleteSale(UUID saleId) {
+        log.info("deleteSale({}) in {}", saleId, getClass().getSimpleName());
         UserPrincipal current = SecurityUtils.getCurrentUserPrincipal();
 
         SaleHistory saleHistory = saleHistoryRepository.findById(saleId)
                 .orElseThrow(() -> new SaleHistoryNotFoundException(saleId));
 
+        Integer saleHistoryQuantity = saleHistory.getQuantity();
         Advertisement advertisement = saleHistory.getAdvertisement();
+        UUID advertisementId = advertisement.getId();
 
         isOwnerOrAdmin(advertisement, current);
+        if (advertisement.getCloseDate() != null) {
+            throw new AdvertisementNotFoundException(advertisementId);
+        }
+        // используя оптимистичную блокировку пробуем обновить количество объявления
+        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
+            if (attempt > 0) {
+                advertisement = advertisementRepository.findById(advertisementId)
+                        .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
+            }
 
-        advertisement.setQuantity(advertisement.getQuantity() + saleHistory.getQuantity());
-        advertisementRepository.save(advertisement);
-        log.debug("advertisement updated: {}", advertisement);
+            Integer advertisementQuantity = advertisement.getQuantity();
 
-        saleHistoryRepository.delete(saleHistory);
+            int rowsUpdated = advertisementRepository.updateAdvertisementQuantity(
+                    advertisementId,
+                    advertisementQuantity,
+                    advertisementQuantity + saleHistoryQuantity
+            );
+            if (rowsUpdated == 1) {
+                // если получилось обновить - выходим из цикла
+                saleHistoryRepository.delete(saleHistory);
+                log.debug("saleHistory deleted: {}", saleHistory);
+                return;
+            }
+        }
+        // не удалось обновить за пять попыток поэтому кидаем исключение
+        throw new SaleHistoryUnexpectedException();
     }
 
     @Override

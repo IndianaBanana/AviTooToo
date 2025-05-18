@@ -61,54 +61,54 @@ class RatingServiceImplTest {
     }
 
     @Test
-    void rateUser_whenGivenValidRatingDto_thenShouldSaveRating() {
+    void addRating_whenGivenValidRatingDto_thenShouldSaveRating() {
         when(userRepository.existsById(userId)).thenReturn(true);
         RatingDto dto = new RatingDto(userId, ratingValue);
 
-        String result = ratingService.rateUser(dto);
+        String result = ratingService.addRating(dto);
 
         verify(ratingRepository).save(new Rating(userId, raterId, ratingValue));
-        assertEquals("Thanks for rating! User rating will be updated in 15 minutes.", result);
+        assertEquals("User rating will be updated in 15 minutes.", result);
     }
 
     @Test
-    void rateUser_whenGivenRatingYourself_thenShouldThrowUserRatesTheSameUserException() {
+    void addRatingException() {
         RatingDto dto = new RatingDto(raterId, ratingValue);
 
-        assertThrows(UserRatesTheSameUserException.class, () -> ratingService.rateUser(dto));
+        assertThrows(UserRatesTheSameUserException.class, () -> ratingService.addRating(dto));
         verifyNoInteractions(ratingRepository);
     }
 
     @Test
-    void rateUser_whenGivenNonExistentUser_thenShouldThrowUserNotFoundException() {
+    void addRatingNotFoundException() {
         when(userRepository.existsById(userId)).thenReturn(false);
         RatingDto dto = new RatingDto(userId, ratingValue);
 
-        assertThrows(UserNotFoundException.class, () -> ratingService.rateUser(dto));
+        assertThrows(UserNotFoundException.class, () -> ratingService.addRating(dto));
         verifyNoInteractions(ratingRepository);
     }
 
     @Test
-    void removeRating_whenGivenValidUserId_thenShouldRemoveRating() {
+    void removeRating_whenGivenValidUserId_thenShouldDeleteRating() {
         when(userRepository.existsById(userId)).thenReturn(true);
 
-        String result = ratingService.removeRating(userId);
+        String result = ratingService.deleteRating(userId);
 
         verify(ratingRepository).deleteById(new RatingId(userId, raterId));
-        assertEquals("Thanks for rating! User rating will be updated in 15 minutes.", result);
+        assertEquals("User rating will be updated in 15 minutes.", result);
     }
 
     @Test
-    void removeRating_whenGivenRemovingYourself_thenShouldThrowUserRatesTheSameUserException() {
-        assertThrows(UserRatesTheSameUserException.class, () -> ratingService.removeRating(raterId));
+    void deleteRating_whenGivenRemovingYourself_thenShouldThrowUserRatesTheSameUserException() {
+        assertThrows(UserRatesTheSameUserException.class, () -> ratingService.deleteRating(raterId));
         verifyNoInteractions(ratingRepository);
     }
 
     @Test
-    void removeRating_whenGivenNonExistentUser_thenShouldThrowUserNotFoundException() {
+    void deleteRating_whenGivenNonExistentUser_thenShouldThrowUserNotFoundException() {
         when(userRepository.existsById(userId)).thenReturn(false);
 
-        assertThrows(UserNotFoundException.class, () -> ratingService.removeRating(userId));
+        assertThrows(UserNotFoundException.class, () -> ratingService.deleteRating(userId));
         verifyNoInteractions(ratingRepository);
     }
 

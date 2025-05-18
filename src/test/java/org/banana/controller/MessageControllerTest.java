@@ -53,7 +53,7 @@ class MessageControllerTest {
     @MockitoBean
     private MessageService messageService;
 
-    // --- sendMessage ---
+    // --- addMessage ---
 
     @Test
     @WithMockUser
@@ -65,7 +65,7 @@ class MessageControllerTest {
 
         MessageResponseDto resp = new MessageResponseDto();
         resp.setId(UUID.randomUUID());
-        when(messageService.sendMessage(req)).thenReturn(resp);
+        when(messageService.addMessage(req)).thenReturn(resp);
 
         mvc.perform(post("/api/v1/message")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,7 +95,7 @@ class MessageControllerTest {
         req.setRecipientId(UUID.randomUUID());
         req.setMessageText("Hi");
 
-        when(messageService.sendMessage(req))
+        when(messageService.addMessage(req))
                 .thenThrow(new MessageSendException(USER_MESSAGES_THE_SAME_USER));
 
         mvc.perform(post("/api/v1/message")
@@ -111,7 +111,7 @@ class MessageControllerTest {
         req.setRecipientId(UUID.randomUUID());
         req.setMessageText("Hello");
 
-        when(messageService.sendMessage(req)).thenThrow(new UserNotFoundException(req.getRecipientId()));
+        when(messageService.addMessage(req)).thenThrow(new UserNotFoundException(req.getRecipientId()));
 
         mvc.perform(post("/api/v1/message")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -182,6 +182,7 @@ class MessageControllerTest {
         MessageMarkReadRequestDto dto = new MessageMarkReadRequestDto();
         dto.setSecondUserId(UUID.randomUUID());
         dto.setUpToDateTime(LocalDateTime.now());
+        dto.setUpToMessageId(UUID.randomUUID());
 
         mvc.perform(patch("/api/v1/message/mark-read")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -196,6 +197,7 @@ class MessageControllerTest {
         MessageMarkReadRequestDto dto = new MessageMarkReadRequestDto();
         dto.setSecondUserId(UUID.randomUUID());
         dto.setUpToDateTime(LocalDateTime.now());
+        dto.setUpToMessageId(UUID.randomUUID());
 
         doThrow(new MessageSendException(USER_MESSAGES_THE_SAME_USER)).when(messageService).markReadUpTo(dto);
 
@@ -225,6 +227,7 @@ class MessageControllerTest {
         MessageMarkReadRequestDto dto = new MessageMarkReadRequestDto();
         dto.setSecondUserId(UUID.randomUUID());
         dto.setUpToDateTime(LocalDateTime.now());
+        dto.setUpToMessageId(UUID.randomUUID());
 
         doThrow(new ConversationNotFoundException(dto.getSecondUserId(), dto.getAdvertisementId()))
                 .when(messageService).markReadUpTo(dto);

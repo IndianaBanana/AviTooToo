@@ -2,7 +2,7 @@ package org.banana.exception;
 
 import java.util.UUID;
 
-public class CityNotFoundException extends RuntimeException {
+public class CityNotFoundException extends AbstractNotFoundException {
 
     private static final String MESSAGE = "City with id <<%s>> does not exist.";
 

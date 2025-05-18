@@ -1,9 +1,6 @@
 package org.banana.exception;
 
-/**
- * Created by Banana on 04.05.2025
- */
-public class UserRatesTheSameUserException extends RuntimeException {
+public class UserRatesTheSameUserException extends AbstractConflictException {
 
     private static final String MESSAGE = "Rating yourself is prohibited";
 

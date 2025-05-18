@@ -1,6 +1,8 @@
 package org.banana.security.exception;
 
-public class UserPhoneAlreadyExistsException extends RuntimeException {
+import org.banana.exception.AbstractConflictException;
+
+public class UserPhoneAlreadyExistsException extends AbstractConflictException {
 
     private static final String MESSAGE = "User with phone <<%s>> already exists.";
 

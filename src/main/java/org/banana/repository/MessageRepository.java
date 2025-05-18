@@ -11,7 +11,9 @@ import java.util.UUID;
 
 public interface MessageRepository extends CrudRepository<Message, UUID> {
 
-    int markMessagesReadUpTo(UUID recipientId, UUID secondUserId, UUID advertisementId, LocalDateTime upToDateTime);
+    long countMessagesInChat(UUID secondUserId, UUID currentUserId, UUID advertisementId);
+
+    int markMessagesReadUpTo(UUID senderId, UUID recipientId, UUID advertisementId, LocalDateTime upToDateTime, UUID upToMessageId);
 
     int markAllMessagesRead(UUID fromUserId, UUID toUserId, UUID advertisementId);
 

@@ -47,12 +47,15 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
               )
               and (m.advertisementId = :advertisementId or (m.advertisementId is null and :advertisementId is null))
             """;
-    public static final String COUNT_UNREAD_MESSAGES = """
+
+    public static final String COUNT_MESSAGES = """
             select count(m)
             from Message m
             where m.senderId = :secondUserId
             and m.recipientId = :currentUserId
-            and (m.advertisementId = :advertisementId or (m.advertisementId is null and :advertisementId is null))
+            and (m.advertisementId = :advertisementId or (m.advertisementId is null and :advertisementId is null))""";
+
+    public static final String COUNT_UNREAD_MESSAGES = COUNT_MESSAGES + """
             and m.isRead = false
             """;
     private static final String UPDATE_MARK_READ = """
@@ -66,9 +69,9 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                   )
               and m.isRead = false
             """;
-// todo возможно переписать надо запрос: and m.messageDateTime < :upToDateTime || (and m.messageDateTime = :upToDateTime && m.id <= :upToMessageId)
+    // todo возможно переписать надо запрос: and m.messageDateTime < :upToDateTime || (and m.messageDateTime = :upToDateTime && m.id <= :upToMessageId)
     private static final String UPDATE_MARK_READ_UP_TO = UPDATE_MARK_READ + """
-               and m.messageDateTime <= :upToDateTime
+               and m.messageDateTime < :upToDateTime || (m.messageDateTime = :upToDateTime and m.id <= :upToMessageId)
             """;
 
     public MessageRepositoryImpl() {
@@ -76,7 +79,17 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
     }
 
     @Override
-    public int markMessagesReadUpTo(UUID recipientId, UUID senderId, UUID advertisementId, LocalDateTime upToDateTime) {
+    public long countMessagesInChat(UUID secondUserId, UUID currentUserId, UUID advertisementId) {
+        log.info("entering countMessagesInChat({}, {}, {}) in {}", secondUserId, currentUserId, advertisementId, getClass().getSimpleName());
+        return getSession().createQuery(COUNT_MESSAGES, Long.class)
+                .setParameter("secondUserId", secondUserId)
+                .setParameter("currentUserId", currentUserId)
+                .setParameter("advertisementId", advertisementId)
+                .getSingleResultOrNull();
+    }
+
+    @Override
+    public int markMessagesReadUpTo(UUID senderId, UUID recipientId, UUID advertisementId, LocalDateTime upToDateTime, UUID upToMessageId) {
         log.info("entering markMessagesReadUpTo({}, {}, {}, {}) in {}", recipientId, senderId, advertisementId, upToDateTime, getClass().getSimpleName());
         return getSession()
                 .createMutationQuery(UPDATE_MARK_READ_UP_TO)
@@ -84,6 +97,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                 .setParameter("senderId", senderId)
                 .setParameter("advertisementId", advertisementId)
                 .setParameter("upToDateTime", upToDateTime)
+                .setParameter("upToMessageId", upToMessageId)
                 .executeUpdate();
     }
 
@@ -126,7 +140,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
         UUID advertisementId = filter.getAdvertisementId();
         LocalDateTime cursorDateTime = filter.getCursorDateTime();
         UUID cursorMessageId = filter.getCursorMessageId();
-
+        int offset = 0;
         Query<MessageResponseDto> query = getFindAllByFilterQuery(filter, cursorDateTime, cursorMessageId)
                 .setParameter("secondUserId", filter.getSecondUserId())
                 .setParameter("currentUserId", filter.getCurrentUserId())
@@ -135,13 +149,7 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
         if (cursorDateTime != null && cursorMessageId != null) {
             query.setParameter("cursorDateTime", cursorDateTime).setParameter("cursorMessageId", cursorMessageId);
         } else if (filter.getUnreadMessagesCount() != null && filter.getUnreadMessagesCount() > 0) {
-            /*
-            todo
-              поправить. иногда получается меньше лимита если у пользователя много непрочитанных сообщений,
-              а прочитанных или его сообщений мало. Пример всего записей 15 и все они не прочитаны.
-              лимит 10, сдвиг будет 9 соответственно пользователю придет не 10 записей а 6.
-            */
-            int offset = calculateOffset(filter.getUnreadMessagesCount(), filter.getLimit());
+            offset = calculateOffset(filter);
             log.debug("setting offset to: {}", offset);
             query.setFirstResult(offset);
         }
@@ -150,29 +158,25 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
 
         List<MessageResponseDto> list = query.getResultList();
 
-        if (cursorDateTime != null && cursorMessageId != null) {
-            if (filter.getIsBefore() != null && filter.getIsBefore()) {
-                Collections.reverse(list);
-            }
-        } else {
+        if ((cursorDateTime == null || cursorMessageId == null)
+            || (filter.getIsBefore() != null && filter.getIsBefore())) {
             Collections.reverse(list);
         }
 
         return list;
     }
 
-    private int calculateOffset(Long unreadCount, int limit) {
-        int offset = (int) (unreadCount - Math.floor(limit / 1.5));
+    private int calculateOffset(MessageFilterDto filter) {
+        int offset = (int) (filter.getUnreadMessagesCount() - Math.floor(filter.getLimit() / 1.5));
         if (offset > 0) {
-            long totalCount = count();
-            if ((totalCount - offset) < limit) {
-                offset = (int) (totalCount - limit);
+            long totalCount = countMessagesInChat(filter.getSecondUserId(), filter.getCurrentUserId(), filter.getAdvertisementId());
+            if ((totalCount - offset) < filter.getLimit()) {
+                offset = (int) (totalCount - filter.getLimit());
             }
-        } else {
-            offset = 0;
         }
         return Math.max(offset, 0);
     }
+
     private Query<MessageResponseDto> getFindAllByFilterQuery(MessageFilterDto filter, LocalDateTime cursorDateTime, UUID cursorMessageId) {
         StringBuilder jpql = new StringBuilder(SELECT_MESSAGES_BY_AD_FIRST_USER_AND_SECOND_USER);
         if (cursorDateTime != null && cursorMessageId != null) {

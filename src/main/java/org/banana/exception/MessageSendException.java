@@ -2,10 +2,7 @@ package org.banana.exception;
 
 import lombok.Getter;
 
-/**
- * Created by Banana on 29.04.2025
- */
-public class MessageSendException extends RuntimeException {
+public class MessageSendException extends AbstractConflictException {
 
     private static final String MESSAGE = "You can't send message to that user: %s.";
 

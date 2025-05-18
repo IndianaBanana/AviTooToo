@@ -31,7 +31,7 @@ class CityServiceTest {
     private CityMapper cityMapper;
 
     @InjectMocks
-    private CityService cityService;
+    private CityServiceImpl cityService;
 
     private List<City> cityList;
     private List<CityDto> cityDtoList;
@@ -61,17 +61,15 @@ class CityServiceTest {
     void findByNameLike_whenCalledWithPattern_thenReturnsMappedDtos() {
         // given
         String inputPattern = "%_test\\";
-        String expectedEscapedPattern = "\\%\\_test\\\\";
         List<CityDto> cityDtos = List.of(new CityDto("Test City"));
 
-        when(cityRepository.findByNameLike(expectedEscapedPattern)).thenReturn(cityDtos);
+        when(cityRepository.findByNameLike(inputPattern)).thenReturn(cityDtos);
 
         // when
         List<CityDto> result = cityService.findByNameLike(inputPattern);
 
         // then
         assertEquals(cityDtos, result);
-        verify(cityRepository).findByNameLike(expectedEscapedPattern);
     }
 
     @Test

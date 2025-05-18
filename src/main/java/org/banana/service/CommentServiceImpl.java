@@ -27,9 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by Banana on 25.04.2025
- */
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -83,6 +81,10 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.fromCommentToCommentResponseDto(comment);
     }
 
+    /**
+     * Физического удаления не происходит. По аналогии с хабром или ютубом,
+     * мы просто обнуляем комментатора и заменяем текст комментария на "Comment deleted"
+     */
     @Override
     @Transactional
     public void deleteComment(UUID commentId) {
@@ -95,7 +97,7 @@ public class CommentServiceImpl implements CommentService {
         if (comment.getCommenter() == null) throw new UserDeleteCommentException();
 
         boolean isOwner = comment.getCommenter().getId().equals(currentUser.getId());
-        boolean isAdmin = currentUser.getRole().equals(UserRole.ROLE_ADMIN);
+        boolean isAdmin = UserRole.ROLE_ADMIN.equals(currentUser.getRole());
         if (!isOwner && !isAdmin) throw new UserDeleteCommentException();
 
         comment.setCommenter(null);
@@ -124,12 +126,14 @@ public class CommentServiceImpl implements CommentService {
         if (!advertisementRepository.existsById(advertisementId))
             throw new AdvertisementNotFoundException(advertisementId);
 
+        // отберем заданное кол-во комментариев у которых нет родителей (рутовые)
         List<CommentResponseDto> allRootComments = commentRepository
                 .findAllRootCommentsByAdvertisementId(advertisementId, page * size, size);
-
+        // найдем всех детей рутовых комментариев
         List<CommentResponseDto> allCommentsInRootIds = commentRepository
                 .findAllCommentsInRootIds(allRootComments.stream().map(CommentResponseDto::getId).toList());
-
+        // Объединяем родителей и детей в плоский список. задача построения иерархии комментариев лежит на фронтенде,
+        // чтобы снизить нагрузку на сервер
         List<CommentResponseDto> allComments = new ArrayList<>();
         allComments.addAll(allRootComments);
         allComments.addAll(allCommentsInRootIds);

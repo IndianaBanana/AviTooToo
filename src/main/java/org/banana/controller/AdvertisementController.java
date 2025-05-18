@@ -47,7 +47,7 @@ public class AdvertisementController {
 
     @PostMapping
     public ResponseEntity<AdvertisementResponseDto> createAdvertisement(@RequestBody @Valid AdvertisementRequestDto requestDto) {
-        AdvertisementResponseDto created = advertisementService.createAdvertisement(requestDto);
+        AdvertisementResponseDto created = advertisementService.addAdvertisement(requestDto);
         URI uri = URI.create(String.format("/api/v1/advertisement/%s", created.getId()));
         return ResponseEntity.created(uri).body(created);
     }
@@ -62,6 +62,11 @@ public class AdvertisementController {
         return ResponseEntity.ok(advertisementService.closeAdvertisement(id));
     }
 
+    @PatchMapping("/{id}/reopen")
+    public ResponseEntity<AdvertisementResponseDto> reopenAdvertisement(@PathVariable UUID id) {
+        return ResponseEntity.ok(advertisementService.reopenAdvertisement(id));
+    }
+
     @PatchMapping("/{id}/promote")
     public ResponseEntity<AdvertisementResponseDto> promoteAdvertisement(@PathVariable UUID id) {
         return ResponseEntity.ok(advertisementService.promoteAdvertisement(id));
@@ -69,7 +74,7 @@ public class AdvertisementController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAdvertisement(@PathVariable UUID id) {
-        advertisementService.deleteById(id);
+        advertisementService.deleteAdvertisement(id);
         return ResponseEntity.noContent().build();
     }
 }

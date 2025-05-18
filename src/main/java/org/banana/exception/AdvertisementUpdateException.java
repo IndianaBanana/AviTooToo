@@ -2,10 +2,7 @@ package org.banana.exception;
 
 import lombok.Getter;
 
-/**
- * Created by Banana on 29.04.2025
- */
-public class AdvertisementUpdateException extends RuntimeException {
+public class AdvertisementUpdateException extends AbstractConflictException {
 
     private static final String MESSAGE = "Can't update advertisement: %s.";
 
@@ -14,8 +11,10 @@ public class AdvertisementUpdateException extends RuntimeException {
     }
 
     public enum AdvertisementUpdateExceptionMessage {
-        ALREADY_CLOSED("Advertisement is already closed"),
+        ADVERTISEMENT_CLOSED("Advertisement is closed"),
+        ADVERTISEMENT_NOT_CLOSED("Advertisement is not closed"),
         ALREADY_PROMOTED("Advertisement is already promoted"),
+        UNEXPECTED_ERROR("unexpected error"),
         NOT_OWNER("User is not the owner of the advertisement");
 
         @Getter

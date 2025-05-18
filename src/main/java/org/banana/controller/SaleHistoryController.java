@@ -50,7 +50,7 @@ public class SaleHistoryController {
 
     @DeleteMapping("/{saleId}")
     public ResponseEntity<Void> cancelSale(@PathVariable UUID saleId) {
-        saleHistoryService.cancelSale(saleId);
+        saleHistoryService.deleteSale(saleId);
         return ResponseEntity.noContent().build();
     }
 }

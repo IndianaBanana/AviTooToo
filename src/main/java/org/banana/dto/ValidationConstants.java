@@ -1,8 +1,5 @@
 package org.banana.dto;
 
-/**
- * Created by Banana on 27.04.2025
- */
 public final class ValidationConstants {
 
     public static final int PASSWORD_MIN_LENGTH = 4;

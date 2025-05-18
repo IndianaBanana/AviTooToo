@@ -8,19 +8,34 @@ import java.util.UUID;
 
 public interface UserRepository extends CrudRepository<User, UUID> {
 
-//    void updateFirstNameAndLastName(UUID id, String firstName, String lastName);
-
+    /**
+     * Находит пользователя по uuid и сразу подгружает его RatingView
+     *
+     * @param uuid идентификатор юзера
+     * @return Optional<User> будет пустой если такого юзера нет
+     */
     Optional<User> findFetchedById(UUID uuid);
 
+    /**
+     * Обновляет пароль пользователя,
+     *
+     * @param id       идентификатор юзера
+     * @param password обязательно заранее зашифрованный пароль
+     */
     void updatePassword(UUID id, String password);
 
+    /**
+     * Обновляет имя пользователя
+     *
+     * @param id       идентификатор юзера
+     * @param username новое имя
+     * @throws
+     */
     void updateUsername(UUID id, String username);
 
     void updatePhone(UUID id, String phone);
 
     Optional<User> findByUsername(String username);
-
-//    Optional<User> findByPhone(String phone);
 
     boolean existsByUsername(String username);
 

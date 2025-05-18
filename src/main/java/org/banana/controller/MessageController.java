@@ -26,7 +26,7 @@ public class MessageController {
 
     @PostMapping
     public ResponseEntity<MessageResponseDto> sendMessage(@RequestBody @Valid MessageSendRequestDto requestDto) {
-        MessageResponseDto created = messageService.sendMessage(requestDto);
+        MessageResponseDto created = messageService.addMessage(requestDto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(created);

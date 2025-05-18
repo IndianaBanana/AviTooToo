@@ -9,9 +9,7 @@ import lombok.ToString;
 import static org.banana.dto.ValidationConstants.PHONE_ERROR_MESSAGE;
 import static org.banana.dto.ValidationConstants.PHONE_REGEX;
 
-/**
- * Created by Banana on 29.04.2025
- */
+
 @Data
 @AllArgsConstructor
 public class UserPhoneUpdateRequestDto {

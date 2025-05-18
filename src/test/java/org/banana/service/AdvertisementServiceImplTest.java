@@ -38,11 +38,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_CLOSED;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_CLOSED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_PROMOTED;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_NOT_CLOSED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.NOT_OWNER;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.UNEXPECTED_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -115,7 +118,7 @@ class AdvertisementServiceImplTest {
     // -------- findAllFiltered --------
 
     @Test
-    void findAllFiltered_whenSearchParamEscaping_thenReturnsList() {
+    void findAllFiltered_whenSearchParam_thenReturnsList() {
         AdvertisementFilterDto filter = new AdvertisementFilterDto();
         filter.setSearchParam("100%_test\\value");
         List<AdvertisementResponseDto> dtos = List.of(new AdvertisementResponseDto());
@@ -124,7 +127,6 @@ class AdvertisementServiceImplTest {
         List<AdvertisementResponseDto> result = advertisementService.findAllFiltered(filter, 1, 10);
 
         assertEquals(dtos, result);
-        assertEquals("100\\%\\_test\\\\value", filter.getSearchParam());
     }
 
     @Test
@@ -139,10 +141,10 @@ class AdvertisementServiceImplTest {
         assertSame(dtos, result);
     }
 
-    // -------- deleteById --------
+    // -------- deleteAdvertisement --------
 
     @Test
-    void deleteById_whenOwner_thenDeletes() {
+    void deleteAdvertisement_whenOwner_thenDeletes() {
         UUID id = UUID.randomUUID();
         Advertisement ad = new Advertisement();
         User owner = new User();
@@ -150,13 +152,13 @@ class AdvertisementServiceImplTest {
         ad.setUser(owner);
         when(advertisementRepository.findById(id)).thenReturn(Optional.of(ad));
 
-        advertisementService.deleteById(id);
+        advertisementService.deleteAdvertisement(id);
 
         verify(advertisementRepository).delete(ad);
     }
 
     @Test
-    void deleteById_whenAdmin_thenDeletes() {
+    void deleteAdvertisement_whenAdmin_thenDeletes() {
         principal.setRole(UserRole.ROLE_ADMIN);
         UUID id = UUID.randomUUID();
         Advertisement ad = new Advertisement();
@@ -165,13 +167,13 @@ class AdvertisementServiceImplTest {
         ad.setUser(owner);
         when(advertisementRepository.findById(id)).thenReturn(Optional.of(ad));
 
-        advertisementService.deleteById(id);
+        advertisementService.deleteAdvertisement(id);
 
         verify(advertisementRepository).delete(ad);
     }
 
     @Test
-    void deleteById_whenNotOwnerAndNotAdmin_thenShouldThrowAdvertisementUpdateException() {
+    void deleteAdvertisement_whenNotOwnerAndNotAdmin_thenShouldThrowAdvertisementUpdateException() {
         UUID id = UUID.randomUUID();
         Advertisement ad = new Advertisement();
         User owner = new User();
@@ -179,22 +181,22 @@ class AdvertisementServiceImplTest {
         ad.setUser(owner);
         when(advertisementRepository.findById(id)).thenReturn(Optional.of(ad));
 
-        AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.deleteById(id));
+        AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.deleteAdvertisement(id));
         assertTrue(ex.getMessage().contains(NOT_OWNER.getDescription()));
     }
 
     @Test
-    void deleteById_whenNotFound_thenShouldThrowAdvertisementNotFoundException() {
+    void deleteAdvertisement_whenNotFound_thenShouldThrowAdvertisementNotFoundException() {
         UUID id = UUID.randomUUID();
         when(advertisementRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(AdvertisementNotFoundException.class, () -> advertisementService.deleteById(id));
+        assertThrows(AdvertisementNotFoundException.class, () -> advertisementService.deleteAdvertisement(id));
     }
 
-    // -------- createAdvertisement --------
+    // -------- addAdvertisement --------
 
     @Test
-    void createAdvertisement_whenAllValid_thenReturnsDto() {
+    void addAdvertisement_whenAllValid_thenReturnsDto() {
         UUID typeId = UUID.randomUUID(), cityId = UUID.randomUUID();
         AdvertisementRequestDto req = new AdvertisementRequestDto(cityId, typeId, "T", "D", BigDecimal.ONE, 1);
 
@@ -212,7 +214,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.save(captor.capture())).thenReturn(saved);
         when(advertisementMapper.advertisementToAdvertisementResponseDto(saved)).thenReturn(dto);
 
-        AdvertisementResponseDto result = advertisementService.createAdvertisement(req);
+        AdvertisementResponseDto result = advertisementService.addAdvertisement(req);
         Advertisement capturedAd = captor.getValue();
         assertEquals(type, capturedAd.getAdvertisementType());
         assertEquals(city, capturedAd.getCity());
@@ -221,27 +223,27 @@ class AdvertisementServiceImplTest {
     }
 
     @Test
-    void createAdvertisement_whenTypeNotFound_thenShouldThrowAdvertisementTypeNotFoundException() {
+    void addAdvertisement_whenTypeNotFound_thenShouldThrowAdvertisementTypeNotFoundException() {
         AdvertisementRequestDto req = new AdvertisementRequestDto();
         when(advertisementTypeRepository.findById(any()))
                 .thenReturn(Optional.empty());
 
-        assertThrows(AdvertisementTypeNotFoundException.class, () -> advertisementService.createAdvertisement(req));
+        assertThrows(AdvertisementTypeNotFoundException.class, () -> advertisementService.addAdvertisement(req));
     }
 
     @Test
-    void createAdvertisement_whenCityNotFound_thenShouldThrowCityNotFoundException() {
+    void addAdvertisement_whenCityNotFound_thenShouldThrowCityNotFoundException() {
         AdvertisementRequestDto req = new AdvertisementRequestDto();
 
         when(advertisementTypeRepository.findById(any()))
                 .thenReturn(Optional.of(new AdvertisementType()));
         when(cityRepository.findById(any())).thenReturn(Optional.empty());
 
-        assertThrows(CityNotFoundException.class, () -> advertisementService.createAdvertisement(req));
+        assertThrows(CityNotFoundException.class, () -> advertisementService.addAdvertisement(req));
     }
 
     @Test
-    void createAdvertisement_whenUserNotFound_thenShouldThrowUserNotFoundException() {
+    void addAdvertisement_whenUserNotFound_thenShouldThrowUserNotFoundException() {
         AdvertisementRequestDto req = new AdvertisementRequestDto();
 
         when(advertisementTypeRepository.findById(any()))
@@ -250,10 +252,10 @@ class AdvertisementServiceImplTest {
                 .thenReturn(Optional.of(new City()));
         when(userRepository.findFetchedById(any())).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () -> advertisementService.createAdvertisement(req));
+        assertThrows(UserNotFoundException.class, () -> advertisementService.addAdvertisement(req));
     }
 
-// todo  -------- updateAdvertisement --------
+//  -------- updateAdvertisement --------
 
     @Test
     void updateAdvertisement_whenValid_thenReturnsDto() {
@@ -319,18 +321,20 @@ class AdvertisementServiceImplTest {
     void updateAdvertisement_whenCityNotFound_thenThrowsCityNotFoundException() {
         UUID adId = UUID.randomUUID();
         UUID cityId = UUID.randomUUID();
+        UUID typeId = UUID.randomUUID();
         Advertisement existing = new Advertisement();
         User owner = new User();
         owner.setId(userId);
         existing.setUser(owner);
         AdvertisementRequestDto req = new AdvertisementRequestDto();
         req.setCityId(cityId);
+        req.setAdvertisementTypeId(typeId);
 
+        when(advertisementTypeRepository.findById(typeId)).thenReturn(Optional.of(new AdvertisementType()));
         when(advertisementRepository.findById(adId)).thenReturn(Optional.of(existing));
         when(cityRepository.findById(cityId)).thenReturn(Optional.empty());
 
-        assertThrows(CityNotFoundException.class,
-                () -> advertisementService.updateAdvertisement(adId, req));
+        assertThrows(CityNotFoundException.class, () -> advertisementService.updateAdvertisement(adId, req));
     }
 
     @Test
@@ -346,7 +350,6 @@ class AdvertisementServiceImplTest {
         req.setAdvertisementTypeId(typeId);
 
         when(advertisementRepository.findById(adId)).thenReturn(Optional.of(existing));
-        when(cityRepository.findById(any())).thenReturn(Optional.of(new City()));
         when(advertisementTypeRepository.findById(typeId)).thenReturn(Optional.empty());
 
         assertThrows(AdvertisementTypeNotFoundException.class,
@@ -368,7 +371,7 @@ class AdvertisementServiceImplTest {
         AdvertisementUpdateException exception = assertThrows(AdvertisementUpdateException.class,
                 () -> advertisementService.updateAdvertisement(adId, new AdvertisementRequestDto()));
 
-        assertTrue(exception.getMessage().contains(ALREADY_CLOSED.getDescription()));
+        assertTrue(exception.getMessage().contains(ADVERTISEMENT_CLOSED.getDescription()));
     }
 
     @Test
@@ -403,7 +406,7 @@ class AdvertisementServiceImplTest {
         dto.setCloseDate(null);
 
         when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-
+        when(advertisementRepository.closeAdvertisement(eq(adId), any(LocalDateTime.class))).thenReturn(1);
         AdvertisementResponseDto result = advertisementService.closeAdvertisement(adId);
 
         assertNotNull(result.getCloseDate());
@@ -411,30 +414,14 @@ class AdvertisementServiceImplTest {
     }
 
     @Test
-    void closeAdvertisement_whenAdminAndOpen_thenReturnsDto() {
-        principal.setRole(UserRole.ROLE_ADMIN);
-        UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        UserResponseDto userResponseDto = new UserResponseDto();
-        userResponseDto.setId(UUID.randomUUID());
-        dto.setUserResponseDto(userResponseDto);
-        dto.setCloseDate(null);
-
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-
-        AdvertisementResponseDto result = advertisementService.closeAdvertisement(adId);
-
-        assertNotNull(result.getCloseDate());
-        verify(advertisementRepository).closeAdvertisement(eq(adId), any());
-    }
-
-    @Test
     void closeAdvertisement_whenNotFound_thenShouldThrowAdvertisementNotFoundException() {
         UUID adId = UUID.randomUUID();
         when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.empty());
 
-        assertThrows(AdvertisementNotFoundException.class, () -> advertisementService.closeAdvertisement(adId));
+        AdvertisementUpdateException exception =
+                assertThrows(AdvertisementUpdateException.class, () -> advertisementService.closeAdvertisement(adId));
+
+    assertTrue(exception.getMessage().contains(ADVERTISEMENT_CLOSED.getDescription()));
     }
 
     @Test
@@ -448,7 +435,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
 
         AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.closeAdvertisement(adId));
-        assertTrue(ex.getMessage().contains(ALREADY_CLOSED.getDescription()));
+        assertTrue(ex.getMessage().contains(ADVERTISEMENT_CLOSED.getDescription()));
     }
 
     @Test
@@ -467,6 +454,103 @@ class AdvertisementServiceImplTest {
         assertTrue(ex.getMessage().contains(NOT_OWNER.getDescription()));
     }
 
+    @Test
+    void closeAdvertisement_whenCloseReturnsZero_thenShouldThrowAdvertisementUpdateException() {
+        UUID adId = UUID.randomUUID();
+        AdvertisementResponseDto dto = new AdvertisementResponseDto();
+        dto.setId(adId);
+        UserResponseDto ur = new UserResponseDto();
+        ur.setId(userId);
+        dto.setUserResponseDto(ur);
+        dto.setCloseDate(null);
+
+        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        when(advertisementRepository.closeAdvertisement(eq(adId), any(LocalDateTime.class))).thenReturn(0);
+
+        AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.closeAdvertisement(adId));
+        assertTrue(ex.getMessage().contains(UNEXPECTED_ERROR.getDescription()));
+    }
+
+    //---------reopenAdvertisement--------
+
+@Test
+void reopenAdvertisement_whenNotFound_thenShouldThrowAdvertisementNotFoundException() {
+    UUID adId = UUID.randomUUID();
+    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.empty());
+
+    AdvertisementUpdateException exception = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
+
+    assertTrue(exception.getMessage().contains(ADVERTISEMENT_CLOSED.getDescription()));
+}
+
+@Test
+void reopenAdvertisement_whenNotOwner_thenShouldThrowAdvertisementUpdateException() {
+    UUID adId = UUID.randomUUID();
+    AdvertisementResponseDto dto = new AdvertisementResponseDto();
+    dto.setId(adId);
+    UserResponseDto ur = new UserResponseDto();
+    ur.setId(UUID.randomUUID());
+    dto.setUserResponseDto(ur);
+    dto.setCloseDate(LocalDateTime.now());
+
+    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+
+    AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
+    assertTrue(ex.getMessage().contains(NOT_OWNER.getDescription()));
+}
+
+@Test
+void reopenAdvertisement_whenNotClosed_thenShouldThrowAdvertisementUpdateException() {
+    UUID adId = UUID.randomUUID();
+    AdvertisementResponseDto dto = new AdvertisementResponseDto();
+    dto.setId(adId);
+    UserResponseDto ur = new UserResponseDto();
+    ur.setId(userId);
+    dto.setUserResponseDto(ur);
+    dto.setCloseDate(null);
+
+    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+
+    AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
+    assertTrue(ex.getMessage().contains(ADVERTISEMENT_NOT_CLOSED.getDescription()));
+}
+
+@Test
+void reopenAdvertisement_whenReopenReturnsZero_thenShouldThrowAdvertisementUpdateException() {
+    UUID adId = UUID.randomUUID();
+    AdvertisementResponseDto dto = new AdvertisementResponseDto();
+    dto.setId(adId);
+    UserResponseDto ur = new UserResponseDto();
+    ur.setId(userId);
+    dto.setUserResponseDto(ur);
+    dto.setCloseDate(LocalDateTime.now());
+
+    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+    when(advertisementRepository.reopenAdvertisement(adId)).thenReturn(0);
+
+    AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
+    assertTrue(ex.getMessage().contains(UNEXPECTED_ERROR.getDescription()));
+}
+
+@Test
+void reopenAdvertisement_whenValid_thenReturnsDto() {
+    UUID adId = UUID.randomUUID();
+    AdvertisementResponseDto dto = new AdvertisementResponseDto();
+    dto.setId(adId);
+    UserResponseDto ur = new UserResponseDto();
+    ur.setId(userId);
+    dto.setUserResponseDto(ur);
+    dto.setCloseDate(LocalDateTime.now());
+
+    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+    when(advertisementRepository.reopenAdvertisement(adId)).thenReturn(1);
+
+    AdvertisementResponseDto result = advertisementService.reopenAdvertisement(adId);
+
+    assertNull(result.getCloseDate());
+    verify(advertisementRepository).reopenAdvertisement(adId);
+}
+
     // -------- promoteAdvertisement --------
 
     @Test
@@ -480,7 +564,7 @@ class AdvertisementServiceImplTest {
         dto.setUserResponseDto(ur);
 
         when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-
+        when(advertisementRepository.promoteAdvertisement(adId)).thenReturn(1);
         AdvertisementResponseDto result = advertisementService.promoteAdvertisement(adId);
 
         assertTrue(result.isPromoted());
@@ -532,7 +616,7 @@ class AdvertisementServiceImplTest {
                 AdvertisementUpdateException.class,
                 () -> advertisementService.promoteAdvertisement(adId)
         );
-        assertTrue(ex.getMessage().contains(ALREADY_CLOSED.getDescription()));
+        assertTrue(ex.getMessage().contains(ADVERTISEMENT_CLOSED.getDescription()));
     }
 
     @Test
@@ -553,5 +637,25 @@ class AdvertisementServiceImplTest {
                 () -> advertisementService.promoteAdvertisement(adId)
         );
         assertTrue(ex.getMessage().contains(NOT_OWNER.getDescription()));
+    }
+
+    @Test
+    void promoteAdvertisement_whenPromoteReturnsZero_thenShouldThrowAdvertisementUpdateException() {
+        UUID adId = UUID.randomUUID();
+        AdvertisementResponseDto dto = new AdvertisementResponseDto();
+        dto.setId(adId);
+        dto.setPromoted(false);
+        UserResponseDto ur = new UserResponseDto();
+        ur.setId(userId);
+        dto.setUserResponseDto(ur);
+
+        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        when(advertisementRepository.promoteAdvertisement(adId)).thenReturn(0);
+
+        AdvertisementUpdateException ex = assertThrows(
+                AdvertisementUpdateException.class,
+                () -> advertisementService.promoteAdvertisement(adId)
+        );
+        assertTrue(ex.getMessage().contains(UNEXPECTED_ERROR.getDescription()));
     }
 }

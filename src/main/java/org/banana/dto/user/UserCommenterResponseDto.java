@@ -6,9 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-/**
- * Created by Banana on 06.05.2025
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

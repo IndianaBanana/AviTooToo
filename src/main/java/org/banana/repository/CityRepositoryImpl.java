@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.banana.dto.city.CityDto;
 import org.banana.entity.City;
 import org.banana.repository.crud.AbstractCrudRepositoryImpl;
+import org.banana.util.JpqlHelper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class CityRepositoryImpl extends AbstractCrudRepositoryImpl<City, UUID> i
     public List<CityDto> findByNameLike(String pattern) {
         log.info("findByNameLike() in {}", this.getClass().getSimpleName());
         return getSession().createQuery(FIND_ALL_DTO_BY_NAME, CityDto.class)
-                .setParameter("pattern", pattern + "%")
+                .setParameter("pattern", JpqlHelper.formatSearchParam(pattern) + "%")
                 .getResultList();
     }
 

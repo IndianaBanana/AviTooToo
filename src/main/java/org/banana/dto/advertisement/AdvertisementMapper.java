@@ -7,9 +7,6 @@ import org.mapstruct.Mapping;
 
 import java.util.List;
 
-/**
- * Created by Banana on 04.05.2025
- */
 @Mapper(uses = {UserMapper.class}, componentModel = "spring")
 public interface AdvertisementMapper {
 

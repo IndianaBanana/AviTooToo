@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-    private final UUID id;
+    private UUID id;
     private String firstName;
     private String lastName;
     private String phone;

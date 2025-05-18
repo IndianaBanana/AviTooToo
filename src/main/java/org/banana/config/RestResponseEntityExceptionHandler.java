@@ -1,28 +1,13 @@
-package org.banana.exception.handler;
+package org.banana.config;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import lombok.extern.slf4j.Slf4j;
-import org.banana.exception.AddingCommentWhenParentCommenterIsNullException;
-import org.banana.exception.AdvertisementNotFoundException;
-import org.banana.exception.AdvertisementTypeAlreadyExistsException;
-import org.banana.exception.AdvertisementTypeNotFoundException;
-import org.banana.exception.AdvertisementUpdateException;
-import org.banana.exception.CityAlreadyExistsException;
-import org.banana.exception.CityNotFoundException;
-import org.banana.exception.CommentNotFoundException;
-import org.banana.exception.ConversationNotFoundException;
-import org.banana.exception.MessageSendException;
+import org.banana.exception.AbstractConflictException;
+import org.banana.exception.AbstractNotFoundException;
 import org.banana.exception.SaleHistoryAccessDeniedException;
-import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedException;
-import org.banana.exception.SaleHistoryNotFoundException;
 import org.banana.exception.UserDeleteCommentException;
-import org.banana.exception.UserNotFoundException;
-import org.banana.exception.UserRatesTheSameUserException;
-import org.banana.security.exception.UserPhoneAlreadyExistsException;
-import org.banana.security.exception.UserUpdateOldEqualsNewDataException;
-import org.banana.security.exception.UserUsernameAlreadyExistsException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -56,32 +41,12 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     public static final String TIMESTAMP = "timestamp";
     public static final String PATH = "path";
 
-    @ExceptionHandler({
-            UserNotFoundException.class,
-            UsernameNotFoundException.class,
-            AdvertisementNotFoundException.class,
-            CommentNotFoundException.class,
-            CityNotFoundException.class,
-            AdvertisementTypeNotFoundException.class,
-            SaleHistoryNotFoundException.class,
-            ConversationNotFoundException.class
-    })
+    @ExceptionHandler(AbstractNotFoundException.class)
     protected ResponseEntity<Object> handleNotFoundException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({
-            UserUsernameAlreadyExistsException.class,
-            UserPhoneAlreadyExistsException.class,
-            UserUpdateOldEqualsNewDataException.class,
-            UserRatesTheSameUserException.class,
-            AdvertisementUpdateException.class,
-            MessageSendException.class,
-            AddingCommentWhenParentCommenterIsNullException.class,
-            SaleHistoryAdvertisementQuantityIsLowerThanExpectedException.class,
-            CityAlreadyExistsException.class,
-            AdvertisementTypeAlreadyExistsException.class,
-    })
+    @ExceptionHandler(AbstractConflictException.class)
     protected ResponseEntity<Object> handleConflictDataException(RuntimeException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.CONFLICT);
     }
@@ -152,7 +117,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
                 HttpStatus.BAD_REQUEST, request);
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
+    @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
     protected ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
         return buildErrorResponse(ex, request, HttpStatus.UNAUTHORIZED);
     }

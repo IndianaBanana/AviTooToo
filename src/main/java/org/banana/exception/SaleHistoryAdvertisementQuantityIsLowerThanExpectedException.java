@@ -1,6 +1,6 @@
 package org.banana.exception;
 
-public class SaleHistoryAdvertisementQuantityIsLowerThanExpectedException extends RuntimeException {
+public class SaleHistoryAdvertisementQuantityIsLowerThanExpectedException extends AbstractConflictException {
 
     private static final String MESSAGE = "Sale history advertisement quantity is lower than expected. advertisement quantity: <<%d>> expected quantity: <<%d>>";
 

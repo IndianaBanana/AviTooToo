@@ -2,7 +2,7 @@ package org.banana.exception;
 
 import java.util.UUID;
 
-public class SaleHistoryNotFoundException extends RuntimeException {
+public class SaleHistoryNotFoundException extends AbstractNotFoundException {
 
     private static final String MESSAGE = "Sale history with id <<%s>> does not exist.";
 

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.banana.dto.advertisement.type.AdvertisementTypeDto;
 import org.banana.entity.AdvertisementType;
 import org.banana.repository.crud.AbstractCrudRepositoryImpl;
+import org.banana.util.JpqlHelper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class AdvertisementTypeRepositoryImpl extends AbstractCrudRepositoryImpl<
     public List<AdvertisementTypeDto> findByNameLike(String pattern) {
         log.info("findByNameLike({}) in {}", pattern, getClass().getSimpleName());
         return getSession().createQuery(FIND_ALL_DTO_BY_NAME, AdvertisementTypeDto.class)
-                .setParameter("pattern", "%" + pattern + "%")
+                .setParameter("pattern", "%" + JpqlHelper.formatSearchParam(pattern) + "%")
                 .getResultList();
     }
 

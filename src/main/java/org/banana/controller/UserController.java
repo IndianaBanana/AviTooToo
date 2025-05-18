@@ -10,9 +10,6 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 
-/**
- * Created by Banana on 29.04.2025
- */
 public interface UserController {
 
     ResponseEntity<UserResponseDto> findById(UUID id);

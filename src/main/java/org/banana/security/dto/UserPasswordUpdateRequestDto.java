@@ -10,9 +10,7 @@ import org.banana.security.dto.validation.PasswordChangeValidation;
 import static org.banana.dto.ValidationConstants.PASSWORD_MAX_LENGTH;
 import static org.banana.dto.ValidationConstants.PASSWORD_MIN_LENGTH;
 
-/**
- * Created by Banana on 27.04.2025
- */
+
 @Data
 @AllArgsConstructor
 @PasswordChangeValidation

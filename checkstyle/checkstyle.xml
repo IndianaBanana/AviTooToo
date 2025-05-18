@@ -24,7 +24,7 @@
 
   Most Checks are configurable, be sure to consult the documentation.
 
-  To completely disable a check, just comment it out or deleteById it from the file.
+  To completely disable a check, just comment it out or deleteAdvertisement it from the file.
 
   Finally, it is worth reading the documentation.
 

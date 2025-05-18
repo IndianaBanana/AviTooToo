@@ -9,24 +9,22 @@ import org.springframework.security.core.userdetails.User;
 import java.util.Base64;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtServiceTest {
 
-    private JwtService jwtService;
-
     private static final String SECRET = Base64.getEncoder().encodeToString("testtesttesttesttesttesttesttest".getBytes());
-
     private final UUID userId = UUID.randomUUID();
     private final String username = "johndoe";
     private final String phone = "+123456789";
     private final UserRole role = UserRole.ROLE_USER;
-
+    private JwtService jwtService;
     private String token;
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService(SECRET,86_400_000);
+        jwtService = new JwtService(SECRET, 86_400_000);
         token = jwtService.generateToken(userId, username, role, phone);
     }
 

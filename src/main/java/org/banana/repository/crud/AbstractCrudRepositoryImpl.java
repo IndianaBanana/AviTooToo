@@ -90,7 +90,7 @@ public abstract class AbstractCrudRepositoryImpl<T, ID extends Serializable> imp
 
     @Override
     public void deleteById(ID id) {
-        log.info("deleteById({}) in {}", id, getClass().getSimpleName());
+        log.info("deleteAdvertisement({}) in {}", id, getClass().getSimpleName());
         findById(id).ifPresent(getSession()::remove);
     }
 

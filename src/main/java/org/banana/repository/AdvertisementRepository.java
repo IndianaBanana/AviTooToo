@@ -15,9 +15,21 @@ public interface AdvertisementRepository extends CrudRepository<Advertisement, U
 
     Optional<AdvertisementResponseDto> findDtoById(UUID id);
 
-    void promoteAdvertisement(UUID id);
+    int promoteAdvertisement(UUID id);
 
-    void closeAdvertisement(UUID id, LocalDateTime closeDate);
+    int closeAdvertisement(UUID id, LocalDateTime closeDate);
+
+    int reopenAdvertisement(UUID id);
 
     List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size);
+
+    /**
+     * Изменить количество продаваемой единицы в объявлении (используется для реализации оптимистичной блокировки)
+     *
+     * @param id          идентификатор объявления
+     * @param oldQuantity старое количество
+     * @param newQuantity новое количество
+     * @return количество обновленных объявлений, если 1 то все хорошо, если 0 то что-то пошло не так.
+     */
+    int updateAdvertisementQuantity(UUID id, int oldQuantity, int newQuantity);
 }

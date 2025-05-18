@@ -1,6 +1,6 @@
 package org.banana.exception;
 
-public class CityAlreadyExistsException extends RuntimeException {
+public class CityAlreadyExistsException extends AbstractConflictException {
 
     private static final String MESSAGE = "City with name <<%s>> already exists.";
 
