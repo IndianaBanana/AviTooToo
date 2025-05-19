@@ -162,8 +162,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         if (advertisement.getCloseDate() != null)
             throw new AdvertisementUpdateException(ADVERTISEMENT_CLOSED);
 
-        LocalDateTime closeDate = LocalDateTime.now();
-        advertisement.setCloseDate(closeDate);
+        advertisement.setCloseDate(LocalDateTime.now());
         advertisement = advertisementRepository.save(advertisement);
 
         log.debug("advertisement closed: {}", advertisement);
