@@ -74,6 +74,8 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
                 saleHistory = saleHistoryRepository.save(saleHistory);
                 log.debug("saleHistory created: {}", saleHistory);
                 return saleHistoryMapper.fromSaleHistoryToSaleHistoryResponseDto(saleHistory);
+            } else {
+                advertisementRepository.detach(advertisement);
             }
         }
         // не удалось обновить за пять попыток поэтому кидаем исключение
@@ -116,6 +118,8 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
                 saleHistoryRepository.delete(saleHistory);
                 log.debug("saleHistory deleted: {}", saleHistory);
                 return;
+            } else {
+                advertisementRepository.detach(advertisement);
             }
         }
         // не удалось обновить за пять попыток поэтому кидаем исключение

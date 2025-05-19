@@ -50,14 +50,18 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto findById(UUID advertisementId) {
         log.info("findById({}) in {}", advertisementId, getClass().getSimpleName());
 
-        return advertisementRepository.findDtoById(advertisementId).orElseThrow(
+        AdvertisementResponseDto advertisementResponseDto = advertisementRepository.findDtoById(advertisementId).orElseThrow(
                 () -> new AdvertisementNotFoundException(advertisementId));
+        log.info("advertisement found: {}", advertisementResponseDto);
+        return advertisementResponseDto;
     }
 
     @Override
     public List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size) {
         log.info("findAllFiltered({}) in {}", filter, getClass().getSimpleName());
-        return advertisementRepository.findAllFiltered(filter, page, size);
+        List<AdvertisementResponseDto> allFiltered = advertisementRepository.findAllFiltered(filter, page, size);
+        log.info("advertisements found quantity: {}", allFiltered.size());
+        return allFiltered;
     }
 
 
@@ -77,6 +81,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             throw new AdvertisementUpdateException(NOT_OWNER);
 
         advertisementRepository.delete(advertisement);
+        log.info("advertisement deleted: {}", advertisement);
     }
 
     @Override
@@ -215,7 +220,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         advertisement.setIsPromoted(true);
         advertisement = advertisementRepository.save(advertisement);
 
-        log.debug("advertisement promoted: {}", advertisement);
+        log.info("advertisement promoted: {}", advertisement);
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 }

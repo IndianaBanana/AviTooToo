@@ -64,6 +64,12 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     }
 
     @Override
+    public void detach(Advertisement advertisement) {
+        getSession().detach(advertisement);
+//        getSession().refresh(advertisement);
+    }
+
+    @Override
     public Optional<AdvertisementResponseDto> findDtoById(UUID id) {
         log.info("findDtoById({}) in {}", id, getClass().getSimpleName());
         return Optional.ofNullable(getSession()

@@ -11,6 +11,7 @@ import java.util.UUID;
 
 public interface AdvertisementRepository extends CrudRepository<Advertisement, UUID> {
 
+    void detach(Advertisement advertisement);
 
     Optional<AdvertisementResponseDto> findDtoById(UUID id);
 
