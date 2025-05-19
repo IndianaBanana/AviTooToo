@@ -18,9 +18,9 @@ DB_PASSWORD=ваш_пароль
 ```commandline
 zsh start_script.sh #для Unix систем
 ```
+
 для Windows
 запускаем start_script.bat
-
 
 ## Стек технологий
 
