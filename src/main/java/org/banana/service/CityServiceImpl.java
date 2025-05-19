@@ -23,13 +23,17 @@ public class CityServiceImpl implements CityService {
     @Override
     public List<CityDto> findAll() {
         log.info("findAll() in {}", getClass().getSimpleName());
-        return cityRepository.findAllDto();
+        List<CityDto> allDto = cityRepository.findAllDto();
+        log.info("cities found quantity: {}", allDto.size());
+        return allDto;
     }
 
     @Override
     public List<CityDto> findByNameLike(String pattern) {
         log.info("findByNameLike({}) in {}", pattern, getClass().getSimpleName());
-        return cityRepository.findByNameLike(pattern);
+        List<CityDto> byNameLike = cityRepository.findByNameLike(pattern);
+        log.info("cities found by name quantity: {}", byNameLike.size());
+        return byNameLike;
     }
 
     @Override
@@ -40,6 +44,8 @@ public class CityServiceImpl implements CityService {
         if (cityRepository.existsByName(name))
             throw new CityAlreadyExistsException(name);
 
-        return cityMapper.cityToCityDto(cityRepository.save(new City(name)));
+        City city = cityRepository.save(new City(name));
+        log.info("city saved: {}", city);
+        return cityMapper.cityToCityDto(city);
     }
 }

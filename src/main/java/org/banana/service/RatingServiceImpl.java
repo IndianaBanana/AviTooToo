@@ -41,7 +41,7 @@ public class RatingServiceImpl implements RatingService {
 
         Rating rating = ratingRepository.save(new Rating(ratedUser, currentUserId, dto.getRatingValue()));
 
-        log.debug("rating rating: {}", rating);
+        log.info("rating rating: {}", rating);
         return RATE_MESSAGE;
     }
 
@@ -56,6 +56,7 @@ public class RatingServiceImpl implements RatingService {
         if (!userRepository.existsById(ratedUserId)) throw new UserNotFoundException(ratedUserId);
 
         ratingRepository.deleteById(new RatingId(ratedUserId, currentUserId));
+        log.info("rating deleted");
         return RATE_MESSAGE;
     }
 

@@ -72,9 +72,10 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
                 // если получилось обновить - выходим из цикла
                 SaleHistory saleHistory = new SaleHistory(advertisement, currentUserId, requestDtoQuantity, LocalDateTime.now());
                 saleHistory = saleHistoryRepository.save(saleHistory);
-                log.debug("saleHistory created: {}", saleHistory);
+                log.info("saleHistory created: {}", saleHistory);
                 return saleHistoryMapper.fromSaleHistoryToSaleHistoryResponseDto(saleHistory);
             } else {
+                log.warn("attempt {} failed", attempt);
                 advertisementRepository.detach(advertisement);
             }
         }
@@ -116,9 +117,10 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
             if (rowsUpdated == 1) {
                 // если получилось обновить - выходим из цикла
                 saleHistoryRepository.delete(saleHistory);
-                log.debug("saleHistory deleted: {}", saleHistory);
+                log.info("saleHistory deleted: {}", saleHistory);
                 return;
             } else {
+                log.warn("attempt {} failed", attempt);
                 advertisementRepository.detach(advertisement);
             }
         }
@@ -137,12 +139,18 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
 
         isOwnerOrAdmin(advertisement, current);
 
-        return saleHistoryRepository.getSalesByAdvertisementId(advertisementId);
+        List<SaleHistoryResponseDto> salesByAdvertisementId = saleHistoryRepository.getSalesByAdvertisementId(advertisementId);
+
+        log.info("salesByAdvertisementId quantity: {}", salesByAdvertisementId.size());
+        return salesByAdvertisementId;
     }
 
     @Override
     public List<SaleHistoryTotalForAdvertisementsResponseDto> getTotalForSalesInAdvertisements() {
         log.info("getTotalForSalesInAdvertisements() in {}", getClass().getSimpleName());
-        return saleHistoryRepository.getTotalForSalesInAdvertisements(SecurityUtils.getCurrentUserPrincipal().getId());
+        List<SaleHistoryTotalForAdvertisementsResponseDto> totalForSalesInAdvertisements
+                = saleHistoryRepository.getTotalForSalesInAdvertisements(SecurityUtils.getCurrentUserPrincipal().getId());
+        log.info("totalForSalesInAdvertisements quantity: {}", totalForSalesInAdvertisements.size());
+        return totalForSalesInAdvertisements;
     }
 }

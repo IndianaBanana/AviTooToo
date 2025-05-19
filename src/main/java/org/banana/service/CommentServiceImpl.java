@@ -77,7 +77,7 @@ public class CommentServiceImpl implements CommentService {
 
         comment = commentRepository.save(comment);
 
-        log.debug("comment added: {}", comment);
+        log.info("comment added: {}", comment);
         return commentMapper.fromCommentToCommentResponseDto(comment);
     }
 
@@ -103,7 +103,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setCommenter(null);
         comment.setCommentText("Comment deleted");
 
-        log.debug("comment deleted: {}", comment);
+        log.info("comment deleted: {}", comment);
         commentRepository.save(comment);
     }
 
@@ -138,7 +138,7 @@ public class CommentServiceImpl implements CommentService {
         allComments.addAll(allRootComments);
         allComments.addAll(allCommentsInRootIds);
 
-        log.debug("all comments: {}", allComments);
+        log.info("all comments: {}", allComments);
         return allComments;
     }
 }

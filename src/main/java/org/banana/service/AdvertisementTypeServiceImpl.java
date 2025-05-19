@@ -23,13 +23,17 @@ public class AdvertisementTypeServiceImpl implements AdvertisementTypeService {
     @Override
     public List<AdvertisementTypeDto> findAll() {
         log.info("findAll() in {}", getClass().getSimpleName());
-        return advertisementTypeRepository.findAllDto();
+        List<AdvertisementTypeDto> allDto = advertisementTypeRepository.findAllDto();
+        log.info("advertisement types found quantity: {}", allDto.size());
+        return allDto;
     }
 
     @Override
     public List<AdvertisementTypeDto> findByNameLike(String pattern) {
         log.info("findByNameLike({}) in {}", pattern, getClass().getSimpleName());
-        return advertisementTypeRepository.findByNameLike(pattern);
+        List<AdvertisementTypeDto> advertisementTypeDtoList = advertisementTypeRepository.findByNameLike(pattern);
+        log.info("advertisement types found by name quantity: {}", advertisementTypeDtoList.size());
+        return advertisementTypeDtoList;
     }
 
     @Override
@@ -40,7 +44,9 @@ public class AdvertisementTypeServiceImpl implements AdvertisementTypeService {
         if (advertisementTypeRepository.existsByName(name))
             throw new AdvertisementTypeAlreadyExistsException(name);
 
+        AdvertisementType advertisementType = advertisementTypeRepository.save(new AdvertisementType(name));
+        log.info("AdvertisementType {} saved", advertisementType);
         return advertisementTypeMapper
-                .advertisementTypeToAdvertisementTypeDto(advertisementTypeRepository.save(new AdvertisementType(name)));
+                .advertisementTypeToAdvertisementTypeDto(advertisementType);
     }
 }

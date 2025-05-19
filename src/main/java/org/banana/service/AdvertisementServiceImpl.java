@@ -108,7 +108,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
         advertisement = advertisementRepository.save(advertisement);
 
-        log.debug("advertisement created: {}", advertisement);
+        log.info("advertisement created: {}", advertisement);
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
@@ -146,7 +146,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
         advertisement = advertisementRepository.save(advertisement);
 
-        log.debug("advertisement updated: {}", advertisement);
+        log.info("advertisement updated: {}", advertisement);
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
@@ -170,7 +170,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         advertisement.setCloseDate(LocalDateTime.now());
         advertisement = advertisementRepository.save(advertisement);
 
-        log.debug("advertisement closed: {}", advertisement);
+        log.info("advertisement closed: {}", advertisement);
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
@@ -194,7 +194,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         advertisement.setCloseDate(null);
         advertisement = advertisementRepository.save(advertisement);
 
-        log.debug("advertisement reopened: {}", advertisement);
+        log.info("advertisement reopened: {}", advertisement);
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 

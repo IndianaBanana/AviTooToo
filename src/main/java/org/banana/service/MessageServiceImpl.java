@@ -62,7 +62,7 @@ public class MessageServiceImpl implements MessageService {
         );
         message = messageRepository.save(message);
 
-        log.debug("message saved: {}", message);
+        log.info("message saved: {}", message);
         return messageMapper.messageToMessageResponseDto(message);
     }
 
@@ -83,7 +83,8 @@ public class MessageServiceImpl implements MessageService {
         if (!messageRepository.chatExists(currentUserId, secondUserId, advertisementId))
             throw new ConversationNotFoundException(secondUserId, advertisementId);
 
-        messageRepository.markMessagesReadUpTo(secondUserId, currentUserId, advertisementId, dto.getUpToDateTime(), dto.getUpToMessageId());
+        int count = messageRepository.markMessagesReadUpTo(secondUserId, currentUserId, advertisementId, dto.getUpToDateTime(), dto.getUpToMessageId());
+        log.info("messages marked as read: {}", count);
     }
 
 
@@ -105,7 +106,9 @@ public class MessageServiceImpl implements MessageService {
             filter.setUnreadMessagesCount(unreadMessagesCount);
         }
 
-        return messageRepository.findAllByFilter(filter);
+        List<MessageResponseDto> allByFilter = messageRepository.findAllByFilter(filter);
+        log.info("messages found quantity: {}", allByFilter.size());
+        return allByFilter;
     }
 
     private void validateRecipient(UUID senderId, UUID recipientId) {
