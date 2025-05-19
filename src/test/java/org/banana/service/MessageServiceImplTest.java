@@ -154,7 +154,6 @@ class MessageServiceImplTest {
 
     @Test
     void addMessage_whenSenderIsOwnerAndChatExist_thenReturnMessageResponseDto() {
-        // Setup sender as ad owner
         User adOwner = new User(currentUserId, "owner", "last", "phone", "email", "pass", UserRole.ROLE_USER);
         Advertisement ad = new Advertisement();
         ad.setId(advertisementId);

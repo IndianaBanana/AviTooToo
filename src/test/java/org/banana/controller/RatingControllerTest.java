@@ -68,7 +68,7 @@ class RatingControllerTest {
     @Test
     @WithMockUser
     void rateUser_whenInvalidDto_thenBadRequest() throws Exception {
-        RatingDto dto = new RatingDto(); // missing userId and ratingValue
+        RatingDto dto = new RatingDto();
 
         mvc.perform(post("/api/v1/rating")
                         .contentType(MediaType.APPLICATION_JSON)

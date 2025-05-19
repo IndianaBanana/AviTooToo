@@ -16,12 +16,6 @@ public interface AdvertisementRepository extends CrudRepository<Advertisement, U
 
     Optional<Advertisement> findFetchedById(UUID id);
 
-//    int promoteAdvertisement(UUID id);
-//
-//    int closeAdvertisement(UUID id, LocalDateTime closeDate);
-//
-//    int reopenAdvertisement(UUID id);
-
     List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size);
 
     /**

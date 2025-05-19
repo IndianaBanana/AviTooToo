@@ -76,7 +76,6 @@ class SaleHistoryControllerTest {
     @Test
     @WithMockUser
     void addSale_whenInvalidDto_thenBadRequest() throws Exception {
-        // quantity < 1
         SaleHistoryAddRequestDto req = new SaleHistoryAddRequestDto(UUID.randomUUID(), 0);
 
         mvc.perform(post("/api/v1/sale-history")

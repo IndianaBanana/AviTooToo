@@ -77,7 +77,6 @@ class MessageControllerTest {
     @Test
     @WithMockUser
     void sendMessage_whenInvalidDto_thenBadRequest() throws Exception {
-        // missing recipientId and messageText
         MessageSendRequestDto req = new MessageSendRequestDto();
 
         mvc.perform(post("/api/v1/message")
@@ -154,7 +153,6 @@ class MessageControllerTest {
         MessageFilterDto filter = new MessageFilterDto();
         filter.setSecondUserId(UUID.randomUUID());
         filter.setCursorDateTime(LocalDateTime.now());
-        // cursorMessageId null -> invalid
 
         mvc.perform(post("/api/v1/message/chat")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -212,7 +210,6 @@ class MessageControllerTest {
     void markReadUpTo_whenMissingUpToDateTime_thenBadRequest() throws Exception {
         MessageMarkReadRequestDto dto = new MessageMarkReadRequestDto();
         dto.setSecondUserId(UUID.randomUUID());
-        // missing upToDateTime
 
         mvc.perform(patch("/api/v1/message/mark-read")
                         .contentType(MediaType.APPLICATION_JSON)

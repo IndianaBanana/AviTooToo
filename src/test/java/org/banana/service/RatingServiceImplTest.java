@@ -117,10 +117,4 @@ class RatingServiceImplTest {
         ratingService.updateActualInformationAboutRating();
         verify(userRatingViewRepository).updateView();
     }
-//    @Test
-//    void getCurrentUserPrincipal_ShouldThrow_WhenUnauthorized() {
-//        SecurityContextHolder.clearContext();
-//
-//        assertThrows(AccessDeniedException.class, SecurityUtils::getCurrentUserPrincipal);
-//    }
 }

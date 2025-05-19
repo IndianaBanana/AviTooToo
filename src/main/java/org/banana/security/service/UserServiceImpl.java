@@ -112,7 +112,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.userToUserResponseDto(user);
     }
 
-    // todo здесь не нужен токен. может стоит заморочиться и написать инвалидацию токенов в бд
     @Override
     @Transactional
     public String updatePassword(UserPasswordUpdateRequestDto requestDto) {

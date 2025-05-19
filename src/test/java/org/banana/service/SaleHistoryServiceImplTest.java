@@ -149,8 +149,6 @@ class SaleHistoryServiceImplTest {
 
     @Test
     void addSale_whenUpdateAdvertisementQuantityUnsuccessful_thenShouldThrowAdvertisementNotFoundException() {
-        SaleHistory saleHistory = new SaleHistory(advertisement, userId, 2, LocalDateTime.now());
-        ArgumentCaptor<SaleHistory> historyArgumentCaptor = ArgumentCaptor.forClass(SaleHistory.class);
         SaleHistoryAddRequestDto dto = new SaleHistoryAddRequestDto(advertisementId, 2);
 
         when(advertisementRepository.findById(advertisementId)).thenReturn(Optional.of(advertisement));
@@ -291,11 +289,4 @@ class SaleHistoryServiceImplTest {
 
         assertThat(result).isEqualTo(expected);
     }
-
-//    private void mockCurrentUser(UUID id, UserRole role) {
-//        principal = new UserPrincipal(id, "First", "Last", "123", "user", "pass", role);
-//        Authentication auth = mock(Authentication.class);
-//        when(auth.getPrincipal()).thenReturn(principal);
-//        SecurityContextHolder.getContext().setAuthentication(auth);
-//    }
 }

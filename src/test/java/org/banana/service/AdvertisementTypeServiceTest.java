@@ -35,37 +35,30 @@ class AdvertisementTypeServiceTest {
 
     @Test
     void findAll_whenCalled_thenReturnDtos() {
-        // given
         List<AdvertisementTypeDto> dtos = List.of(new AdvertisementTypeDto("Sell"));
 
         when(advertisementTypeRepository.findAllDto()).thenReturn(dtos);
 
-        // when
         List<AdvertisementTypeDto> result = advertisementTypeService.findAll();
 
-        // then
         assertEquals(dtos, result);
         verify(advertisementTypeRepository).findAllDto();
     }
 
     @Test
     void findByNameLike_whenPatternEscaped_thenReturnMappedDtos() {
-        // given
         String inputPattern = "%_type\\";
         List<AdvertisementTypeDto> dtos = List.of(new AdvertisementTypeDto("Rent"));
 
         when(advertisementTypeRepository.findByNameLike(inputPattern)).thenReturn(dtos);
 
-        // when
         List<AdvertisementTypeDto> result = advertisementTypeService.findByNameLike(inputPattern);
 
-        // then
         assertEquals(dtos, result);
     }
 
     @Test
     void addAdvertisementType_whenCalled_thenSaveEntityAndReturnMappedDto() {
-        // given
         String name = "Exchange";
         AdvertisementType savedEntity = new AdvertisementType(name);
         AdvertisementTypeDto expectedDto = new AdvertisementTypeDto(name);
@@ -74,10 +67,8 @@ class AdvertisementTypeServiceTest {
         when(advertisementTypeMapper.advertisementTypeToAdvertisementTypeDto(savedEntity)).thenReturn(expectedDto);
         when(advertisementTypeRepository.existsByName(name)).thenReturn(false);
 
-        // when
         AdvertisementTypeDto result = advertisementTypeService.addAdvertisementType(name);
 
-        // then
         assertEquals(expectedDto, result);
         verify(advertisementTypeRepository).save(argThat(type -> type.getName().equals(name)));
         verify(advertisementTypeMapper).advertisementTypeToAdvertisementTypeDto(savedEntity);
@@ -85,11 +76,9 @@ class AdvertisementTypeServiceTest {
 
     @Test
     void addAdvertisementType_whenNameAlreadyExists_thenThrowAdvertisementTypeAlreadyExistsException() {
-        // given
         String name = "Exchange";
         when(advertisementTypeRepository.existsByName(name)).thenReturn(true);
 
-        // when and then
         assertThrows(AdvertisementTypeAlreadyExistsException.class, () -> advertisementTypeService.addAdvertisementType(name));
         verify(advertisementTypeRepository).existsByName(name);
         verify(advertisementTypeRepository, never()).save(any(AdvertisementType.class));

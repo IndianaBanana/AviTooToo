@@ -78,7 +78,7 @@ class CommentControllerTest {
     @Test
     @WithMockUser
     void addComment_whenInvalidDto_thenBadRequest() throws Exception {
-        CommentRequestDto req = new CommentRequestDto(); // missing advertisementId and commentText
+        CommentRequestDto req = new CommentRequestDto();
 
         mvc.perform(post("/api/v1/comment")
                         .contentType(MediaType.APPLICATION_JSON)

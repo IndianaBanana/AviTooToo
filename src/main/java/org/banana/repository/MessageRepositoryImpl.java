@@ -69,7 +69,6 @@ public class MessageRepositoryImpl extends AbstractCrudRepositoryImpl<Message, U
                   )
               and m.isRead = false
             """;
-    // todo возможно переписать надо запрос: and m.messageDateTime < :upToDateTime || (and m.messageDateTime = :upToDateTime && m.id <= :upToMessageId)
     private static final String UPDATE_MARK_READ_UP_TO = UPDATE_MARK_READ + """
                and m.messageDateTime < :upToDateTime || (m.messageDateTime = :upToDateTime and m.id <= :upToMessageId)
             """;

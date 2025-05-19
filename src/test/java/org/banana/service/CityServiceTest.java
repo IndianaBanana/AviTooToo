@@ -33,15 +33,10 @@ class CityServiceTest {
     @InjectMocks
     private CityServiceImpl cityService;
 
-    private List<City> cityList;
     private List<CityDto> cityDtoList;
 
     @BeforeEach
     void setUp() {
-        City city1 = new City("New York");
-        City city2 = new City("Los Angeles");
-        cityList = List.of(city1, city2);
-
         CityDto dto1 = new CityDto("New York");
         CityDto dto2 = new CityDto("Los Angeles");
         cityDtoList = List.of(dto1, dto2);
@@ -59,16 +54,13 @@ class CityServiceTest {
 
     @Test
     void findByNameLike_whenCalledWithPattern_thenReturnsMappedDtos() {
-        // given
         String inputPattern = "%_test\\";
         List<CityDto> cityDtos = List.of(new CityDto("Test City"));
 
         when(cityRepository.findByNameLike(inputPattern)).thenReturn(cityDtos);
 
-        // when
         List<CityDto> result = cityService.findByNameLike(inputPattern);
 
-        // then
         assertEquals(cityDtos, result);
     }
 
