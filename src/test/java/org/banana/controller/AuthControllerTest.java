@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(controllers = AuthControllerImpl.class)
+@WebMvcTest(controllers = AuthController.class)
 @Import(SecurityConfig.class)
 public class AuthControllerTest {
 
