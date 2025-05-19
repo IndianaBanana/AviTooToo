@@ -5,7 +5,6 @@ import org.banana.dto.advertisement.AdvertisementResponseDto;
 import org.banana.entity.Advertisement;
 import org.banana.repository.crud.CrudRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,11 +14,13 @@ public interface AdvertisementRepository extends CrudRepository<Advertisement, U
 
     Optional<AdvertisementResponseDto> findDtoById(UUID id);
 
-    int promoteAdvertisement(UUID id);
+    Optional<Advertisement> findFetchedById(UUID id);
 
-    int closeAdvertisement(UUID id, LocalDateTime closeDate);
-
-    int reopenAdvertisement(UUID id);
+//    int promoteAdvertisement(UUID id);
+//
+//    int closeAdvertisement(UUID id, LocalDateTime closeDate);
+//
+//    int reopenAdvertisement(UUID id);
 
     List<AdvertisementResponseDto> findAllFiltered(AdvertisementFilterDto filter, int page, int size);
 

@@ -4,7 +4,6 @@ import org.banana.dto.advertisement.AdvertisementFilterDto;
 import org.banana.dto.advertisement.AdvertisementMapper;
 import org.banana.dto.advertisement.AdvertisementRequestDto;
 import org.banana.dto.advertisement.AdvertisementResponseDto;
-import org.banana.dto.user.UserResponseDto;
 import org.banana.entity.Advertisement;
 import org.banana.entity.AdvertisementType;
 import org.banana.entity.City;
@@ -39,10 +38,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_CLOSED;
-import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_PROMOTED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_NOT_CLOSED;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_PROMOTED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.NOT_OWNER;
-import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.UNEXPECTED_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -50,7 +48,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -398,41 +395,40 @@ class AdvertisementServiceImplTest {
     @Test
     void closeAdvertisement_whenOwnerAndOpen_thenReturnsDto() {
         UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        UserResponseDto ur = new UserResponseDto();
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User ur = new User();
         ur.setId(userId);
-        dto.setUserResponseDto(ur);
-        dto.setCloseDate(null);
+        advertisement.setUser(ur);
+        advertisement.setCloseDate(null);
 
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-        when(advertisementRepository.closeAdvertisement(eq(adId), any(LocalDateTime.class))).thenReturn(1);
-        AdvertisementResponseDto result = advertisementService.closeAdvertisement(adId);
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
+        when(advertisementRepository.save(advertisement)).thenReturn(advertisement);
+        when(advertisementMapper.advertisementToAdvertisementResponseDto(advertisement)).thenReturn(new AdvertisementResponseDto());
+        advertisementService.closeAdvertisement(adId);
 
-        assertNotNull(result.getCloseDate());
-        verify(advertisementRepository).closeAdvertisement(eq(adId), any(LocalDateTime.class));
+        assertNotNull(advertisement.getCloseDate());
     }
 
     @Test
     void closeAdvertisement_whenNotFound_thenShouldThrowAdvertisementNotFoundException() {
         UUID adId = UUID.randomUUID();
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.empty());
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.empty());
 
-        AdvertisementUpdateException exception =
-                assertThrows(AdvertisementUpdateException.class, () -> advertisementService.closeAdvertisement(adId));
-
-    assertTrue(exception.getMessage().contains(ADVERTISEMENT_CLOSED.getDescription()));
+        assertThrows(AdvertisementNotFoundException.class, () -> advertisementService.closeAdvertisement(adId));
     }
 
     @Test
     void closeAdvertisement_whenAlreadyClosed_thenShouldThrowAdvertisementUpdateException() {
         UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setUserResponseDto(new UserResponseDto());
-        dto.getUserResponseDto().setId(userId);
-        dto.setId(adId);
-        dto.setCloseDate(LocalDateTime.now());
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User ur = new User();
+        ur.setId(userId);
+        advertisement.setUser(ur);
+        advertisement.setCloseDate(LocalDateTime.now());
+
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
 
         AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.closeAdvertisement(adId));
         assertTrue(ex.getMessage().contains(ADVERTISEMENT_CLOSED.getDescription()));
@@ -441,140 +437,104 @@ class AdvertisementServiceImplTest {
     @Test
     void closeAdvertisement_whenNotOwner_thenShouldThrowAdvertisementUpdateException() {
         UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        UserResponseDto ur = new UserResponseDto();
-        ur.setId(UUID.randomUUID());
-        dto.setUserResponseDto(ur);
-        dto.setCloseDate(null);
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        advertisement.setUser(user);
+        advertisement.setCloseDate(null);
 
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
 
         AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.closeAdvertisement(adId));
         assertTrue(ex.getMessage().contains(NOT_OWNER.getDescription()));
     }
 
-    @Test
-    void closeAdvertisement_whenCloseReturnsZero_thenShouldThrowAdvertisementUpdateException() {
-        UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        UserResponseDto ur = new UserResponseDto();
-        ur.setId(userId);
-        dto.setUserResponseDto(ur);
-        dto.setCloseDate(null);
-
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-        when(advertisementRepository.closeAdvertisement(eq(adId), any(LocalDateTime.class))).thenReturn(0);
-
-        AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.closeAdvertisement(adId));
-        assertTrue(ex.getMessage().contains(UNEXPECTED_ERROR.getDescription()));
-    }
-
     //---------reopenAdvertisement--------
 
-@Test
-void reopenAdvertisement_whenNotFound_thenShouldThrowAdvertisementNotFoundException() {
-    UUID adId = UUID.randomUUID();
-    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.empty());
+    @Test
+    void reopenAdvertisement_whenNotFound_thenShouldThrowAdvertisementNotFoundException() {
+        UUID adId = UUID.randomUUID();
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.empty());
 
-    AdvertisementUpdateException exception = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
+        assertThrows(AdvertisementNotFoundException.class, () -> advertisementService.reopenAdvertisement(adId));
+    }
 
-    assertTrue(exception.getMessage().contains(ADVERTISEMENT_CLOSED.getDescription()));
-}
+    @Test
+    void reopenAdvertisement_whenNotOwner_thenShouldThrowAdvertisementUpdateException() {
+        UUID adId = UUID.randomUUID();
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        advertisement.setUser(user);
+        advertisement.setCloseDate(LocalDateTime.now());
 
-@Test
-void reopenAdvertisement_whenNotOwner_thenShouldThrowAdvertisementUpdateException() {
-    UUID adId = UUID.randomUUID();
-    AdvertisementResponseDto dto = new AdvertisementResponseDto();
-    dto.setId(adId);
-    UserResponseDto ur = new UserResponseDto();
-    ur.setId(UUID.randomUUID());
-    dto.setUserResponseDto(ur);
-    dto.setCloseDate(LocalDateTime.now());
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
 
-    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
+        assertTrue(ex.getMessage().contains(NOT_OWNER.getDescription()));
+    }
 
-    AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
-    assertTrue(ex.getMessage().contains(NOT_OWNER.getDescription()));
-}
+    @Test
+    void reopenAdvertisement_whenNotClosed_thenShouldThrowAdvertisementUpdateException() {
+        UUID adId = UUID.randomUUID();
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User ur = new User();
+        ur.setId(userId);
+        advertisement.setUser(ur);
+        advertisement.setCloseDate(null);
 
-@Test
-void reopenAdvertisement_whenNotClosed_thenShouldThrowAdvertisementUpdateException() {
-    UUID adId = UUID.randomUUID();
-    AdvertisementResponseDto dto = new AdvertisementResponseDto();
-    dto.setId(adId);
-    UserResponseDto ur = new UserResponseDto();
-    ur.setId(userId);
-    dto.setUserResponseDto(ur);
-    dto.setCloseDate(null);
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
 
-    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
+        assertTrue(ex.getMessage().contains(ADVERTISEMENT_NOT_CLOSED.getDescription()));
+    }
 
-    AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
-    assertTrue(ex.getMessage().contains(ADVERTISEMENT_NOT_CLOSED.getDescription()));
-}
+    @Test
+    void reopenAdvertisement_whenValid_thenReturnsDto() {
+        UUID adId = UUID.randomUUID();
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User user = new User();
+        user.setId(userId);
+        advertisement.setUser(user);
+        advertisement.setCloseDate(LocalDateTime.now());
 
-@Test
-void reopenAdvertisement_whenReopenReturnsZero_thenShouldThrowAdvertisementUpdateException() {
-    UUID adId = UUID.randomUUID();
-    AdvertisementResponseDto dto = new AdvertisementResponseDto();
-    dto.setId(adId);
-    UserResponseDto ur = new UserResponseDto();
-    ur.setId(userId);
-    dto.setUserResponseDto(ur);
-    dto.setCloseDate(LocalDateTime.now());
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
+        when(advertisementRepository.save(advertisement)).thenReturn(advertisement);
+        when(advertisementMapper.advertisementToAdvertisementResponseDto(advertisement)).thenReturn(new AdvertisementResponseDto());
+        advertisementService.reopenAdvertisement(adId);
 
-    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-    when(advertisementRepository.reopenAdvertisement(adId)).thenReturn(0);
-
-    AdvertisementUpdateException ex = assertThrows(AdvertisementUpdateException.class, () -> advertisementService.reopenAdvertisement(adId));
-    assertTrue(ex.getMessage().contains(UNEXPECTED_ERROR.getDescription()));
-}
-
-@Test
-void reopenAdvertisement_whenValid_thenReturnsDto() {
-    UUID adId = UUID.randomUUID();
-    AdvertisementResponseDto dto = new AdvertisementResponseDto();
-    dto.setId(adId);
-    UserResponseDto ur = new UserResponseDto();
-    ur.setId(userId);
-    dto.setUserResponseDto(ur);
-    dto.setCloseDate(LocalDateTime.now());
-
-    when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-    when(advertisementRepository.reopenAdvertisement(adId)).thenReturn(1);
-
-    AdvertisementResponseDto result = advertisementService.reopenAdvertisement(adId);
-
-    assertNull(result.getCloseDate());
-    verify(advertisementRepository).reopenAdvertisement(adId);
-}
+        assertNull(advertisement.getCloseDate());
+    }
 
     // -------- promoteAdvertisement --------
 
     @Test
     void promoteAdvertisement_whenOwnerAndNotPromotedAndOpen_thenReturnsDto() {
         UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        dto.setPromoted(false);
-        UserResponseDto ur = new UserResponseDto();
-        ur.setId(userId);
-        dto.setUserResponseDto(ur);
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User user = new User();
+        user.setId(userId);
+        advertisement.setUser(user);
+        advertisement.setIsPromoted(false);
+        advertisement.setCloseDate(null);
 
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-        when(advertisementRepository.promoteAdvertisement(adId)).thenReturn(1);
-        AdvertisementResponseDto result = advertisementService.promoteAdvertisement(adId);
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
+        when(advertisementRepository.save(advertisement)).thenReturn(advertisement);
+        when(advertisementMapper.advertisementToAdvertisementResponseDto(advertisement)).thenReturn(new AdvertisementResponseDto());
+        advertisementService.promoteAdvertisement(adId);
 
-        assertTrue(result.isPromoted());
-        verify(advertisementRepository).promoteAdvertisement(adId);
+        assertTrue(advertisement.getIsPromoted());
     }
 
     @Test
     void promoteAdvertisement_whenNotFound_thenShouldThrowAdvertisementNotFoundException() {
         UUID adId = UUID.randomUUID();
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.empty());
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.empty());
 
         assertThrows(AdvertisementNotFoundException.class,
                 () -> advertisementService.promoteAdvertisement(adId));
@@ -583,14 +543,15 @@ void reopenAdvertisement_whenValid_thenReturnsDto() {
     @Test
     void promoteAdvertisement_whenAlreadyPromoted_thenShouldThrowAdvertisementUpdateException() {
         UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        dto.setPromoted(true);
-        UserResponseDto ur = new UserResponseDto();
-        ur.setId(userId);
-        dto.setUserResponseDto(ur);
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User user = new User();
+        user.setId(userId);
+        advertisement.setUser(user);
+        advertisement.setCloseDate(null);
+        advertisement.setIsPromoted(true);
 
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
 
         AdvertisementUpdateException ex = assertThrows(
                 AdvertisementUpdateException.class,
@@ -602,15 +563,14 @@ void reopenAdvertisement_whenValid_thenReturnsDto() {
     @Test
     void promoteAdvertisement_whenAlreadyClosed_thenShouldThrowAdvertisementUpdateException() {
         UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        dto.setPromoted(false);
-        dto.setCloseDate(LocalDateTime.now());
-        UserResponseDto ur = new UserResponseDto();
-        ur.setId(userId);
-        dto.setUserResponseDto(ur);
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User user = new User();
+        user.setId(userId);
+        advertisement.setUser(user);
+        advertisement.setCloseDate(LocalDateTime.now());
 
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
 
         AdvertisementUpdateException ex = assertThrows(
                 AdvertisementUpdateException.class,
@@ -622,40 +582,19 @@ void reopenAdvertisement_whenValid_thenReturnsDto() {
     @Test
     void promoteAdvertisement_whenNotOwner_thenShouldThrowAdvertisementUpdateException() {
         UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        dto.setPromoted(false);
-        dto.setCloseDate(null);
-        UserResponseDto ur = new UserResponseDto();
-        ur.setId(UUID.randomUUID());
-        dto.setUserResponseDto(ur);
+        Advertisement advertisement = new Advertisement();
+        advertisement.setId(adId);
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        advertisement.setUser(user);
+        advertisement.setCloseDate(null);
 
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
+        when(advertisementRepository.findFetchedById(adId)).thenReturn(Optional.of(advertisement));
 
         AdvertisementUpdateException ex = assertThrows(
                 AdvertisementUpdateException.class,
                 () -> advertisementService.promoteAdvertisement(adId)
         );
         assertTrue(ex.getMessage().contains(NOT_OWNER.getDescription()));
-    }
-
-    @Test
-    void promoteAdvertisement_whenPromoteReturnsZero_thenShouldThrowAdvertisementUpdateException() {
-        UUID adId = UUID.randomUUID();
-        AdvertisementResponseDto dto = new AdvertisementResponseDto();
-        dto.setId(adId);
-        dto.setPromoted(false);
-        UserResponseDto ur = new UserResponseDto();
-        ur.setId(userId);
-        dto.setUserResponseDto(ur);
-
-        when(advertisementRepository.findDtoById(adId)).thenReturn(Optional.of(dto));
-        when(advertisementRepository.promoteAdvertisement(adId)).thenReturn(0);
-
-        AdvertisementUpdateException ex = assertThrows(
-                AdvertisementUpdateException.class,
-                () -> advertisementService.promoteAdvertisement(adId)
-        );
-        assertTrue(ex.getMessage().contains(UNEXPECTED_ERROR.getDescription()));
     }
 }

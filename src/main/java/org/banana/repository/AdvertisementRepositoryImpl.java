@@ -11,7 +11,6 @@ import org.banana.util.JpqlHelper;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -58,8 +57,9 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
             where 1=1
             """;
     public static final String FIND_FULL_DTO_BY_ID = FIND_FULL_DTO + " and a.id = :id";
-    private static final String PROMOTE_ADVERTISEMENT = "update Advertisement a set a.isPromoted = true where a.id = :id";
-    private static final String CLOSE_ADVERTISEMENT = "update Advertisement a set a.closeDate = :closeDate where a.id = :id";
+    //    private static final String PROMOTE_ADVERTISEMENT = "update Advertisement a set a.isPromoted = true where a.id = :id";
+//    private static final String CLOSE_ADVERTISEMENT = "update Advertisement a set a.closeDate = :closeDate where a.id = :id";
+    private static final String FIND_FETCHED_BY_ID = "select a from Advertisement a join fetch a.city join fetch a.advertisementType join fetch a.user left join fetch a.user.userRatingView where a.id = :id";
 
     public AdvertisementRepositoryImpl() {
         super(Advertisement.class);
@@ -75,31 +75,38 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     }
 
     @Override
-    public int promoteAdvertisement(UUID id) {
-        log.info("promoteAdvertisement({}) in {}", id, getClass().getSimpleName());
-        return getSession()
-                .createMutationQuery(PROMOTE_ADVERTISEMENT)
+    public Optional<Advertisement> findFetchedById(UUID id) {
+        return Optional.ofNullable(getSession().createQuery(FIND_FETCHED_BY_ID, Advertisement.class)
                 .setParameter("id", id)
-                .executeUpdate();
+                .getSingleResultOrNull());
     }
 
-    @Override
-    public int closeAdvertisement(UUID id, LocalDateTime closeDate) {
-        log.info("closeAdvertisement({}) in {}", id, getClass().getSimpleName());
-        return getSession()
-                .createMutationQuery(CLOSE_ADVERTISEMENT)
-                .setParameter("id", id)
-                .setParameter("closeDate", closeDate)
-                .executeUpdate();
-    }
-
-    @Override
-    public int reopenAdvertisement(UUID id) {
-        log.info("reopenAdvertisement({}) in {}", id, getClass().getSimpleName());
-        return getSession().createMutationQuery("update Advertisement a set a.closeDate = null where a.id = :id")
-                .setParameter("id", id)
-                .executeUpdate();
-    }
+//    @Override
+//    public int promoteAdvertisement(UUID id) {
+//        log.info("promoteAdvertisement({}) in {}", id, getClass().getSimpleName());
+//        return getSession()
+//                .createMutationQuery(PROMOTE_ADVERTISEMENT)
+//                .setParameter("id", id)
+//                .executeUpdate();
+//    }
+//
+//    @Override
+//    public int closeAdvertisement(UUID id, LocalDateTime closeDate) {
+//        log.info("closeAdvertisement({}) in {}", id, getClass().getSimpleName());
+//        return getSession()
+//                .createMutationQuery(CLOSE_ADVERTISEMENT)
+//                .setParameter("id", id)
+//                .setParameter("closeDate", closeDate)
+//                .executeUpdate();
+//    }
+//
+//    @Override
+//    public int reopenAdvertisement(UUID id) {
+//        log.info("reopenAdvertisement({}) in {}", id, getClass().getSimpleName());
+//        return getSession().createMutationQuery("update Advertisement a set a.closeDate = null where a.id = :id")
+//                .setParameter("id", id)
+//                .executeUpdate();
+//    }
 
     @Override
     public List<AdvertisementResponseDto> findAllFiltered(@NotNull AdvertisementFilterDto filter, int page, int size) {

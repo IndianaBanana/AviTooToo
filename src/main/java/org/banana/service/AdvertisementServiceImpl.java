@@ -30,10 +30,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_CLOSED;
-import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_PROMOTED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ADVERTISEMENT_NOT_CLOSED;
+import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.ALREADY_PROMOTED;
 import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.NOT_OWNER;
-import static org.banana.exception.AdvertisementUpdateException.AdvertisementUpdateExceptionMessage.UNEXPECTED_ERROR;
 
 
 @Service
@@ -108,7 +107,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
-    // todo подумать, можно ли сделать меньше запросов на обновление
     @Override
     @Transactional
     public AdvertisementResponseDto updateAdvertisement(UUID advertisementId, AdvertisementRequestDto requestDto) {
@@ -152,26 +150,24 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto closeAdvertisement(UUID advertisementId) {
         log.info("closeAdvertisement({}) in {}", advertisementId, getClass().getSimpleName());
 
-        AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
-                .orElseThrow(() -> new AdvertisementUpdateException(ADVERTISEMENT_CLOSED));
+        Advertisement advertisement = advertisementRepository.findFetchedById(advertisementId)
+                .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
 
         UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
 
-        boolean isOwner = advertisementDto.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
+        boolean isOwner = advertisement.getUser().getId().equals(currentUserPrincipal.getId());
         if (!isOwner)
             throw new AdvertisementUpdateException(NOT_OWNER);
 
-        if (advertisementDto.getCloseDate() != null)
+        if (advertisement.getCloseDate() != null)
             throw new AdvertisementUpdateException(ADVERTISEMENT_CLOSED);
 
         LocalDateTime closeDate = LocalDateTime.now();
-        advertisementDto.setCloseDate(closeDate);
-        if (advertisementRepository.closeAdvertisement(advertisementId, closeDate) != 1) {
-            throw new AdvertisementUpdateException(UNEXPECTED_ERROR);
-        }
+        advertisement.setCloseDate(closeDate);
+        advertisement = advertisementRepository.save(advertisement);
 
-        log.debug("advertisement closed: {}", advertisementDto);
-        return advertisementDto;
+        log.debug("advertisement closed: {}", advertisement);
+        return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
     @Override
@@ -179,26 +175,23 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto reopenAdvertisement(UUID advertisementId) {
         log.info("reopenAdvertisement({}) in {}", advertisementId, getClass().getSimpleName());
 
-        AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
-                .orElseThrow(() -> new AdvertisementUpdateException(ADVERTISEMENT_CLOSED));
+        Advertisement advertisement = advertisementRepository.findFetchedById(advertisementId)
+                .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
 
         UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
-        boolean isOwner = advertisementDto.getUserResponseDto().getId().equals(currentUserPrincipal.getId());
+
+        boolean isOwner = advertisement.getUser().getId().equals(currentUserPrincipal.getId());
         if (!isOwner)
             throw new AdvertisementUpdateException(NOT_OWNER);
 
-        if (advertisementDto.getCloseDate() == null)
+        if (advertisement.getCloseDate() == null)
             throw new AdvertisementUpdateException(ADVERTISEMENT_NOT_CLOSED);
 
-        advertisementDto.setCloseDate(null);
+        advertisement.setCloseDate(null);
+        advertisement = advertisementRepository.save(advertisement);
 
-        if (advertisementRepository.reopenAdvertisement(advertisementId) != 1) {
-            throw new AdvertisementUpdateException(UNEXPECTED_ERROR);
-        }
-
-        log.debug("advertisement reopened: {}", advertisementDto);
-
-        return advertisementDto;
+        log.debug("advertisement reopened: {}", advertisement);
+        return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 
     @Override
@@ -206,25 +199,24 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     public AdvertisementResponseDto promoteAdvertisement(UUID advertisementId) {
         log.info("promoteAdvertisement({}) in {}", advertisementId, getClass().getSimpleName());
 
-        AdvertisementResponseDto advertisementDto = advertisementRepository.findDtoById(advertisementId)
+        Advertisement advertisement = advertisementRepository.findFetchedById(advertisementId)
                 .orElseThrow(() -> new AdvertisementNotFoundException(advertisementId));
 
-        if (!advertisementDto.getUserResponseDto().getId().equals(SecurityUtils.getCurrentUserPrincipal().getId()))
+        UserPrincipal currentUserPrincipal = SecurityUtils.getCurrentUserPrincipal();
+        boolean isOwner = advertisement.getUser().getId().equals(currentUserPrincipal.getId());
+        if (!isOwner)
             throw new AdvertisementUpdateException(NOT_OWNER);
 
-        if (advertisementDto.isPromoted())
+        if (advertisement.getIsPromoted() != null && advertisement.getIsPromoted())
             throw new AdvertisementUpdateException(ALREADY_PROMOTED);
 
-        if (advertisementDto.getCloseDate() != null)
+        if (advertisement.getCloseDate() != null)
             throw new AdvertisementUpdateException(ADVERTISEMENT_CLOSED);
 
-        advertisementDto.setPromoted(true);
+        advertisement.setIsPromoted(true);
+        advertisement = advertisementRepository.save(advertisement);
 
-        if (advertisementRepository.promoteAdvertisement(advertisementId) != 1) {
-            throw new AdvertisementUpdateException(UNEXPECTED_ERROR);
-        }
-
-        log.debug("advertisement promoted: {}", advertisementDto);
-        return advertisementDto;
+        log.debug("advertisement promoted: {}", advertisement);
+        return advertisementMapper.advertisementToAdvertisementResponseDto(advertisement);
     }
 }

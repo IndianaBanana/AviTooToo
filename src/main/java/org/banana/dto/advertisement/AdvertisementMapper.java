@@ -11,15 +11,10 @@ import java.util.List;
 public interface AdvertisementMapper {
 
     @Mapping(source = "user", target = "userResponseDto")
-//    @Mapping(target = "userResponseDto.averageRating", ignore = true)
-//    @Mapping(target = "userResponseDto.ratingCount", ignore = true)
     @Mapping(source = "city.name", target = "cityName")
     @Mapping(source = "advertisementType.name", target = "advertisementType")
+    @Mapping(source = "isPromoted", target = "promoted")
     AdvertisementResponseDto advertisementToAdvertisementResponseDto(Advertisement advertisement);
-
-//    @Mapping(source = "city.name", target = "cityName")
-//    @Mapping(source = "advertisementType.name", target = "advertisementType")
-//    AdvertisementResponseDto advertisementToAdvertisementResponseDtoWithoutUser(Advertisement advertisement);
 
     Advertisement advertisementRequestDtoToAdvertisement(AdvertisementRequestDto advertisementRequestDto);
 
