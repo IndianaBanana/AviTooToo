@@ -144,7 +144,7 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
             params.put("maxPrice", filter.getMaxPrice());
         }
 
-        jpql.append(" order by a.isPromoted desc, ur.averageRating desc, ur.ratingCount desc, a.createDate desc");
+        jpql.append(" order by a.isPromoted desc, ur.averageRating desc NULLS LAST, ur.ratingCount desc NULLS LAST, a.createDate desc");
 
         return getSession().createQuery(jpql.toString(), AdvertisementResponseDto.class);
     }
