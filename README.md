@@ -19,6 +19,15 @@
     - Образ БД: `postgres:latest`
 - **PgAdmin 4**
 
+После запуска проекта можно заходить в PgAdmin по адресу http://localhost:5050. 
+Чтобы подключится к серверу надо ввести: 
+1. пользователь: postgres, 
+2. пароль: postgres, 
+3. host: db
+
+![img.png](img.png)
+
+Вход в приложение по адресу http://localhost:8080
 ## Запуск Без Docker
 
 создать базу данных с СУБД PostgreSQL: avi_too_too c public схемой
