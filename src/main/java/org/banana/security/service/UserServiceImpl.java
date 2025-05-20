@@ -16,9 +16,9 @@ import org.banana.security.dto.UserPhoneUpdateRequestDto;
 import org.banana.security.dto.UserPrincipal;
 import org.banana.security.dto.UserRegisterRequestDto;
 import org.banana.security.dto.UserUsernameUpdateRequestDto;
-import org.banana.security.exception.UserPhoneAlreadyExistsException;
-import org.banana.security.exception.UserUpdateOldEqualsNewDataException;
-import org.banana.security.exception.UserUsernameAlreadyExistsException;
+import org.banana.exception.UserPhoneAlreadyExistsException;
+import org.banana.exception.UserUpdateOldEqualsNewDataException;
+import org.banana.exception.UserUsernameAlreadyExistsException;
 import org.banana.util.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,9 +30,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-import static org.banana.security.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_FIRST_NAME_AND_LAST_NAME;
-import static org.banana.security.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_PHONE;
-import static org.banana.security.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_USERNAME;
+import static org.banana.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_FIRST_NAME_AND_LAST_NAME;
+import static org.banana.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_PHONE;
+import static org.banana.exception.UserUpdateOldEqualsNewDataException.UserUpdateExceptionMessage.SAME_USERNAME;
 
 @Slf4j
 @Service

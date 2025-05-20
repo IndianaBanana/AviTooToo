@@ -1,7 +1,7 @@
 package org.banana.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.banana.config.SecurityConfig;
+import org.banana.security.config.SecurityConfig;
 import org.banana.dto.message.MessageFilterDto;
 import org.banana.dto.message.MessageMarkReadRequestDto;
 import org.banana.dto.message.MessageResponseDto;

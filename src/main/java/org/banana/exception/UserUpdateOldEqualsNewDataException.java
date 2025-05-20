@@ -1,7 +1,6 @@
-package org.banana.security.exception;
+package org.banana.exception;
 
 import lombok.Getter;
-import org.banana.exception.AbstractConflictException;
 
 
 public class UserUpdateOldEqualsNewDataException extends AbstractConflictException {

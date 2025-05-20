@@ -1,4 +1,4 @@
-package org.banana.config;
+package org.banana.security.config;
 
 
 import lombok.RequiredArgsConstructor;

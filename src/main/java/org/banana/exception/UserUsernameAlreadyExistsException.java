@@ -1,6 +1,4 @@
-package org.banana.security.exception;
-
-import org.banana.exception.AbstractConflictException;
+package org.banana.exception;
 
 public class UserUsernameAlreadyExistsException extends AbstractConflictException {
 
