@@ -1,5 +1,6 @@
 package org.banana.security.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -21,29 +22,36 @@ import static org.banana.dto.ValidationConstants.PHONE_REGEX;
 @AllArgsConstructor
 @NoArgsConstructor
 @PasswordOnRegisterValidation
+@Schema(description = "Запрос на регистрацию пользователя")
 public class UserRegisterRequestDto {
 
     @NotBlank
+    @Schema(description = "Имя пользователя", example = "Иван")
     private String firstName;
 
     @NotBlank
+    @Schema(description = "Фамилия пользователя", example = "Иванов")
     private String lastName;
 
     @NotBlank
+    @Schema(description = "Номер телефона", example = "+79001234567")
     @Pattern(regexp = PHONE_REGEX, message = PHONE_ERROR_MESSAGE)
     private String phone;
 
     @NotBlank
     @Email(regexp = EMAIL_REGEX)
+    @Schema(description = "Email пользователя (используется как логин)", example = "ivanov@example.com")
     private String username;
 
     @NotBlank
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
+    @Schema(description = "Пароль", example = "securePass123")
     @ToString.Exclude
     private String password;
 
     @NotBlank
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
+    @Schema(description = "Повтор пароля", example = "securePass123")
     @ToString.Exclude
     private String matchingPassword;
 }
