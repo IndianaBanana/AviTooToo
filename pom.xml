@@ -32,7 +32,6 @@
         <flyway.version>11.8.2</flyway.version>
         <sonar.java.binaries>target/classes</sonar.java.binaries>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.login>$SONAR_LOGIN</sonar.login>
         <sonar.organization>indianabanana</sonar.organization>
     </properties>
     <reporting>

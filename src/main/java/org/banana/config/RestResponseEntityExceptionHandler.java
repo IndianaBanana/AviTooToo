@@ -127,7 +127,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         log.error("Unhandled exception: {}", ex.getMessage(), ex);
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problemDetail.setTitle("Unexpected server error");
-        problemDetail.setDetail("An unexpected error occurred. Please contact support.");
+        problemDetail.setDetail("An unexpected error occurred. Please try again or contact support.");
         problemDetail.setProperty(TIMESTAMP, Instant.now());
         problemDetail.setProperty(PATH, ((ServletWebRequest) request).getRequest().getRequestURI());
 
