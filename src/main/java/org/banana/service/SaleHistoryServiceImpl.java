@@ -67,7 +67,8 @@ public class SaleHistoryServiceImpl implements SaleHistoryService {
             int rowsUpdated = advertisementRepository.updateAdvertisementQuantity(
                     requestDto.getAdvertisementId(),
                     advertisementQuantity,
-                    advertisementQuantity - requestDtoQuantity);
+                    advertisementQuantity - requestDtoQuantity
+            );
             if (rowsUpdated == 1) {
                 // если получилось обновить - выходим из цикла
                 SaleHistory saleHistory = new SaleHistory(advertisement, currentUserId, requestDtoQuantity, LocalDateTime.now());

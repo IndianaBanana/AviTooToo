@@ -2,7 +2,6 @@ package org.banana.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -18,12 +17,8 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("AviTooToo API")
                         .version("1.0")
-                        .description("API documentation for your project")
-                        .contact(new Contact()
-                                .name("Your Name")
-                                .email("you@example.com")
-                                .url("https://your-site.com")
-                        )
+                        .description("Документация API AviTooToo")
+
                 )
                 .components(new Components()
                         .addSecuritySchemes("bearer-jwt",
