@@ -66,7 +66,6 @@ public class AdvertisementRepositoryImpl extends AbstractCrudRepositoryImpl<Adve
     @Override
     public void detach(Advertisement advertisement) {
         getSession().detach(advertisement);
-//        getSession().refresh(advertisement);
     }
 
     @Override

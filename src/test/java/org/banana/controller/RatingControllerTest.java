@@ -1,10 +1,10 @@
 package org.banana.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.banana.security.config.SecurityConfig;
 import org.banana.dto.rating.RatingDto;
 import org.banana.exception.UserNotFoundException;
 import org.banana.exception.UserRatesTheSameUserException;
+import org.banana.security.config.SecurityConfig;
 import org.banana.security.service.JwtService;
 import org.banana.service.RatingService;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,6 @@
 package org.banana.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.banana.security.config.SecurityConfig;
 import org.banana.dto.history.SaleHistoryAddRequestDto;
 import org.banana.dto.history.SaleHistoryResponseDto;
 import org.banana.dto.history.SaleHistoryTotalForAdvertisementsResponseDto;
@@ -10,6 +9,7 @@ import org.banana.exception.SaleHistoryAccessDeniedException;
 import org.banana.exception.SaleHistoryAdvertisementQuantityIsLowerThanExpectedException;
 import org.banana.exception.SaleHistoryNotFoundException;
 import org.banana.exception.SaleHistoryUnexpectedException;
+import org.banana.security.config.SecurityConfig;
 import org.banana.security.service.JwtService;
 import org.banana.service.SaleHistoryService;
 import org.junit.jupiter.api.Test;

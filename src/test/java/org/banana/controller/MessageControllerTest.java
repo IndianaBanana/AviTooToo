@@ -1,7 +1,6 @@
 package org.banana.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.banana.security.config.SecurityConfig;
 import org.banana.dto.message.MessageFilterDto;
 import org.banana.dto.message.MessageMarkReadRequestDto;
 import org.banana.dto.message.MessageResponseDto;
@@ -9,6 +8,7 @@ import org.banana.dto.message.MessageSendRequestDto;
 import org.banana.exception.ConversationNotFoundException;
 import org.banana.exception.MessageSendException;
 import org.banana.exception.UserNotFoundException;
+import org.banana.security.config.SecurityConfig;
 import org.banana.security.service.JwtService;
 import org.banana.service.MessageService;
 import org.junit.jupiter.api.Test;

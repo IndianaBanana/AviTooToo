@@ -1,9 +1,9 @@
 package org.banana.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.banana.security.config.SecurityConfig;
 import org.banana.dto.advertisement.type.AdvertisementTypeDto;
 import org.banana.exception.AdvertisementTypeAlreadyExistsException;
+import org.banana.security.config.SecurityConfig;
 import org.banana.security.service.JwtService;
 import org.banana.service.AdvertisementTypeService;
 import org.junit.jupiter.api.Test;

@@ -36,7 +36,7 @@ public class CityController {
             summary = "Получить список всех городов",
             description = "Возвращает список всех зарегистрированных городов.",
             responses = {@ApiResponse(responseCode = "200", description = "Список городов успешно получен",
-                    content = @Content( array = @ArraySchema(schema = @Schema(implementation = CityDto.class))))
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CityDto.class))))
             }
     )
     @GetMapping

@@ -1,9 +1,9 @@
 package org.banana.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.banana.security.config.SecurityConfig;
 import org.banana.dto.city.CityDto;
 import org.banana.exception.CityAlreadyExistsException;
+import org.banana.security.config.SecurityConfig;
 import org.banana.security.service.JwtService;
 import org.banana.service.CityService;
 import org.junit.jupiter.api.Test;

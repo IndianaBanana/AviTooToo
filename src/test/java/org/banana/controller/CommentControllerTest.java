@@ -1,13 +1,13 @@
 package org.banana.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.banana.security.config.SecurityConfig;
 import org.banana.dto.comment.CommentRequestDto;
 import org.banana.dto.comment.CommentResponseDto;
 import org.banana.exception.AddingCommentWhenParentCommenterIsNullException;
 import org.banana.exception.AdvertisementNotFoundException;
 import org.banana.exception.CommentNotFoundException;
 import org.banana.exception.UserDeleteCommentException;
+import org.banana.security.config.SecurityConfig;
 import org.banana.security.service.JwtService;
 import org.banana.service.CommentService;
 import org.junit.jupiter.api.Test;
