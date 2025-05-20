@@ -19,7 +19,7 @@
     - Образ БД: `postgres:latest`
 - **PgAdmin 4**
 
-## Без Docker
+## Запуск Без Docker
 
 создать базу данных с СУБД PostgreSQL: avi_too_too c public схемой
 
