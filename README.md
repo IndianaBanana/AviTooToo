@@ -2,27 +2,17 @@
 
 ## Система размещения частных объявлений.
 
-создать базу данных с СУБД PostgreSQL: avi_too_too c public схемой
+Нужно скачать и установить docker https://www.docker.com/products/docker-desktop/
 
-В переменные окружения добавить:
+для деплоя:
+1. открыть терминал в корне проекта
+2. ввести ```docker-compose up --build```
 
-```commandline
-SONAR_LOGIN=ваш_токен (необязательно если не собираетесь использовать SonarQube)
-DB_URL=jdbc:postgresql://localhost:5432/avi_too_too
-DB_USERNAME=ваш_логин
-DB_PASSWORD=ваш_пароль
-```
+## Технологический стек и образы Docker
 
-для запуска проекта (заходим в корень проекта):
+- **Java SE 17**
+    - Образ сборки: `maven:3.8.3-openjdk-17`
+    - Образ рантайма: `openjdk:17-jdk-slim`
 
-```commandline
-zsh start_script.sh #для Unix систем
-```
-
-для Windows
-запускаем start_script.bat
-
-## Стек технологий
-
-Java 17,
-PostgreSQL для СУБД
+- **PostgreSQL 17**
+    - Образ БД: `postgres:latest`
